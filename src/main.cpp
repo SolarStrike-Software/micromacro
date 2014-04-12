@@ -41,7 +41,8 @@ std::string promptForScript();
 void splitArgs(std::string cmd, std::vector<std::string> &);
 std::string strReplaceAll(std::string, std::string, std::string);
 std::string autoExtension(std::string);
-double getConfigNumber(lua_State *, const char *, double);
+double getConfigFloat(lua_State *, const char *, double);
+int getConfigInt(lua_State *, const char *, int);
 std::string getConfigString(lua_State *, const char *, std::string);
 int loadConfig(const char *);
 void printStdHead();
@@ -485,13 +486,27 @@ std::string autoExtension(std::string filename)
 	Config stuff
    =========================================================================*/
 
-double getConfigNumber(lua_State *L, const char *key, double defaultValue)
+double getConfigFloat(lua_State *L, const char *key, double defaultValue)
 {
 	lua_getglobal(L, key);
 	double num = 0;
 
 	if( lua_isnumber(L, -1) )
 		num = lua_tonumber(L, -1);
+	else
+		num = defaultValue;
+
+	lua_pop(L, 1);
+	return num;
+}
+
+int getConfigInt(lua_State *L, const char *key, int defaultValue)
+{
+	lua_getglobal(L, key);
+	int num = 0;
+
+	if( lua_isnumber(L, -1) )
+		num = lua_tointeger(L, -1);
 	else
 		num = defaultValue;
 
@@ -545,11 +560,11 @@ int loadConfig(const char *filename)
 	std::string szval;
 	Settings *psettings = Macro::instance()->getSettings();
 
-	fval = getConfigNumber(lstate, CONFVAR_MEMORY_STRING_BUFFER_SIZE, CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE);
-	psettings->setNumber(CONFVAR_MEMORY_STRING_BUFFER_SIZE, fval);
+	fval = getConfigInt(lstate, CONFVAR_MEMORY_STRING_BUFFER_SIZE, CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE);
+	psettings->setInt(CONFVAR_MEMORY_STRING_BUFFER_SIZE, fval);
 
-	fval = getConfigNumber(lstate, CONFVAR_LOG_REMOVAL_DAYS, CONFDEFAULT_LOG_REMOVAL_DAYS);
-	psettings->setNumber(CONFVAR_LOG_REMOVAL_DAYS, fval);
+	fval = getConfigInt(lstate, CONFVAR_LOG_REMOVAL_DAYS, CONFDEFAULT_LOG_REMOVAL_DAYS);
+	psettings->setInt(CONFVAR_LOG_REMOVAL_DAYS, fval);
 
 	szval = getConfigString(lstate, CONFVAR_LOG_DIRECTORY, CONFDEFAULT_LOG_DIRECTORY);
 	psettings->setString(CONFVAR_LOG_DIRECTORY, szval);
@@ -648,7 +663,7 @@ void openLog()
 {
 	Settings *psettings = Macro::instance()->getSettings();
 	const char *logDir = psettings->getString(CONFVAR_LOG_DIRECTORY).c_str();
-	unsigned int logRemovalDays = (unsigned int)psettings->getNumber(CONFVAR_LOG_REMOVAL_DAYS);
+	unsigned int logRemovalDays = (unsigned int)psettings->getInt(CONFVAR_LOG_REMOVAL_DAYS);
 
 	// Ensure log directory exists
 	if( !directoryExists(logDir) )

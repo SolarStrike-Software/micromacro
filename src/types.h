@@ -16,28 +16,9 @@
 	enum BatchJob_type{MEM_BYTE, MEM_UBYTE, MEM_SHORT, MEM_USHORT,
 			MEM_INT, MEM_UINT, MEM_FLOAT, MEM_DOUBLE, MEM_STRING, MEM_SKIP};
 
-	class CMultivar;
-	typedef CMultivar Multivar;
+	//class CMultivar;
+	//typedef CMultivar Multivar;
 	typedef unsigned int ALuint;
-
-	class CMultivar
-	{
-		protected:
-			Multivar_type type;
-			double fValue;
-			std::string szValue;
-
-		public:
-			CMultivar() : type(VT_NIL), fValue(0.0), szValue("") { }
-
-			void setNumber(double);
-			void setString(std::string);
-			void setNil();
-
-			double getNumber();
-			std::string getString();
-			Multivar_type getType();
-	};
 
 	/* Used in window.find() */
 	struct EnumWindowPair
@@ -62,7 +43,7 @@
 		HDC hdc;
 	};
 
-	/* Describes a job (type and length) */
+	/* Describes a memory read job (type and length) */
 	struct BatchJob
 	{
 		unsigned int count;

@@ -26,8 +26,37 @@
 	#define CONFDEFAULT_SCRIPT_DIRECTORY				"scripts"
 
 	class CSettings;
+	class CSettingValue;
 	typedef CSettings Settings;
-	typedef std::map<std::string, Multivar> t_settingsmap;
+	typedef std::map<std::string, CSettingValue> t_settingsmap;
+
+	enum SettingType {ST_FLOAT, ST_INT, ST_STRING, ST_NIL};
+
+	class CSettingValue
+	{
+		protected:
+			SettingType type;
+			union
+			{
+				double fValue;
+				int iValue;
+			};
+			std::string szValue;
+
+		public:
+			CSettingValue();
+			CSettingValue(double);
+			CSettingValue(int);
+			CSettingValue(std::string);
+			SettingType getType();
+			double getFloat();
+			void setFloat(double);
+			int getInt();
+			void setInt(int);
+			std::string getString();
+			void setString(std::string);
+			void setNil();
+	};
 
 	class CSettings
 	{
@@ -38,10 +67,12 @@
 			CSettings();
 			~CSettings();
 
-			void setNumber(std::string, double);
+			void setFloat(std::string, double);
+			void setInt(std::string, int);
 			void setString(std::string, std::string);
 
-			double getNumber(std::string, double = 0.0);
+			double getFloat(std::string, double = 0.0);
+			int getInt(std::string, int = 0);
 			std::string getString(std::string, std::string = "");
 
 			void clear(std::string);

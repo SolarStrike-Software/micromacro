@@ -46,7 +46,7 @@ std::string Process_lua::readString(HANDLE handle, unsigned long address, int &e
 	err = 0;
 	int success;
 	unsigned int memoryReadBufferSize =
-		(unsigned int)Macro::instance()->getSettings()->getNumber(CONFVAR_MEMORY_STRING_BUFFER_SIZE,
+		(unsigned int)Macro::instance()->getSettings()->getInt(CONFVAR_MEMORY_STRING_BUFFER_SIZE,
 		CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE);
 
 	char *readBuffer = 0;
@@ -97,7 +97,7 @@ std::wstring Process_lua::readUString(HANDLE handle, unsigned long address, int 
 	err = 0;
 	int success;
 	unsigned int memoryReadBufferSize =
-		(unsigned int)Macro::instance()->getSettings()->getNumber(CONFVAR_MEMORY_STRING_BUFFER_SIZE,
+		(unsigned int)Macro::instance()->getSettings()->getInt(CONFVAR_MEMORY_STRING_BUFFER_SIZE,
 		CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE);
 
 
