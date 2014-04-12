@@ -1,3 +1,10 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #include "audio_lua.h"
 #include "types.h"
 #include "luatypes.h"
@@ -5,6 +12,7 @@
 #include "strl.h"
 #include "event.h"
 #include "macro.h"
+#include "logger.h"
 
 extern "C"
 {
@@ -38,7 +46,11 @@ int Audio_lua::regmod(lua_State *L)
 	ALenum error = alGetError();
 	if( error != AL_NO_ERROR )
 	{ // Throw error
-
+		char buffer[512];
+		slprintf(buffer, sizeof(buffer)-1, "Failed to initialize ALUT. Error code %d\n", error);
+		fprintf(stderr, buffer);
+		Logger::instance()->add(buffer);
+		return MicroMacro::ERR_INIT_FAIL;
 	}
 
 	return MicroMacro::ERR_OK;

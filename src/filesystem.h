@@ -1,3 +1,10 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
 
@@ -16,6 +23,6 @@
 	std::string fixSlashes(std::string, int);
 	std::string getFileName(std::string);
 	std::string getFilePath(std::string, bool);
-	std::string fixFileRelatives(std::string, bool = true);
+	std::string fixFileRelatives(std::string);
 
 #endif

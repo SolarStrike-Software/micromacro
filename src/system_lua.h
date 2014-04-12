@@ -1,3 +1,10 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #ifndef SYSTEM_LUA_H
 #define SYSTEM_LUA_H
 

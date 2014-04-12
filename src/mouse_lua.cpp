@@ -1,3 +1,10 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #include "mouse_lua.h"
 #include "error.h"
 #include "macro.h"

@@ -1,10 +1,15 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #ifndef TIMER_LUA_H
 #define TIMER_LUA_H
 
 	#define TIMER_MODULE_NAME		"timer"
 	typedef struct lua_State lua_State;
-
-	#include "error.h"
 
 	class Timer_lua
 	{

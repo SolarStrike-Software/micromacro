@@ -1,3 +1,10 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #ifndef WINDOW_LUA_H
 #define WINDOW_LUA_H
 
@@ -14,7 +21,6 @@
 		protected:
 			static BOOL CALLBACK _findProc(HWND, LPARAM);
 			static BOOL CALLBACK _findListProc(HWND, LPARAM);
-			//static int wildfind(const std::string &, const std::string &);
 
 			static int find(lua_State *);
 			static int findList(lua_State *);

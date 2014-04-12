@@ -1,3 +1,10 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #ifndef NCURSES_LUA_H
 #define NCURSES_LUA_H
 
@@ -8,8 +15,6 @@
 
 	typedef struct lua_State lua_State;
 
-	//#include "error.h"
-
 	class Ncurses_lua
 	{
 		protected:
@@ -18,8 +23,6 @@
 
 			static void flush(WINDOW *);
 			static void readline(WINDOW *, char *, size_t);
-			//static void hideCursor();
-			//static void showCursor();
 
 			static int print(lua_State *);
 			static int refresh(lua_State *);
@@ -28,7 +31,6 @@
 			static int move(lua_State *);
 			static int createWindow(lua_State *);
 			static int getString(lua_State *);
-			//static int setColor(lua_State *);
 			static int setPair(lua_State *);
 			static int getPair(lua_State *);
 			static int attributeOn(lua_State *);

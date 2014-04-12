@@ -1,7 +1,15 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #ifndef ERROR_H
 #define ERROR_H
 
 	#include <string>
+	#include <exception>
 
 	typedef struct lua_State lua_State;
 
@@ -41,7 +49,7 @@
 	void wrongArgsReal(lua_State *, const char *);
 	void badAllocationReal(const char *, const char *, int);
 	int checkType(lua_State *, int, int);
-	int luaL_typerror (lua_State *, int, const char *);
+	int luaL_typerror (lua_State *, int, const char *); // For compatibility with Lua <= 5.1; yes, the spelling is correct
 	const char *getErrorString(int);
 	std::string getWindowsErrorString(int);
 

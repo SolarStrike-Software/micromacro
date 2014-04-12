@@ -1,6 +1,15 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #include "luaengine.h"
 #include "luatypes.h"
 #include "macro.h"
+#include "logger.h"
+
 #include "ncurses_lua.h"
 #include "timer_lua.h"
 #include "keyboard_lua.h"
@@ -125,26 +134,43 @@ int LuaEngine::init()
 	/* Register types (metatables) */
 	registerLuaTypes(lstate);
 
-	/* Add modules */
-	Ncurses_lua::regmod(lstate);
-	Timer_lua::regmod(lstate);
-	Keyboard_lua::regmod(lstate);
-	Mouse_lua::regmod(lstate);
-	Key_lua::regmod(lstate);
-	Gamepad_lua::regmod(lstate);
-	System_lua::regmod(lstate);
-	Filesystem_lua::regmod(lstate);
-	Process_lua::regmod(lstate);
-	Window_lua::regmod(lstate);
-	Audio_lua::regmod(lstate);
-	Class_lua::regmod(lstate);
-	Log_lua::regmod(lstate);
+	/* Register modules & addons */
+	const lua_CFunction regModFuncs[] = {
+		/* Modules */
+		Ncurses_lua::regmod,
+		Timer_lua::regmod,
+		Keyboard_lua::regmod,
+		Mouse_lua::regmod,
+		Key_lua::regmod,
+		Gamepad_lua::regmod,
+		System_lua::regmod,
+		Filesystem_lua::regmod,
+		Process_lua::regmod,
+		Window_lua::regmod,
+		Audio_lua::regmod,
+		Class_lua::regmod,
+		Log_lua::regmod,
+		/* Addons */
+		Global_addon::regmod,
+		String_addon::regmod,
+		Math_addon::regmod,
+		Table_addon::regmod,
+		0 // NULL terminator
+	};
 
-	/* Addons */
-	Global_addon::regmod(lstate);
-	String_addon::regmod(lstate);
-	Math_addon::regmod(lstate);
-	Table_addon::regmod(lstate);
+	unsigned int i = 0;
+	while( regModFuncs[i] != 0 )
+	{
+		int regSuccess = regModFuncs[i](lstate);
+		if( regSuccess != MicroMacro::ERR_OK )
+		{ // Error occurred while loading module
+			const char *err = "One or more modules failed to load.\n";
+			fprintf(stderr, err);
+			Logger::instance()->add(err);
+			return regSuccess;
+		}
+		++i; // Next module
+	}
 
 	return MicroMacro::ERR_OK;
 }

@@ -1,7 +1,14 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #include "timer_lua.h"
 #include "timer.h"
 #include "luatypes.h"
-
+#include "error.h"
 extern "C"
 {
 	#include <lua.h>

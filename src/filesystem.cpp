@@ -1,3 +1,10 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #include "filesystem.h"
 #include "strl.h"
 #include "wininclude.h"
@@ -125,7 +132,7 @@ std::string getFilePath(std::string fullpath, bool includeTrailingSlash)
 	return fullpath;
 }
 
-std::string fixFileRelatives(std::string instr, bool keepPrefixed)
+std::string fixFileRelatives(std::string instr)
 {
 	instr = fixSlashes(instr, SLASHES_TO_STANDARD);
 

@@ -1,3 +1,10 @@
+/******************************************************************************
+	Project: 	MicroMacro
+	Author: 	SolarStrike Software
+	URL:		www.solarstrike.net
+	License:	Modified BSD (see license.txt)
+******************************************************************************/
+
 #include "wininclude.h"		// Be sure to include this *before* ncurses!
 #include <stdio.h>
 #include <string.h>
@@ -30,7 +37,7 @@ extern "C"
 const char *basicTitle = "MicroMacro v%ld.%ld.%ld";
 
 std::string scriptGUIDialog(std::string);
-std::string promptForScript(/*std::vector<std::string> &args*/);
+std::string promptForScript();
 void splitArgs(std::string cmd, std::vector<std::string> &);
 std::string strReplaceAll(std::string, std::string, std::string);
 std::string autoExtension(std::string);
@@ -105,7 +112,7 @@ int main(int argc, char **argv)
 
 		/* Prompt for script */
 		std::vector<std::string> args;
-		std::string script = promptForScript(/*args*/);
+		std::string script = promptForScript();
 		if( script == "" )
 		{ // We need something to run, duh!
 			fprintf(stderr, "Error: You didn\'t even give me a script to run, silly!\n\n");
@@ -380,12 +387,11 @@ std::string scriptGUIDialog(std::string defaultFilename)
 	return retval;
 }
 
-std::string promptForScript(/*std::vector<std::string> &args*/)
+std::string promptForScript()
 {
 	static std::string previousScript = "";
-	//std::string filename;
 
-	//while( getch() ) { } // Clear keyboard buffer
+	// Clear keyboard buffer
 	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
 	FlushConsoleInputBuffer(hStdin);
 
@@ -403,45 +409,6 @@ std::string promptForScript(/*std::vector<std::string> &args*/)
 
 	previousScript = fullcmd; // Remember this.
 	return fullcmd;
-/*
-	if( fullcmd == "" )
-	{ // No input, show file open dialog
-        std::string filter = "Lua files";
-        filter.push_back('\0');
-        filter.append("*.lua");
-        filter.push_back('\0');
-        filter.append("All files");
-        filter.push_back('\0');
-		filter.append("*.*");
-		filter.push_back('\0');
-		filter.push_back('\0');
-
-		std::string fullScriptsDir = "";
-		if( previousScript.length() > 0 )
-		{
-			fullcmd = Macro::instance()->getOpenFileName(previousScript, filter);
-		}
-		else
-		{
-			std::string scriptsDir = Settings::instance()->getString(CONFIG_VAR_SCRIPTS_DIR);
-			if( scriptsDir.length() == 0 )
-				scriptsDir = DEFAULT_SCRIPTS_DIR;
-
-			fullScriptsDir = getAppPath() + "/";
-			fullScriptsDir += scriptsDir;
-			fullcmd = Macro::instance()->getOpenFileName(fullScriptsDir, filter);
-		}
-		previousScript = fullcmd;
-		fullcmd = std::string("\"") + fullcmd + std::string("\"");
-	}
-
-
-	splitArgs(fullcmd, args);
-
-	filename = args[0];
-	args.erase(args.begin()); // Don't return filename in args array
-	return filename;
-*/
 }
 
 void splitArgs(std::string cmd, std::vector<std::string> &args)
