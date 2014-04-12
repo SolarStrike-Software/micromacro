@@ -60,8 +60,21 @@ int main(int argc, char **argv)
 	SetConsoleCtrlHandler(consoleControlCallback, true);
 	printStdHead(); // Intro text output
 
+	/* We reset our working directory after every script run
+		so we need to make sure we hang onto this */
 	char origCWD[MAX_PATH+1];
 	GetCurrentDirectory(MAX_PATH,(LPTSTR)&origCWD);
+
+	{ // Initiate our macro singleton
+		int success;
+		success = Macro::instance()->init();
+		if( success != MicroMacro::ERR_OK )
+		{
+			Logger::instance()->add("Failed to initiate Macro singleton; Error code: %d (%s)\n",
+				success, getErrorString(success));
+			return success;
+		}
+	}
 
 	{	/* Run configs */
 		int success = loadConfig(CONFIG_FILENAME);
@@ -80,14 +93,16 @@ int main(int argc, char **argv)
 	// Open log file. Also creates log directory (if needed)
 	openLog();
 
-	{ // Initiate our macro singleton
-		int success;
-		success = Macro::instance()->init();
-		if( success != MicroMacro::ERR_OK )
+	{ // Ensure scripts directory exists
+		const char *scriptsDir = Macro::instance()->getSettings()->getString(
+			CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY).c_str();
+		if( !directoryExists(scriptsDir) )
 		{
-			Logger::instance()->add("Failed to initiate Macro singleton; Error code: %d (%s)\n",
-				success, getErrorString(success));
-			return success;
+			SECURITY_ATTRIBUTES attribs;
+			attribs.nLength = sizeof(SECURITY_ATTRIBUTES);
+			attribs.bInheritHandle = false;
+			attribs.lpSecurityDescriptor = NULL;
+			CreateDirectory(scriptsDir, &attribs);
 		}
 	}
 
@@ -104,8 +119,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "[WARN]: lua_gettop() is not 0 (zero).\n");
 		#endif
 
-		/* Reset window title */
-		{
+		{ /* Reset window title */
 			char title[1024];
 			slprintf(title, sizeof(title)-1, basicTitle, AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD);
 			SendMessage(Macro::instance()->getAppHwnd(), WM_SETTEXT, (WPARAM)0, (LPARAM)title);

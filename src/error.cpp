@@ -215,7 +215,7 @@ int checkType(lua_State *L, int acceptableTypes, int arg)
 	return 0;
 }
 
-int luaL_typerror (lua_State *s, int narg, const char *tname)
+int luaL_typerror(lua_State *s, int narg, const char *tname)
 {
 	const char *msg = lua_pushfstring(s, "%s expected, got %s", tname,
 		luaL_typename(s, narg));

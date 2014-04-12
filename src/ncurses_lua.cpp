@@ -329,14 +329,12 @@ void Ncurses_lua::flush(WINDOW *pw)
 
 void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 {
-	//int old_curs = curs_set(1);
 	unsigned int pos = 0;
 	unsigned int len = 0;
 	unsigned int outstart = 0;
 	unsigned int outwidth = 0;
 	int x, y, mx, my;
 
-	//showCursor();
 	memset(buffer, 0, bufflen);
 	getyx(pw, y, x);
 	getmaxyx(pw, my, mx);
@@ -351,7 +349,6 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 	{
 		int c; // Input character
 
-		//buffer[len] = ' ';
 		if( pos < outstart )
 			outstart = (pos >= 5 ? pos - 5 : 0); // Just a nice touch when we're moving left
 		else if( pos > (outstart + outwidth) )
@@ -359,8 +356,6 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 		if( outstart > len )
 			outstart = len;
 
-		//mvwaddnstr(pw, y, x, buffer, len+1);
-		//wmove(pw, y, x+pos);
 		for(unsigned int i = 0; i <= outwidth; i++)
 			mvwaddch(pw, y, x+i, ' '); // Erase garbage
 		mvwaddnstr(pw, y, x, buffer + outstart, (len < outwidth ? len : outwidth)); // len-outstart ?
@@ -413,21 +408,16 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 		::scrollok(pw, true);
 
 	buffer[len] = 0; // Ensure NULL terminator
-	//if( old_curs != ERR ) curs_set(old_curs); // Reset cursor
-	//hideCursor();
 }
 
 int Ncurses_lua::getString(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
 
 	char buffer[1024];
 	int sx, sy, nx, ny;
@@ -523,14 +513,11 @@ int Ncurses_lua::attributeOn(lua_State *L)
 {
 	if( lua_gettop(L) != 3 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_NUMBER, 2);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
 	int attribValue = (int)lua_tonumber(L, 2);
 	wattron(*pw, attribValue);
 
@@ -541,14 +528,11 @@ int Ncurses_lua::attributeOff(lua_State *L)
 {
 	if( lua_gettop(L) != 3 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_NUMBER, 2);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
 	int attribValue = (int)lua_tonumber(L, 2);
 	wattron(*pw, attribValue);
 
@@ -563,10 +547,7 @@ int Ncurses_lua::setAttribute(lua_State *L)
 	checkType(L, LT_NUMBER, 2);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
 	int attribValue = (int)lua_tonumber(L, 2);
 	wattrset(*pw, attribValue);
 
@@ -577,19 +558,14 @@ int Ncurses_lua::setBackground(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_NUMBER, 2);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
 
 	int style = (int)lua_tonumber(L, 2);
 	attr_t attribs = style;
-	//short pair;
-	//wattr_get(*pw, &attribs, &pair, NULL);
 	wbkgd(*pw, attribs);
 	return 0;
 }
@@ -598,13 +574,10 @@ int Ncurses_lua::getWindowSize(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
 
 	int y, x;
 	getmaxyx(*pw, y, x);

@@ -165,7 +165,7 @@ int Table_addon::print(lua_State *L)
 			key = buffer;
 		}
 		else
-			key = key = lua_tostring(L, -2);
+			key = lua_tostring(L, -2);
 
 		if( lua_istable(L, -1) && depth < TABLE_PRINT_MAXDEPTH )
 		{

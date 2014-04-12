@@ -509,14 +509,29 @@ int Process_lua::readPtr(lua_State *L)
 			if( lua_isnumber(L, -1) )
 			{
 				offsets.push_back(lua_tointeger(L, -1));
-				lua_pop(L, 1);
-			} // TODO: Throw error if invalid type
+				lua_pop(L, 1); // Pop value off stack
+			}
 			else
-			{
-				lua_pop(L, 1);
+			{ // Throw error (invalid type)
+				lua_pop(L, 1); // Pop value off stack
+
+				std::string key;
+				if( lua_isnumber(L, -1) )
+				{
+					char buffer[32];
+					slprintf(buffer, sizeof(buffer)-1, "%d", lua_tointeger(L, -1));
+					key = buffer;
+				}
+				else
+					key = lua_tostring(L, -1);
+
+				char buffer[1024];
+				slprintf(buffer, sizeof(buffer)-1,
+					"Received invalid type (non-number) in offset list; key: %s.", key.c_str());
+				luaL_error(L, buffer);
+				return 0;
 			}
 		}
-		//lua_pop(L, 1); // Pop table
 	}
 
 	unsigned int realAddress;
@@ -524,8 +539,7 @@ int Process_lua::readPtr(lua_State *L)
 		realAddress = readMemory<unsigned int>(*pHandle, address + offsets.at(0), err);
 	else
 	{
-		//realAddress = readMemory<unsigned int>(*pHandle, address, err); // Get address pointed to
-		realAddress = address;// + offsets.at(0);
+		realAddress = address;
 		for(unsigned int i = 0; i < offsets.size() - 1; i++)
 		{
 			realAddress = readMemory<unsigned int>(*pHandle, realAddress + offsets.at(i), err); // Get value
@@ -930,10 +944,26 @@ int Process_lua::writePtr(lua_State *L)
 			{
 				offsets.push_back(lua_tointeger(L, -1));
 				lua_pop(L, 1);
-			} // TODO: Throw error if invalid type
+			}
 			else
-			{
-				lua_pop(L, 1);
+			{ // Throw error (invalid type)
+				lua_pop(L, 1); // Pop value off stack
+
+				std::string key;
+				if( lua_isnumber(L, -1) )
+				{
+					char buffer[32];
+					slprintf(buffer, sizeof(buffer)-1, "%d", lua_tointeger(L, -1));
+					key = buffer;
+				}
+				else
+					key = lua_tostring(L, -1);
+
+				char buffer[1024];
+				slprintf(buffer, sizeof(buffer)-1,
+					"Received invalid type (non-number) in offset list; key: %s.", key.c_str());
+				luaL_error(L, buffer);
+				return 0;
 			}
 		}
 	}
