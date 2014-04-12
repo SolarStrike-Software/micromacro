@@ -50,6 +50,12 @@ int Gamepad_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	gamepad.pressed(number gamepadId, number btn)
+	Returns:	boolean
+
+	If the given gamepad has had its button pressed
+	since last polling, returns true. Else, false.
+*/
 int Gamepad_lua::pressed(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -64,6 +70,12 @@ int Gamepad_lua::pressed(lua_State *L)
 	return 1;
 }
 
+/*	gamepad.released(number gamepadId, number btn)
+	Returns:	boolean
+
+	If the given gamepad has had its button released
+	since last polling, returns true. Else, false.
+*/
 int Gamepad_lua::released(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -78,6 +90,13 @@ int Gamepad_lua::released(lua_State *L)
 	return 1;
 }
 
+/*	gamepad.isDown(number gamepadId, number btn)
+	Returns:	boolean
+
+	If the given gamepad currently has a given
+	button held down (as of last polling), returns true.
+	Else, returns false.
+*/
 int Gamepad_lua::isDown(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -92,6 +111,12 @@ int Gamepad_lua::isDown(lua_State *L)
 	return 1;
 }
 
+/*	gamepad.getPOV(number gamepadId)
+	Returns:	number
+
+	Returns the angle of the POV hat (D-pad).
+	If centered, returns JOY_POVCENTERED
+*/
 int Gamepad_lua::getPOV(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -103,6 +128,18 @@ int Gamepad_lua::getPOV(lua_State *L)
 	return 1;
 }
 
+/*	gamepad.getAxis(number gamepadId, number axisId)
+	Returns:	number
+
+	Returns the axis value for a given gamepad.
+	The value will be between 0 (minimum) and 100(maximum).
+	If centered, the value will be ~50.
+
+	NOTE: This will not always be exact! Due to calibration,
+	floating-point inaccuracies, and physical defects,
+	you may receive a value that is a fraction off
+	the intended value. I.e. ~49-51 while centered.
+*/
 int Gamepad_lua::getAxis(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -116,7 +153,10 @@ int Gamepad_lua::getAxis(lua_State *L)
 	return 1;
 }
 
-/*int Gamepad_lua::press(lua_State *L)
+/*	NOTE: Commented out until I can find a way
+	to make this work.
+
+int Gamepad_lua::press(lua_State *L)
 {
 	int top = lua_gettop(L);
 	if( top != 2 && top != 3 )
@@ -167,6 +207,11 @@ int Gamepad_lua::release(lua_State *L)
 	return 0;
 }*/
 
+/*	gamepad.getCount()
+	Returns:	number
+
+	Returns the number of connected gamepads.
+*/
 int Gamepad_lua::getCount(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )

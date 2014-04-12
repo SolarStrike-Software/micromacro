@@ -39,6 +39,12 @@ int Table_addon::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	table.copy(table orig)
+	Returns:	table
+
+	Actually does a full copy of a table, instead of referencing the original.
+	This also recursively copies sub-tables.
+*/
 int Table_addon::copy(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -69,6 +75,14 @@ int Table_addon::copy(lua_State *L)
 	return 1;
 }
 
+/*	table.find(table haystack, value)
+	Returns (on success):	key
+	Returns (on failure):	nil
+
+	Checks table 'haystack' for anything that matches 'value'.
+	If found, returns the table's key that contains the value.
+	If no match is found, returns nil.
+*/
 int Table_addon::find(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -133,6 +147,12 @@ int Table_addon::find(lua_State *L)
 	return 0;
 }
 
+/*	table.print(table tab [, number depth])
+	Returns:	nil
+
+	Recursively dump the table to the standard output.
+	When called from Lua, you probably shouldn't include the depth...
+*/
 int Table_addon::print(lua_State *L)
 {
 	int depth = 0;

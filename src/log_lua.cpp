@@ -33,6 +33,11 @@ int Log_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	log.getFilename()
+	Returns:	string
+
+	Returns the filename of the file we are logging to.
+*/
 int Log_lua::getFilename(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -41,6 +46,12 @@ int Log_lua::getFilename(lua_State *L)
 	return 1;
 }
 
+/*	log.add(string msg)
+	Returns:	nil
+
+	Adds 'msg' into our log file. This includes timestamp prefix,
+	but not newline.
+*/
 int Log_lua::add(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -51,6 +62,12 @@ int Log_lua::add(lua_State *L)
 	return 0;
 }
 
+/*	log.addRaw(string msg)
+	Returns:	nil
+
+	Adds 'msg' into our log file. This differs from log.add()
+	as it does not include the timestamp.
+*/
 int Log_lua::addRaw(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -61,6 +78,12 @@ int Log_lua::addRaw(lua_State *L)
 	return 0;
 }
 
+/*	log.isOpen()
+	Returns:	boolean
+
+	If a log was successfully opened for writing, returns true.
+	Else, returns false.
+*/
 int Log_lua::isOpen(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )

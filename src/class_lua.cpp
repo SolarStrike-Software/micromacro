@@ -30,7 +30,15 @@ int Class_lua::regmod(lua_State *L)
 }
 
 
+/*	class.new([table baseclass])
+	Returns:	table (new class)
 
+	Create a new class. If baseclass is given, creates a child of it,
+	and set the 'parent' variable to its base.
+
+	This will *not* call the constructor. That is what the __call
+	operator on the returned class is for: to create an instance of the class.
+*/
 int Class_lua::_new(lua_State *L)
 {
 	static const luaL_Reg class_meta[] = {
@@ -39,10 +47,6 @@ int Class_lua::_new(lua_State *L)
 		{NULL, NULL}
 	};
 
-/*	static const luaL_Reg class_methods[] = {
-		{NULL, NULL}
-	};
-*/
 	int top = lua_gettop(L);
 	if( top != 0 && top != 1 )
 		wrongArgs(L);
@@ -53,21 +57,13 @@ int Class_lua::_new(lua_State *L)
 
 	if( top == 0 ) // Create a base class
 	{
-		//luaL_newmetatable(L, "MicroMacro.class");
 		lua_newtable(L);
-		//int metaTableId = lua_gettop(L);
 		luaL_setfuncs(L, class_meta, 0);
 
-		// metatable.__index = <methods>
-		//luaL_newlib(L, class_methods);
 		lua_pushvalue(L, newtab_index);
-		lua_setfield(L, newtab_index/*-2*/, "__index");
+		lua_setfield(L, newtab_index, "__index");
 
-		// metatable.__metatable = <metatable>
-		//luaL_newlib(L, class_meta);
-		//lua_setfield(L, metaTableId, "__metatable");
-
-		lua_setmetatable(L, newtab_index/*-2*/);
+		lua_setmetatable(L, newtab_index);
 
 		lua_pushstring(L, "__call");
 		lua_pushcfunction(L, Class_lua::__call);
@@ -88,7 +84,7 @@ int Class_lua::_new(lua_State *L)
 		luaL_setfuncs(L, class_meta, 0);
 
 		lua_pushvalue(L, newtab_index);
-		lua_setfield(L, newtab_index/*-2*/, "__index");
+		lua_setfield(L, newtab_index, "__index");
 
 		lua_setmetatable(L, newtab_index);
 
@@ -100,6 +96,12 @@ int Class_lua::_new(lua_State *L)
 	return 1;
 }
 
+/*	class operator (...)
+	Returns:	table [class]
+
+	This creates an instance of the given class, sets parent,
+	and calls its constructor function with the given parameters
+*/
 int Class_lua::__call(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -155,6 +157,14 @@ int Class_lua::__call(lua_State *L)
 	return 1;
 }
 
+
+/*	class __tostring() metamethod
+	Returns:	string (Class: 0x%X)
+
+	This is the default "tostring" metamethod for classes
+	that do not overload it in their metatables.
+	Nothing fancy here.
+*/
 int Class_lua::__tostring(lua_State *L)
 {
 	checkType(L, LT_TABLE, 1);

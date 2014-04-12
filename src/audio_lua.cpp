@@ -27,6 +27,17 @@ extern "C"
 
 int Audio_lua::regmod(lua_State *L)
 {
+	alutInit(0, NULL);
+	ALenum error = alGetError();
+	if( error != AL_NO_ERROR )
+	{ // Throw error
+		char buffer[512];
+		slprintf(buffer, sizeof(buffer)-1, "Failed to initialize ALUT. Error code %d\n", error);
+		fprintf(stderr, buffer);
+		Logger::instance()->add(buffer);
+		return MicroMacro::ERR_INIT_FAIL;
+	}
+
 	static const luaL_Reg _funcs[] = {
 		{"load", Audio_lua::load},
 		{"unload", Audio_lua::unload},
@@ -42,17 +53,6 @@ int Audio_lua::regmod(lua_State *L)
 	luaL_newlib(L, _funcs);
 	lua_setglobal(L, AUDIO_MODULE_NAME);
 
-	alutInit(0, NULL);
-	ALenum error = alGetError();
-	if( error != AL_NO_ERROR )
-	{ // Throw error
-		char buffer[512];
-		slprintf(buffer, sizeof(buffer)-1, "Failed to initialize ALUT. Error code %d\n", error);
-		fprintf(stderr, buffer);
-		Logger::instance()->add(buffer);
-		return MicroMacro::ERR_INIT_FAIL;
-	}
-
 	return MicroMacro::ERR_OK;
 }
 
@@ -62,6 +62,12 @@ int Audio_lua::cleanup(lua_State *)
 	return MicroMacro::ERR_OK;
 }
 
+/*	audio.load(string filename)
+	Returns (on success):	userdata (audioresource)
+	Returns (on failure):	nil
+
+	Loads a sound file and returns the resource
+*/
 int Audio_lua::load(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -70,6 +76,7 @@ int Audio_lua::load(lua_State *L)
 
 	const char *filename = lua_tostring(L, 1);
 
+	// Create a new, empty AudioResource on the Lua stack
 	AudioResource *pResource = static_cast<AudioResource *>(lua_newuserdata(L, sizeof(AudioResource)));
 	luaL_getmetatable(L, LuaType::metatable_audioResource);
 	lua_setmetatable(L, -2);
@@ -116,6 +123,11 @@ int Audio_lua::load(lua_State *L)
 	return 1;
 }
 
+/*	audio.unload(userdata audioresource)
+	Returns:	nil
+
+	Unloads a audioresource and sets its buffer & sources to empty (AL_NONE)
+*/
 int Audio_lua::unload(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -134,6 +146,11 @@ int Audio_lua::unload(lua_State *L)
 	return 0;
 }
 
+/*	audio.play(userdata audioresource)
+	Returns:	nil
+
+	Plays a loaded audioresource
+*/
 int Audio_lua::play(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -146,6 +163,11 @@ int Audio_lua::play(lua_State *L)
 	return 0;
 }
 
+/*	audio.stop(userdata audioresource)
+	Returns:	nil
+
+	Stops an audioresource (if it is playing)
+*/
 int Audio_lua::stop(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -158,6 +180,11 @@ int Audio_lua::stop(lua_State *L)
 	return 0;
 }
 
+/*	audio.pause(userdata audioresource)
+	Returns:	nil
+
+	Pause an audioresource (if it is playing)
+*/
 int Audio_lua::pause(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -170,6 +197,11 @@ int Audio_lua::pause(lua_State *L)
 	return 0;
 }
 
+/*	audio.getState(userdata audioresource)
+	Returns:	string [initial|playing|paused|stopped|unknown]
+
+	Returns the state of an audioresource as a string
+*/
 int Audio_lua::getState(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -201,6 +233,11 @@ int Audio_lua::getState(lua_State *L)
 	return 1;
 }
 
+/*	audio.setLooping(userdata audioresource, boolean looping)
+	Returns:	nil
+
+	Sets the "looping" state for an audioresource; true = loop it, false = no looping
+*/
 int Audio_lua::setLooping(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -220,6 +257,11 @@ int Audio_lua::setLooping(lua_State *L)
 	return 0;
 }
 
+/*	audio.setVolume(userdata audioresource, number volume)
+	Returns:	nil
+
+	Sets the volume for an audioresource. 0 = no volume, 1 = full volume
+*/
 int Audio_lua::setVolume(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )

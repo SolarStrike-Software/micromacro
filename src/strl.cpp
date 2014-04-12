@@ -10,6 +10,7 @@
 #include <cstdarg>
 #include <stdio.h>
 
+// Just like strncpy, except ensures we always NULL-terminate
 size_t strlcpy(char *dest, const char* src, size_t max_len)
 {
 	size_t src_len = strlen(src);
@@ -26,6 +27,7 @@ size_t strlcpy(char *dest, const char* src, size_t max_len)
 	return strlen(dest);
 }
 
+// Just like strncat, except ensures we always NULL-terminate
 size_t strlcat(char *dest, const char *src, size_t max_len)
 {
 	size_t start_len = strlen(dest);
@@ -43,6 +45,7 @@ size_t strlcat(char *dest, const char *src, size_t max_len)
 	return strlen(dest) - start_len;
 }
 
+// I think you get the pattern by now. Like snprintf(), ensures NULL-terminator
 int slprintf(char *dest, size_t size, const char *fmt, ...)
 {
 	// Forward to "normal" snprintf
@@ -57,6 +60,7 @@ int slprintf(char *dest, size_t size, const char *fmt, ...)
 	return ret;
 }
 
+// Converts 'src' to lowercase, stores in 'dest'.
 void sztolower(char *dest, const char *src, size_t max_len)
 {
 	for(size_t i = 0; i <= max_len; i++)
@@ -70,6 +74,7 @@ void sztolower(char *dest, const char *src, size_t max_len)
 	}
 }
 
+// Find with wildcards * and ?
 int wildfind(const std::string &format, const std::string &checkstring)
 {
 	if( checkstring.length() == 0 || format.length() == 0 )

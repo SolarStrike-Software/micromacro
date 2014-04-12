@@ -17,7 +17,6 @@ extern "C"
 }
 
 
-
 int Timer_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
@@ -32,6 +31,11 @@ int Timer_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	timer.getNow()
+	Returns:	table (int64)
+
+	Returns the current high-precision time as an int64 table.
+*/
 int Timer_lua::getNow(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -58,6 +62,13 @@ int Timer_lua::getNow(lua_State *L)
 	return 1;
 }
 
+/*	timer.deltaTime(int64 t2, int64 t1)
+	Returns:	number delta
+
+	Compares two high-precision time values (from timer.getNow())
+	and returns the amount of time that has elapsed between them
+	in seconds.
+*/
 int Timer_lua::deltaTime(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )

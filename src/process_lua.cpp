@@ -307,6 +307,13 @@ int Process_lua::cleanup(lua_State *)
 	return MicroMacro::ERR_OK;
 }
 
+
+/*	process.open(number processId)
+	Returns (on success):	userdata (handle)
+	Returns (on failure):	nil
+
+	Attempt to open a handle to a process for reading/writing.
+*/
 int Process_lua::open(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -346,6 +353,11 @@ int Process_lua::open(lua_State *L)
 	return 1;
 }
 
+/*	process.close(handle proc)
+	Returns:	nil
+
+	Closes an opened handle.
+*/
 int Process_lua::close(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -357,6 +369,14 @@ int Process_lua::close(lua_State *L)
 	return 0;
 }
 
+/*	process.read(handle proc, string type, number address [, length])
+	Returns (on success):	number|string
+	Returns (on failure):	nil
+
+	Attempt to read memory from process 'proc' at the given address.
+	'type' should be "byte", "ubyte", "short", "ushort", etc.
+	When reading a string, a maximum bytes to read should be given as 'length'.
+*/
 int Process_lua::read(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -480,6 +500,17 @@ int Process_lua::read(lua_State *L)
 	return 1;
 }
 
+/*	process.readPtr(handle proc, string type, number address, number|table offsets [, length])
+	Returns (on success):	number|string
+	Returns (on failure):	nil
+
+	Attempt to read memory from process 'proc' pointed to by address + offsets.
+	'type' should be "byte", "ubyte", "short", "ushort", etc.
+	When reading a string, a maximum bytes to read should be given as 'length'.
+
+	'offsets' can be a number (single offset) or a table (multiple offsets).
+	If a table is given for 'offsets', each value should be of type number.
+*/
 int Process_lua::readPtr(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -659,6 +690,28 @@ int Process_lua::readPtr(lua_State *L)
 	return 1;
 }
 
+/*	process.readBatch(handle proc, number address, string mask)
+	Returns (on success):	table
+	Returns (on failure):	nil
+
+	Attempt to read memory from process 'proc' at the given address.
+	'mask' dictates what type(s) and how many variables should be read.
+	Each character in 'mask' specifies the type to read or skip. A number
+	prefixing the type can dictate the number to read (number types) or
+	the length of a string.
+
+	Character		Type
+	b				byte
+	B				unsigned byte
+	s				short
+	S				unsigned short
+	i				int
+	I				unsigned int
+	f				float
+	F				double
+	c				string
+	_				(skip ahead; do not return this)
+*/
 int Process_lua::readBatch(lua_State *L)
 {
 	if( lua_gettop(L) != 3 )
@@ -836,6 +889,15 @@ int Process_lua::readBatch(lua_State *L)
 	return 1;
 }
 
+/*	process.write(handle proc, string type, number address)
+	Returns:	boolean
+
+	Attempt to write memory to process 'proc' at the given address.
+	'type' does not need to indicate signedness. (do not includes 'u' prefix)
+	Strings also do not require length to be given.
+
+	Returns true on success, false on failure.
+*/
 int Process_lua::write(lua_State *L)
 {
 	if( lua_gettop(L) != 3 && lua_gettop(L) != 4 )
@@ -914,6 +976,18 @@ int Process_lua::write(lua_State *L)
 	return 1;
 }
 
+/*	process.writePtr(handle proc, string type, number address, number|table offsets])
+	Returns:	boolean
+
+	Attempt to write memory to process 'proc' at the given address + offsets.
+
+	'offsets' can be a number (single offset) or a table (multiple offsets).
+	If a table is given for 'offsets', each value should be of type number.
+
+	See process.write() for more details.
+
+	Returns true on success, false on failure.
+*/
 int Process_lua::writePtr(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -1049,6 +1123,15 @@ int Process_lua::writePtr(lua_State *L)
 	return 1;
 }
 
+/*	process.findPattern(handle proc, number address, number length, string bitmask, string szmask)
+	Returns (on success):	number address
+	Returns (on failure):	nil
+
+	Attempt to find a pattern within a process, beginning at memory address 'address',
+	with a max scan length of 'length'.
+	'bitmask' should contain an 'x' for a match, and '?' for wildcard.
+	'szmask' should contain the actual data we are checking against for a match.
+*/
 int Process_lua::findPattern(lua_State *L)
 {
 	if( lua_gettop(L) != 5 )
@@ -1059,6 +1142,7 @@ int Process_lua::findPattern(lua_State *L)
 	checkType(L, LT_STRING, 4);
 	checkType(L, LT_STRING, 5);
 
+	// Get data, create buffers, etc.
 	size_t bmaskLen;
 	size_t szMaskLen;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
@@ -1082,8 +1166,10 @@ int Process_lua::findPattern(lua_State *L)
 		buffer = new unsigned char[bufferLen + 1];
 	} catch( std::bad_alloc &ba ) { badAllocation(); }
 
+	// Iterate through up until we reach the length of find something
 	for(unsigned long i = 0; i < scanLen; i++)
 	{
+		// Read a chunk (if needed)
 		unsigned int curAddr = address + i;
 		if( (curAddr - bufferStart + szMaskLen) >= curBufferLen )
 		{
@@ -1096,7 +1182,7 @@ int Process_lua::findPattern(lua_State *L)
 				continue;
 
 			if( !success && bytesRead < bufferLen )
-			{
+			{ // An error might have occurred, or we just couldn't complete the read. Ignore it.
 				debugMessage("findPattern() did not read full length. Got %d bytes, expected %d.",
 					(int)bytesRead, bufferLen);
 			}
@@ -1104,6 +1190,7 @@ int Process_lua::findPattern(lua_State *L)
 			curBufferLen = bytesRead;
 		}
 
+		// Check for matches
 		if( procDataCompare((const char *)&buffer[curAddr - bufferStart], bmask, szMask) )
 		{
 			found = true;
@@ -1121,6 +1208,12 @@ int Process_lua::findPattern(lua_State *L)
 	return 1;
 }
 
+/*	process.findByWindow(number hwnd)
+	Returns (on success):	number procId
+	Returns (on failure):	nil
+
+	Look up the process ID that owns the given window, return it.
+*/
 int Process_lua::findByWindow(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -1131,7 +1224,7 @@ int Process_lua::findByWindow(lua_State *L)
 	DWORD procId;
 	GetWindowThreadProcessId(hwnd, &procId);
 
-	if( procId == 0 )
+	if( procId == 0 ) // Nothing found
 	{ // Throw warning
 		lua_Debug ar;
 		lua_getstack(L, 1, &ar);
@@ -1149,12 +1242,19 @@ int Process_lua::findByWindow(lua_State *L)
 		e.type = EVENT_WARNING;
 		e.msg = buffer;
 		Macro::instance()->getEventQueue()->push(e);
+		return 0;
 	}
 
 	lua_pushnumber(L, (unsigned int)procId);
 	return 1;
 }
 
+/*	process.findByExe(string exeName)
+	Returns (on success):	number procId
+	Returns (on failure):	nil
+
+	Look up a process ID by checking for its running executable.
+*/
 int Process_lua::findByExe(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -1169,6 +1269,23 @@ int Process_lua::findByExe(lua_State *L)
 	int success = EnumProcesses(processes, sizeof(processes), &bytesReturned);
 	if( !success ) {
 		// Throw error
+		lua_Debug ar;
+		lua_getstack(L, 1, &ar);
+		lua_getinfo(L, "nSl", &ar);
+		int line = ar.currentline;
+		const char *script = ar.short_src;
+
+		int errCode = GetLastError();
+		char buffer[4096];
+		slprintf(buffer, sizeof(buffer)-1,
+			"Failure to enumerate processes. %s:%d, Error code %i (%s)",
+			script, line, errCode, getWindowsErrorString(errCode).c_str());
+
+		Event e;
+		e.type = EVENT_ERROR;
+		e.msg = buffer;
+		Macro::instance()->getEventQueue()->push(e);
+		return 0;
 	}
 
 	DWORD foundProcId = 0;
@@ -1186,7 +1303,7 @@ int Process_lua::findByExe(lua_State *L)
 		{
 			int errCode = GetLastError();
 			if( errCode != ERROR_ACCESS_DENIED ) // Skip over processes we cannot access
-			{ // Throw an error
+			{
 
 			}
 		}
@@ -1232,6 +1349,13 @@ int Process_lua::findByExe(lua_State *L)
 	return 1;
 }
 
+/*	process.getModuleAddress(handle proc, string moduleName)
+	Returns (on success):	number address
+	Returns (on failure):	nil
+
+	Look up the address of a module within a process and return
+	its origin address.
+*/
 int Process_lua::getModuleAddress(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -1304,6 +1428,12 @@ int Process_lua::getModuleAddress(lua_State *L)
 	return 1;
 }
 
+/*	process.attachInput(number hwnd)
+	Returns:	boolean
+
+	Attach our input thread to the target window.
+	Returns true on success, false on failure.
+*/
 int Process_lua::attachInput(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -1343,6 +1473,12 @@ int Process_lua::attachInput(lua_State *L)
 	return 1;
 }
 
+/*	process.detachInput(number hwnd)
+	Returns:	boolean
+
+	Detach our input thread from the target window.
+	Returns true on success, false on failure.
+*/
 int Process_lua::detachInput(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )

@@ -33,6 +33,12 @@ int Math_addon::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	math.distance(x1, y1, x2, y2)
+	Returns:	number
+
+	Fairly standard distance function: returns the
+	distance between two points.
+*/
 int Math_addon::distance(lua_State *L)
 {
 	if( lua_gettop(L) != 4 )
@@ -51,6 +57,16 @@ int Math_addon::distance(lua_State *L)
 	return 1;
 }
 
+/*	math.vector2d([number x, number y])
+	Returns:	table (class)
+
+	Create a new table (class) of vector2d.
+	If x and y are given, the new vector2d retains
+	the given values.
+
+	The vector2d class contains metamethods for
+	operations such as vector scaling and dot product.
+*/
 int Math_addon::vector2d(lua_State *L)
 {
 	int top = lua_gettop(L);

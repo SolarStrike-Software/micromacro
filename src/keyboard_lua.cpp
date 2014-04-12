@@ -38,6 +38,12 @@ int Keyboard_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	keyboard.pressed(number vk)
+	Returns:	boolean
+
+	If the given key identified by vk was pressed
+	since last polling, returns true. Else, false.
+*/
 int Keyboard_lua::pressed(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -52,6 +58,12 @@ int Keyboard_lua::pressed(lua_State *L)
 	return 1;
 }
 
+/*	keyboard.released(number vk)
+	Returns:	boolean
+
+	If the given key identified by vk was released
+	since last polling, returns true. Else, false.
+*/
 int Keyboard_lua::released(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -66,6 +78,12 @@ int Keyboard_lua::released(lua_State *L)
 	return 1;
 }
 
+/*	keyboard.isDown(number vk)
+	Returns:	boolean
+
+	If the given key identified by vk is currently
+	held down (as of last polling), returns true. Else, false.
+*/
 int Keyboard_lua::isDown(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -80,6 +98,12 @@ int Keyboard_lua::isDown(lua_State *L)
 	return 1;
 }
 
+/*	keyboard.getToggleState(number vk)
+	Returns:	boolean
+
+	Returns the toggle state (true = on, false = off)
+	for the given key identified by vk.
+*/
 int Keyboard_lua::getToggleState(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -94,6 +118,13 @@ int Keyboard_lua::getToggleState(lua_State *L)
 	return 1;
 }
 
+/*	keyboard.press(number vk [, boolean async])
+	Returns:	nil
+
+	Attempts to send a synthetic press for the given key.
+	If async is true (default), it is queued for automatic
+	release. Otherwise, execution is blocked while waiting for release.
+*/
 int Keyboard_lua::press(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -112,6 +143,11 @@ int Keyboard_lua::press(lua_State *L)
 	return 0;
 }
 
+/*	keyboard.hold(number vk)
+	Returns:	nil
+
+	Attempts to send a synthetic hold for the given key.
+*/
 int Keyboard_lua::hold(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -124,6 +160,11 @@ int Keyboard_lua::hold(lua_State *L)
 	return 0;
 }
 
+/*	keyboard.release(number vk)
+	Returns:	nil
+
+	Attempts to send a synthetic release for the given key.
+*/
 int Keyboard_lua::release(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -136,6 +177,14 @@ int Keyboard_lua::release(lua_State *L)
 	return 0;
 }
 
+/*	keyboard.virtualPress(number hwnd, number vk [, boolean async])
+	Returns:	nil
+
+	Attempts to send a synthetic press for the given key, and sends
+	that input directly to the given window.
+	If async is true (default), it is queued for automatic
+	release. Otherwise, execution is blocked while waiting for release.
+*/
 int Keyboard_lua::virtualPress(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -156,6 +205,12 @@ int Keyboard_lua::virtualPress(lua_State *L)
 	return 0;
 }
 
+/*	keyboard.virtualHold(number hwnd, number vk)
+	Returns:	nil
+
+	Attempts to send a synthetic hold for the given key, and sends
+	that input directly to the given window.
+*/
 int Keyboard_lua::virtualHold(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -171,6 +226,12 @@ int Keyboard_lua::virtualHold(lua_State *L)
 	return 0;
 }
 
+/*	keyboard.virtualRelease(number hwnd, number vk)
+	Returns:	nil
+
+	Attempts to send a synthetic release for the given key, and sends
+	that input directly to the given window.
+*/
 int Keyboard_lua::virtualRelease(lua_State *L)
 {
 	int top = lua_gettop(L);

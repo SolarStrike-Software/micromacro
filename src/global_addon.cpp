@@ -45,6 +45,11 @@ int Global_addon::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	printf(string fmt, ...)
+	Returns:	nil
+
+	C-style formatted output. That's all.
+*/
 int Global_addon::printf(lua_State *L)
 {
 	//int top = lua_gettop(L);
@@ -55,7 +60,11 @@ int Global_addon::printf(lua_State *L)
 	return 0;
 }
 
-// Takes vararg and retuns them as a table
+/*	unpack2(...)
+	Returns:	table
+
+	Takes varargs and returns them as a table
+*/
 int Global_addon::unpack2(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -73,6 +82,16 @@ int Global_addon::unpack2(lua_State *L)
 	return 1;
 }
 
+/*	include(string filename [, boolean force])
+	Returns:	result of file
+
+	"include" (dofile) a file.
+	If 'force' is false or ungiven, this will not include
+	the same file multiple times.
+
+	NOTE: This function modified the CWD, both
+	before AND after loading the target file.
+*/
 int Global_addon::include(lua_State *L)
 {
 	bool forceRun = false;

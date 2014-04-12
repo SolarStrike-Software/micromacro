@@ -120,7 +120,7 @@ int Ncurses_lua::init(lua_State *L)
 	wclear(::stdscr);
 	wrefresh(::stdscr);
 
-	//lua_getglobal(L, NCURSES_MODULE_NAME);
+	// Create a new window, put it on the Lua stack
 	WINDOW **w = (WINDOW **)lua_newuserdata(L, sizeof(WINDOW *));
 	*w = ::stdscr;
 
@@ -128,10 +128,8 @@ int Ncurses_lua::init(lua_State *L)
 	luaL_getmetatable(L, LuaType::metatable_ncursesWindow);
 	lua_setmetatable(L, -2);
 
-	// Set Lua var
+	// Set Lua var (global namespace)
 	lua_setglobal(L, Ncurses_lua::stdscr_name);
-	//lua_setfield(L, -2, Ncurses_lua::stdscr_name);
-	//lua_pop(L, 1);
 
 	initialized = true;
 	return 0;
@@ -160,82 +158,96 @@ int Ncurses_lua::cleanup(lua_State *L)
 	return 0;
 }
 
+/*	ncurses.print(window win, string str)
+	Returns:	nil
+
+	Prints 'str' onto window 'win' at current cursor position.
+	Remember to refresh the screen afterwards!
+*/
 int Ncurses_lua::print(lua_State *L)
 {
 	if( lua_gettop(L) < 2 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_STRING, 2);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
 
 	wprintw(*pw, lua_tostring(L, 2));
 	return 0;
 }
 
+/*	ncurses.refresh(window win)
+	Returns:	nil
+
+	Redraw the given window to commit our changes.
+*/
 int Ncurses_lua::refresh(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
+
 	wrefresh(*pw);
 	return 0;
 }
 
+/*	ncurses.scrollok(window win, boolean scrolling)
+	Returns:	nil
+
+	Sets (or unsets) scrolling on the given window.
+*/
 int Ncurses_lua::scrollok(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_BOOLEAN, 2);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
+
 	::scrollok(*pw, (bool)lua_toboolean(L, 2));
 	return 0;
 }
 
+/*	ncurses.clear(window win)
+	Returns:	nil
+
+	Erase the contents of window 'win'.
+*/
 int Ncurses_lua::clear(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
+
 	werase(*pw);
 	return 0;
 }
 
+/*	ncurses.move(window win, number y, number x)
+	Returns:	nil
+
+	Moves the position of the cursor to y,x in the given window.
+*/
 int Ncurses_lua::move(lua_State *L)
 {
 	if( lua_gettop(L) != 3 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_NUMBER, 2);
 	checkType(L, LT_NUMBER, 3);
 
 	WINDOW **pw = NULL;
-	/*if( lua_isnil(L, 1) )
-		pw = &::stdscr;
-	else*/
-		pw = (WINDOW **)lua_touserdata(L, 1);
+	pw = (WINDOW **)lua_touserdata(L, 1);
 
 	int y = (int)lua_tonumber(L, 2);
 	int x = (int)lua_tonumber(L, 3);
@@ -245,6 +257,14 @@ int Ncurses_lua::move(lua_State *L)
 	return 0;
 }
 
+/*	ncurses.createWindow(number sy, number sx, number width, number height)
+	Returns (on success):	userdata (window)
+	Returns (on failure):	nil
+
+	Creates a new Ncurses window and returns it.
+	'sy' and 'sx' indicate the top-left corner of the window (in characters).
+	'width' and 'height' represent the window's width/height in characters.
+*/
 int Ncurses_lua::createWindow(lua_State *L)
 {
 	if( lua_gettop(L) != 4 )
@@ -293,7 +313,8 @@ int Ncurses_lua::createWindow(lua_State *L)
 
 	return 1;
 }
-/*
+
+/* NOTE: This seems broken in this version of Ncurses... disabled for now
 void Ncurses_lua::hideCursor()
 {
 	CONSOLE_CURSOR_INFO cci;
@@ -314,6 +335,10 @@ void Ncurses_lua::showCursor()
 	curs_set(1);
 }
 */
+
+/*	NOTE: Not exposed to Lua
+	Discards buffered keyboard input for given window
+*/
 void Ncurses_lua::flush(WINDOW *pw)
 {
 	::flushinp(); // Flush Ncurses input
@@ -327,6 +352,10 @@ void Ncurses_lua::flush(WINDOW *pw)
 	nodelay(pw, false);
 }
 
+/* NOTE: Not exposed to Lua
+	This is essentially a non-broken getline() for a given
+	Ncurses window.
+*/
 void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 {
 	unsigned int pos = 0;
@@ -410,6 +439,14 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 	buffer[len] = 0; // Ensure NULL terminator
 }
 
+/*	ncurses.getString(window win)
+	Returns:	string
+
+	Prompt the user for some input on an Ncurses window.
+	Returns that input as a string value.
+
+	NOTE: This function is blocking!
+*/
 int Ncurses_lua::getString(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -465,6 +502,11 @@ int Ncurses_lua::setColor(lua_State *L)
 }
 */
 
+/*	ncurses.setPair(number pairIndex, number foregroundColor, number backgroundColor)
+	Returns:	nil
+
+	Modified the color (foreground/background) pair at a given index.
+*/
 int Ncurses_lua::setPair(lua_State *L)
 {
 	if( lua_gettop(L) != 3 )
@@ -493,6 +535,11 @@ int Ncurses_lua::setPair(lua_State *L)
 	return 0;
 }
 
+/*	ncurses.getPair(number pairIndex)
+	Returns:	number (foreground/background pair)
+
+	Returns the attribute mask of a given color pair.
+*/
 int Ncurses_lua::getPair(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -509,9 +556,14 @@ int Ncurses_lua::getPair(lua_State *L)
 	return 1;
 }
 
+/*	ncurses.attributeOn(window win, number attrib)
+	Returns:	nil
+
+	Turns an attribute (identified by 'attrib') on for the given window.
+*/
 int Ncurses_lua::attributeOn(lua_State *L)
 {
-	if( lua_gettop(L) != 3 )
+	if( lua_gettop(L) != 2 )
 		wrongArgs(L);
 	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_NUMBER, 2);
@@ -524,9 +576,15 @@ int Ncurses_lua::attributeOn(lua_State *L)
 	return 0;
 }
 
+
+/*	ncurses.attributeOff(window win, number attrib)
+	Returns:	nil
+
+	Turns an attribute (identified by 'attrib') off for the given window.
+*/
 int Ncurses_lua::attributeOff(lua_State *L)
 {
-	if( lua_gettop(L) != 3 )
+	if( lua_gettop(L) != 2 )
 		wrongArgs(L);
 	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_NUMBER, 2);
@@ -539,6 +597,12 @@ int Ncurses_lua::attributeOff(lua_State *L)
 	return 0;
 }
 
+
+/*	ncurses.setAttribute(window win, number attrib)
+	Returns:	nil
+
+	Sets an attribute (identified by 'attrib') on the given window.
+*/
 int Ncurses_lua::setAttribute(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -554,6 +618,12 @@ int Ncurses_lua::setAttribute(lua_State *L)
 	return 0;
 }
 
+
+/*	ncurses.setBackground(window win, number attrib)
+	Returns:	nil
+
+	Sets an background on the given window to the attribute mask.
+*/
 int Ncurses_lua::setBackground(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -570,6 +640,13 @@ int Ncurses_lua::setBackground(lua_State *L)
 	return 0;
 }
 
+
+/*	ncurses.getWindowSize(window win)
+	Returns:	number y
+				number x
+
+	Returns the size of a window in characters.
+*/
 int Ncurses_lua::getWindowSize(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )

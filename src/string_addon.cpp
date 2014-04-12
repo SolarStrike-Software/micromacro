@@ -44,6 +44,12 @@ int String_addon::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	string.explode(string str, string delim)
+	Returns:	table
+
+	Splits string 'str' by delimiter 'delim'.
+	Returns results as a table.
+*/
 int String_addon::explode(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -75,6 +81,11 @@ int String_addon::explode(lua_State *L)
 	return 1;
 }
 
+/*	string.trim(string str)
+	Returns:	string
+
+	"Trim" whitespace off head and tail of string 'str', return result.
+*/
 int String_addon::trim(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -90,6 +101,17 @@ int String_addon::trim(lua_State *L)
 	return 1;
 }
 
+/*	string.random(string type, number length)
+	Returns:	string
+
+	Creates a random string based on the given type
+	and with 'length' characters.
+	'type' should be:
+		"alnum"		Alpha-numeric (both upper and lower case) characters
+		"letters"	Letters only (both upper and lower case)
+		"numbers"	Numeric characters only
+*/
+// TODO: Add table option for type
 int String_addon::random(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -130,6 +152,12 @@ int String_addon::random(lua_State *L)
 	return 1;
 }
 
+/*	string.toUnicode(string str)
+	Returns:	string
+
+	Attempt to convert the input string 'str' to a
+	wide string.
+*/
 int String_addon::toUnicode(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )

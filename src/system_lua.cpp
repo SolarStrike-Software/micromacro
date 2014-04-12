@@ -43,6 +43,11 @@ int System_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	system.rest(number msec)
+	Returns:	nil
+
+	Put the process to sleep for 'msec' milliseconds.
+*/
 int System_lua::rest(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -55,6 +60,11 @@ int System_lua::rest(lua_State *L)
 	return 0;
 }
 
+/*	system.exec(string cmd)
+	Returns:	string
+
+	Run the given command and return its output as a string.
+*/
 int System_lua::exec(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -77,6 +87,11 @@ int System_lua::exec(lua_State *L)
 	return 1;
 }
 
+/*	system.getClipboard()
+	Returns:	string
+
+	Returns the system clipboard data as a string.
+*/
 int System_lua::getClipboard(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -96,13 +111,13 @@ int System_lua::getClipboard(lua_State *L)
 	else
 	{
 		pClip = (CHAR *)GlobalLock(hGlobal);
-		if( !pClip ) { // Throw error
+		if( !pClip ) { // Throw error (see below)
 			CloseClipboard();
 			success = false;
 		}
 	}
 
-	if( !success ) // Throw error
+	if( !success ) // Throw error (for real this time)
 	{
 		lua_Debug ar;
 		lua_getstack(L, 1, &ar);
@@ -133,6 +148,12 @@ int System_lua::getClipboard(lua_State *L)
 	return 1;
 }
 
+/*	system.setClipboard(string data)
+	Returns:	boolean
+
+	Sets the system's clipboard to 'data'.
+	Returns true on success, false on failure.
+*/
 int System_lua::setClipboard(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -190,6 +211,11 @@ int System_lua::setClipboard(lua_State *L)
 	return 1;
 }
 
+/*	system.getActiveCodePage()
+	Returns:	number	acp
+
+	Returns the system's current code page as an integer.
+*/
 int System_lua::getActiveCodePage(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -198,6 +224,11 @@ int System_lua::getActiveCodePage(lua_State *L)
 	return 1;
 }
 
+/*	system.getConsoleCodePage()
+	Returns:	number	ccp
+
+	Returns the console's current code page as an integer.
+*/
 int System_lua::getConsoleCodePage(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -206,10 +237,17 @@ int System_lua::getConsoleCodePage(lua_State *L)
 	return 1;
 }
 
+/*	system.setPriority(string priority)
+	Returns:	nil
+
+	Change the process's priority.
+	'priority' should be "high", "low", or "normal" (default)
+*/
 int System_lua::setPriority(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
+	checkType(L, LT_STRING, 1);
 
 	unsigned int priority = 0;
 	const char *priorityStr = lua_tostring(L, 1);
@@ -224,6 +262,19 @@ int System_lua::setPriority(lua_State *L)
 	return 0;
 }
 
+/*	system.getConsoleAttributes()
+	Returns (on success):	number windowWidth
+							number windowHeight
+							number bufferWidth
+							number bufferHeight
+							number cursorX
+							number cursorY
+
+	Returns (on failure): nil
+
+	Returns a set of console attributes.
+	Values are in characters, not pixels!
+*/
 int System_lua::getConsoleAttributes(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -244,6 +295,13 @@ int System_lua::getConsoleAttributes(lua_State *L)
 		return 0; // Error
 }
 
+/*	system.getConsoleAttributes(number windowWidth, number windowHeight,
+								number bufferWidth, number bufferHeight)
+	Returns:	nil
+
+	Modify the console's attributes.
+	Values should be in characters, not pixels.
+*/
 int System_lua::setConsoleAttributes(lua_State *L)
 {
 	int args = lua_gettop(L);

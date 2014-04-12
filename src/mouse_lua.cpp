@@ -47,6 +47,13 @@ int Mouse_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	mouse.pressed(number vk)
+	Returns:	boolean
+
+	If the mouse button identified by vk was
+	pressed since last polling, returns true.
+	Else, returns false.
+*/
 int Mouse_lua::pressed(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -61,6 +68,13 @@ int Mouse_lua::pressed(lua_State *L)
 	return 1;
 }
 
+/*	mouse.released(number vk)
+	Returns:	boolean
+
+	If the mouse button identified by vk was
+	released since last polling, returns true.
+	Else, returns false.
+*/
 int Mouse_lua::released(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -75,6 +89,13 @@ int Mouse_lua::released(lua_State *L)
 	return 1;
 }
 
+/*	mouse.isDown(number vk)
+	Returns:	boolean
+
+	If the mouse button identified by vk is
+	currently being held down (as of last polling),
+	returns true. Else, returns false.
+*/
 int Mouse_lua::isDown(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -89,6 +110,13 @@ int Mouse_lua::isDown(lua_State *L)
 	return 1;
 }
 
+/*	mouse.press(number vk [, boolean async])
+	Returns:	nil
+
+	Attempts to send a synthetic press for the given button.
+	If async is true (default), it is queued for automatic
+	release. Otherwise, execution is blocked while waiting for release.
+*/
 int Mouse_lua::press(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -107,6 +135,11 @@ int Mouse_lua::press(lua_State *L)
 	return 0;
 }
 
+/*	mouse.hold(number vk)
+	Returns:	nil
+
+	Attempts to send a synthetic hold for the given button.
+*/
 int Mouse_lua::hold(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -119,7 +152,11 @@ int Mouse_lua::hold(lua_State *L)
 	return 0;
 }
 
+/*	mouse.release(number vk)
+	Returns:	nil
 
+	Attempts to send a synthetic release for the given button.
+*/
 int Mouse_lua::release(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -132,6 +169,13 @@ int Mouse_lua::release(lua_State *L)
 	return 0;
 }
 
+/*	mouse.move(number dx, number dy)
+	Returns:	nil
+
+	Attempts to move the physical mouse cursor.
+	'dx' and 'dy' are the amount to move in pixels in
+	the x and y axis, respectively.
+*/
 int Mouse_lua::move(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -153,6 +197,14 @@ int Mouse_lua::move(lua_State *L)
 	return 0;
 }
 
+/*	mouse.wheelMove(number delta)
+	Returns:	nil
+
+	Attempts to move the physical mouse wheel.
+	'delta' specified the amount to move; 120 = 1 wheel click.
+	If 'delta' is positive, moves the wheel up (away from user).
+	If 'delta' is negitive, moves the wheel down (towards user).
+*/
 int Mouse_lua::wheelMove(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -168,6 +220,19 @@ int Mouse_lua::wheelMove(lua_State *L)
 	return 0;
 }
 
+/*	mouse.setPosition(number x, number y)
+	Returns:	nil
+
+	Attempts to set the physical mouse wheel to
+	the given coordinates. 'x' and 'y' are
+	specified in pixels.
+
+	NOTE: Microsoft, in their infinite wisdom,
+	decided to use some goofy, brain-dead system
+	for this and we lose accuracy when normalizing
+	the screen coordinates. As a result, the actual
+	cursor may be 1 or 2 pixels off our target.
+*/
 int Mouse_lua::setPosition(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -195,6 +260,12 @@ int Mouse_lua::setPosition(lua_State *L)
 	return 0;
 }
 
+/*	mouse.getPosition()
+	Returns:	number x
+				number y
+
+	Returns the position of the physical mouse cursor, in pixels.
+*/
 int Mouse_lua::getPosition(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -207,6 +278,14 @@ int Mouse_lua::getPosition(lua_State *L)
 	return 2;
 }
 
+/*	mouse.virtualPress(number hwnd, number vk [, boolean async])
+	Returns:	nil
+
+	Attempts to send a synthetic press for the given button, and sends
+	that input directly to the given window.
+	If async is true (default), it is queued for automatic
+	release. Otherwise, execution is blocked while waiting for release.
+*/
 int Mouse_lua::virtualPress(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -227,6 +306,12 @@ int Mouse_lua::virtualPress(lua_State *L)
 	return 0;
 }
 
+/*	mouse.virtualHold(number hwnd, number vk)
+	Returns:	nil
+
+	Attempts to send a synthetic hold for the given button, and sends
+	that input directly to the given window.
+*/
 int Mouse_lua::virtualHold(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -242,6 +327,12 @@ int Mouse_lua::virtualHold(lua_State *L)
 	return 0;
 }
 
+/*	mouse.virtualRelease(number hwnd, number vk)
+	Returns:	nil
+
+	Attempts to send a synthetic release for the given button, and sends
+	that input directly to the given window.
+*/
 int Mouse_lua::virtualRelease(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -257,6 +348,13 @@ int Mouse_lua::virtualRelease(lua_State *L)
 	return 0;
 }
 
+/*	mouse.virtualMove(number dx, number dy)
+	Returns:	nil
+
+	Moves the virtual mouse cursor by dx, dy.
+	This does not affect the physical mouse cursor.
+	See mouse.move() for more details.
+*/
 int Mouse_lua::virtualMove(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -275,6 +373,12 @@ int Mouse_lua::virtualMove(lua_State *L)
 	return 0;
 }
 
+/*	mouse.virtualWheelMove(number delta)
+	Returns:	nil
+
+	Moves the virtual mouse wheel by 'delta'.
+	See mouse.wheelMove() for more details.
+*/
 int Mouse_lua::virtualWheelMove(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -294,6 +398,13 @@ int Mouse_lua::virtualWheelMove(lua_State *L)
 	return 0;
 }
 
+/*	mouse.setVirtualPosition(number x, number y)
+	Returns:	nil
+
+	Sets the virtual mouse cursor to x, y.
+	This does not affect the physical mouse cursor.
+	See mouse.setPosition() for more details.
+*/
 int Mouse_lua::setVirtualPosition(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -309,6 +420,13 @@ int Mouse_lua::setVirtualPosition(lua_State *L)
 	return 0;
 }
 
+/*	mouse.getVirtualPosition()
+	Returns:	number x
+				number y
+
+	Returns the position of the virtual mouse cursor.
+	See mouse.getPosition() for more details.
+*/
 int Mouse_lua::getVirtualPosition(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )

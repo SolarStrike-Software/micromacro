@@ -19,12 +19,15 @@ extern "C"
 	#include <lualib.h>
 }
 
+#include <sys/stat.h>
+
 int Filesystem_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
 		{"directoryExists", Filesystem_lua::directoryExists},
 		{"fileExists", Filesystem_lua::fileExists},
 		{"getDirectory", Filesystem_lua::getDirectory},
+		{"isDirectory", Filesystem_lua::isDirectory},
 		{"fixSlashes", Filesystem_lua::fixSlashes},
 		{"getOpenFileName", Filesystem_lua::getOpenFileName},
 		{"getSaveFileName", Filesystem_lua::getSaveFileName},
@@ -39,6 +42,12 @@ int Filesystem_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	filesystem.directoryExists(string path)
+	Returns:	boolean
+
+	If the given directory exists, returns true.
+	Else, returns false.
+*/
 int Filesystem_lua::directoryExists(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -52,6 +61,12 @@ int Filesystem_lua::directoryExists(lua_State *L)
 	return 1;
 }
 
+/*	filesystem.fileExists(string path)
+	Returns:	boolean
+
+	If the given file exists, returns true.
+	Else, returns false.
+*/
 int Filesystem_lua::fileExists(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -65,6 +80,14 @@ int Filesystem_lua::fileExists(lua_State *L)
 	return 1;
 }
 
+/*	filesystem.getDirectory(string path)
+	Returns (on success):	table (of strings)
+	Returns (on failure):	nil
+
+	If the given directory does not exist, this function fails.
+	Otherwise, returns a table of filenames & directories
+	contained in this path. This does not include "." and ".."
+*/
 int Filesystem_lua::getDirectory(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -87,6 +110,34 @@ int Filesystem_lua::getDirectory(lua_State *L)
 	return 1;
 }
 
+/*	filesystem.isDirectory(string path)
+	Returns: boolean
+
+	If the given path is a directory, returns true.
+	Else, returns false.
+*/
+int Filesystem_lua::isDirectory(lua_State *L)
+{
+	if( lua_gettop(L) != 1 )
+		wrongArgs(L);
+	const char *path = lua_tostring(L, 1);
+
+	struct stat dstat;
+	stat(path, &dstat);
+	bool isDir = S_ISDIR(dstat.st_mode);
+
+	lua_pushboolean(L, isDir);
+	return 1;
+}
+
+/*	filesystem.fixSlashes(string path [, boolean posix])
+	Returns:	string
+
+	Convert slashes within 'path' to / or \.
+	If posix is true (default), converts backslashes(\)
+	to forward slashes(/). Else, converts forward slashes
+	to backslashes.
+*/
 int Filesystem_lua::fixSlashes(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -110,6 +161,16 @@ int Filesystem_lua::fixSlashes(lua_State *L)
 	return 1;
 }
 
+/*	filesystem.getOpenFileName([string defaultfilename [, string filter]])
+	Returns (on success):	string
+	Returns (on failure):	nil
+
+	Displays the standard open file dialog.
+	'defaultfilename' can contain a full path to the default file.
+	'filter' should be properly formatted: Split key/value pairs with NULL, terminate with double NULL
+
+	If the user cancels the dialog, this function fails and returns nil.
+*/
 int Filesystem_lua::getOpenFileName(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -213,6 +274,13 @@ int Filesystem_lua::getOpenFileName(lua_State *L)
 	return retCount;
 }
 
+/*	filesystem.getSaveFileName([string defaultfilename [, string filter]])
+	Returns (on success):	string
+	Returns (on failure):	nil
+
+	Same as getOpenFileName, except with a save dialog.
+	See getOpenFileName for more information.
+*/
 int Filesystem_lua::getSaveFileName(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -316,6 +384,11 @@ int Filesystem_lua::getSaveFileName(lua_State *L)
 	return retCount;
 }
 
+/*	filesystem.getCWD()
+	Returns:	string
+
+	Returns the current working directory (CWD).
+*/
 int Filesystem_lua::getCWD(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -330,6 +403,11 @@ int Filesystem_lua::getCWD(lua_State *L)
 	return 1;
 }
 
+/*	filesystem.setCWD(string path)
+	Returns:	nil
+
+	Modify the current working directory (CWD) to the given path.
+*/
 int Filesystem_lua::setCWD(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )

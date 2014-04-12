@@ -23,6 +23,7 @@ extern "C"
 
 const char *windowThumbnailClassName = "ThumbnailClass";
 
+// Helper function to Window_lua::find()
 BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 {
 	EnumWindowPair *winpair = (EnumWindowPair *)lparam;
@@ -75,6 +76,7 @@ BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 		return true;
 }
 
+// Helper function to Window_lua::findList()
 BOOL CALLBACK Window_lua::_findListProc(HWND hwnd, LPARAM lparam)
 {
 	EnumWindowListPair *winpair = (EnumWindowListPair *)lparam;
@@ -175,6 +177,17 @@ int Window_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	window.find(string title [, string classname])
+	Returns (on success):	number hwnd
+	Returns (on failure):	nil
+
+	Finds a window's HWND based on its title (not case-sensitive),
+	and (optionally) its classname (case-sensitive).
+	'title' and 'classname' can contain wildcards * and ?.
+
+	Returns the first match found.
+	If no match was found, returns nil.
+*/
 int Window_lua::find(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -200,7 +213,6 @@ int Window_lua::find(lua_State *L)
 
 	// Convert the search name to lowercase for matching
 	sztolower(name_lower, name, nameLen);
-	//sztolower(classname_lower, classname, classnameLen);
 
 	EnumWindowPair searchpair;
 	searchpair.windowname = name_lower;
@@ -237,6 +249,17 @@ int Window_lua::find(lua_State *L)
 	return 1;
 }
 
+/*	window.findList(string title [, string classname])
+	Returns (on success):	table (of numbers)
+	Returns (on failure):	nil
+
+	Finds a list of windows based on title (not case-sensitive),
+	and (optionally) classname (case-sensitive).
+	'title' and 'classname' can contain wildcards * and ?.
+
+	Returns a table of HWNDs (numbers).
+	If no match was found, returns nil.
+*/
 int Window_lua::findList(lua_State *L)
 {
 	int top = lua_gettop(L);
@@ -284,16 +307,34 @@ int Window_lua::findList(lua_State *L)
 	return 1;
 }
 
+/*	window.getParent(number hwnd)
+	Returns (on success):	number hwnd
+	Returns (on failure):	nil
+
+	Returns a window's parent, or nil on error.
+*/
 int Window_lua::getParent(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 	HWND hwnd = (HWND)lua_tointeger(L, 1);
-	lua_pushinteger(L, (int)::GetParent(hwnd));
+
+	HWND parent = ::GetParent(hwnd);
+
+	if( parent == NULL ) // No parent or error occurred
+		return 0;
+
+	lua_pushinteger(L, (int)parent);
 	return 1;
 }
 
+/*	window.getTitle(number hwnd)
+	Returns (on success):	string
+	Returns (on failure):	nil
+
+	Returns a window's title.
+*/
 int Window_lua::getTitle(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -329,6 +370,12 @@ int Window_lua::getTitle(lua_State *L)
 	return 1;
 }
 
+/*	window.setTitle(number hwnd, string title)
+	Returns:	boolean
+
+	Sets a window's title.
+	Returns true on success, false on failure.
+*/
 int Window_lua::setTitle(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -369,6 +416,12 @@ int Window_lua::setTitle(lua_State *L)
 	return 1;
 }
 
+/*	window.getClassName(number hwnd)
+	Returns (on success):	string
+	Returns (on failure):	nil
+
+	Returns a window's title.
+*/
 int Window_lua::getClassName(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -404,6 +457,11 @@ int Window_lua::getClassName(lua_State *L)
 	return 1;
 }
 
+/*	window.valid(number hwnd)
+	Returns:	boolean
+
+	Returns true if hwnd is a valid window handle, or false otherwise.
+*/
 int Window_lua::valid(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -415,6 +473,16 @@ int Window_lua::valid(lua_State *L)
 	return 1;
 }
 
+/*	window.getRect(number hwnd)
+	Returns (on success):	number x
+							number y
+							number width
+							number height
+
+	Returns (on failure):	nil
+
+	Returns the position and size of a window's client area.
+*/
 int Window_lua::getRect(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -438,6 +506,54 @@ int Window_lua::getRect(lua_State *L)
 	return 4;
 }
 
+/*	window.setRect(number hwnd, number x, number y, number width, number height)
+	Returns:	nil
+
+	Change the position and size of a window with handle 'hwnd'.
+*/
+int Window_lua::setRect(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top < 3 || top > 5 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1);
+	checkType(L, LT_NUMBER, 2);
+	checkType(L, LT_NUMBER, 3);
+	if( top >= 4 )
+		checkType(L, LT_NUMBER | LT_NIL, 4);
+	if( top >= 5 )
+		checkType(L, LT_NUMBER | LT_NIL, 5);
+
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	RECT winrect;
+	GetWindowRect(hwnd, &winrect);
+	unsigned int flags = SWP_ASYNCWINDOWPOS|SWP_SHOWWINDOW;
+
+	int origLeft = winrect.left;
+	int origTop = winrect.top;
+
+	winrect.left = lua_tointeger(L, 2);
+	winrect.top = lua_tointeger(L, 3);
+	if( lua_isnumber(L, 4) )
+		winrect.right = lua_tointeger(L, 4);
+	else
+		winrect.right = winrect.right - origLeft;
+	if( lua_isnumber(L, 5) )
+		winrect.bottom = lua_tointeger(L, 5);
+	else
+		winrect.bottom = winrect.bottom - origTop;
+
+	SetWindowPos(hwnd, HWND_NOTOPMOST, winrect.left, winrect.top, winrect.right, winrect.bottom, flags);
+
+	return 0;
+}
+
+/*	window.show(number hwnd, number cmd)
+	Returns:	nil
+
+	Show/hide/minimize/maximize/whatever with the window.
+	See: http://msdn.microsoft.com/en-us/library/windows/desktop/ms633548%28v=vs.85%29.aspx
+*/
 int Window_lua::show(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -475,6 +591,14 @@ int Window_lua::show(lua_State *L)
 	return 0;
 }
 
+/*	window.flash(number hwnd, number flashCount)
+	Returns:	nil
+
+	"Flash" the window to attempt to grab the user's attention.
+	if 'flashCount' is < 0, stop flashing
+	if 'flashCount' is 0, flash until user focuses the window
+	if 'flashCount' is > 0, flash this many times
+*/
 int Window_lua::flash(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -505,7 +629,8 @@ int Window_lua::flash(lua_State *L)
 
 	return 0;
 }
-/*
+
+/* NOTE: We don't need thse functions right now
 int Window_lua::openDC(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -559,6 +684,17 @@ int Window_lua::closeDC(lua_State *L)
 }
 */
 
+/*	window.getPixel(number hwnd, number x, number y)
+	Returns (on success):	number r
+							number g
+							number b
+
+	Returns (on failure):	nil
+
+	Get the color of a pixel at (x,y) inside window 'hwnd',
+	and return the color split into red, green, and blue channels.
+	r, g, and b results will be between 0 and 255.
+*/
 int Window_lua::getPixel(lua_State *L)
 {
 	if( lua_gettop(L) != 3 )
@@ -601,9 +737,28 @@ int Window_lua::getPixel(lua_State *L)
 	return 3;
 }
 
+/*	window.pixelSearch(number hwnd, number r, number b, number b,
+						number x1, number y1, number x2, number y2,
+						number accuracy, number step)
+
+	Returns (on success):	number x
+							number y
+
+	Returns (on failure):	nil
+
+	Search the given window for a pixel that matches r,g,b
+	within the rectangle outlined by (x1,y1) -> (x2,y2)
+
+	'accuracy' is how many units each channel must be within
+	the given color to generate a match. Default: 1
+
+	'step' is the step size (distance between pixels to search).
+	Default: 1
+*/
 int Window_lua::pixelSearch(lua_State *L)
 {
-	if( lua_gettop(L) != 10 )
+	int top = lua_gettop(L);
+	if( top >= 8 && top <= 10 )
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1); // HWND
 	checkType(L, LT_NUMBER, 2); // R
@@ -622,8 +777,8 @@ int Window_lua::pixelSearch(lua_State *L)
 	RECT clientRect;
 	int r1, g1, b1, r2, g2, b2;
 	int x1, y1, x2, y2;
-	int step;
-	int accuracy;
+	int step = 1;
+	int accuracy = 1;
 	HWND hwnd;
 	bool reversex;
 	bool reversey;
@@ -636,8 +791,12 @@ int Window_lua::pixelSearch(lua_State *L)
 	y1 = lua_tointeger(L, 6);
 	x2 = lua_tointeger(L, 7);
 	y2 = lua_tointeger(L, 8);
-	accuracy = lua_tointeger(L, 9);
-	step = lua_tointeger(L, 10);
+
+	if( top >= 9 )
+		accuracy = lua_tointeger(L, 9);
+
+	if( top >= 10 )
+		step = lua_tointeger(L, 10);
 
 	if( step < 1 ) step = 1;
 	reversex = (x2 < x1);
@@ -806,6 +965,12 @@ int Window_lua::pixelSearch(lua_State *L)
 	return 2;
 }
 
+/*	window.saveScreenshot(number hwnd, string filename)
+	Returns:	nil
+
+	Save a screenshot of window 'hwnd' to 'filename'.
+	If 'hwnd' is 0, this screenshots the whole desktop.
+*/
 int Window_lua::saveScreenshot(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
@@ -877,44 +1042,6 @@ int Window_lua::saveScreenshot(lua_State *L)
 	ReleaseDC(hwnd, hdc);
 	DeleteObject(hBmp);
 	delete []pbBits;
-
-	return 0;
-}
-
-int Window_lua::setRect(lua_State *L)
-{
-	int top = lua_gettop(L);
-	if( top < 3 || top > 5 )
-		wrongArgs(L);
-	checkType(L, LT_NUMBER, 1);
-	checkType(L, LT_NUMBER, 2);
-	checkType(L, LT_NUMBER, 3);
-	if( top >= 4 )
-		checkType(L, LT_NUMBER | LT_NIL, 4);
-	if( top >= 5 )
-		checkType(L, LT_NUMBER | LT_NIL, 5);
-
-	HWND hwnd = (HWND)lua_tointeger(L, 1);
-	RECT winrect;
-	GetWindowRect(hwnd, &winrect);
-	unsigned int flags = SWP_ASYNCWINDOWPOS|SWP_SHOWWINDOW;
-	//int x = winrect.left, y = winrect.top, w = winrect.right, h = winrect.bottom;
-
-	int origLeft = winrect.left;
-	int origTop = winrect.top;
-
-	winrect.left = lua_tointeger(L, 2);
-	winrect.top = lua_tointeger(L, 3);
-	if( lua_isnumber(L, 4) )
-		winrect.right = lua_tointeger(L, 4);
-	else
-		winrect.right = winrect.right - origLeft;
-	if( lua_isnumber(L, 5) )
-		winrect.bottom = lua_tointeger(L, 5);
-	else
-		winrect.bottom = winrect.bottom - origTop;
-
-	SetWindowPos(hwnd, HWND_NOTOPMOST, winrect.left, winrect.top, winrect.right, winrect.bottom, flags);
 
 	return 0;
 }

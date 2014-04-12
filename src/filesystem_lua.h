@@ -18,6 +18,7 @@
 			static int directoryExists(lua_State *);
 			static int fileExists(lua_State *);
 			static int getDirectory(lua_State *);
+			static int isDirectory(lua_State *);
 			static int fixSlashes(lua_State *);
 			static int getOpenFileName(lua_State *);
 			static int getSaveFileName(lua_State *);
