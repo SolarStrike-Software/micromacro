@@ -53,6 +53,7 @@ std::string getPrivName(DWORD);
 std::string getOsName();
 void clearCliScreen();
 static BOOL WINAPI consoleControlCallback(DWORD);
+int modifyPermission(HANDLE, const char *, bool);
 
 int main(int argc, char **argv)
 {
@@ -75,6 +76,11 @@ int main(int argc, char **argv)
 			return success;
 		}
 	}
+
+	/* Set debug privileges on self */
+	if( !modifyPermission(GetCurrentProcess(), "SeDebugPrivilege", true) )
+		Logger::instance()->add("Warning: Failed to enable SeDebugPrivilege.");
+
 
 	{	/* Run configs */
 		int success = loadConfig(CONFIG_FILENAME);
@@ -856,6 +862,7 @@ std::string getOsName()
 	return std::string(buffer);
 }
 
+// Capture important events, such as force shutdown
 static BOOL WINAPI consoleControlCallback(DWORD dwCtrlType)
 {
 	switch(dwCtrlType)
@@ -876,4 +883,45 @@ static BOOL WINAPI consoleControlCallback(DWORD dwCtrlType)
 		break;
 	}
 	return false;
+}
+
+/*	Obviously, it changes our permission level for a process.
+	This is called to grant SeDebugPrivilege.
+*/
+int modifyPermission(HANDLE hProcess, const char *PrivName, bool allow)
+{
+	HANDLE hToken;
+	LUID sedebugnameValue;
+	TOKEN_PRIVILEGES tkp;
+
+	if ( !OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES
+						   | TOKEN_QUERY,&hToken ) )
+	{
+		CloseHandle(hToken);
+		return false;
+	}
+
+	//Don't bother looking up and adjusting privilege if removing rights
+	if(allow)
+	{
+		if ( !LookupPrivilegeValue( NULL, PrivName, &sedebugnameValue ) )
+		{
+			CloseHandle( hToken );
+			return false;
+		}
+
+		tkp.PrivilegeCount = 1;
+		tkp.Privileges[0].Luid = sedebugnameValue;
+		tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	}
+
+	if (AdjustTokenPrivileges( hToken, false, &tkp, sizeof tkp,
+							   NULL, NULL ) == 0)
+	{
+		CloseHandle(hToken);
+		return false;
+	}
+
+	CloseHandle(hToken);
+	return true;
 }
