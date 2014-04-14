@@ -43,7 +43,7 @@ int Ncurses_lua::regmod(lua_State *L)
 		{"getPair", Ncurses_lua::getPair},
 		{"attributeOn", Ncurses_lua::attributeOn},
 		{"attributeOff", Ncurses_lua::attributeOff},
-		{"attributeSet", Ncurses_lua::setAttribute},
+		{"setAttribute", Ncurses_lua::setAttribute},
 		{"setBackground", Ncurses_lua::setBackground},
 		{"getWindowSize", Ncurses_lua::getWindowSize},
 		{NULL, NULL}
@@ -592,7 +592,7 @@ int Ncurses_lua::attributeOff(lua_State *L)
 	WINDOW **pw = NULL;
 	pw = (WINDOW **)lua_touserdata(L, 1);
 	int attribValue = (int)lua_tonumber(L, 2);
-	wattron(*pw, attribValue);
+	wattroff(*pw, attribValue);
 
 	return 0;
 }
