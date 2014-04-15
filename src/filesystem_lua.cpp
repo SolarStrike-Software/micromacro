@@ -28,6 +28,7 @@ int Filesystem_lua::regmod(lua_State *L)
 		{"fileExists", Filesystem_lua::fileExists},
 		{"getDirectory", Filesystem_lua::getDirectory},
 		{"isDirectory", Filesystem_lua::isDirectory},
+		{"makeDirectory", Filesystem_lua::makeDirectory},
 		{"fixSlashes", Filesystem_lua::fixSlashes},
 		{"getOpenFileName", Filesystem_lua::getOpenFileName},
 		{"getSaveFileName", Filesystem_lua::getSaveFileName},
@@ -127,6 +128,29 @@ int Filesystem_lua::isDirectory(lua_State *L)
 	bool isDir = S_ISDIR(dstat.st_mode);
 
 	lua_pushboolean(L, isDir);
+	return 1;
+}
+
+/*	filesystem.makeDirectory(string path)
+	Returns:	boolean
+
+	Creates a directory at 'path', returns true on success, else false.
+*/
+int Filesystem_lua::makeDirectory(lua_State *L)
+{
+	if( lua_gettop(L) != 1 )
+		wrongArgs(L);
+	checkType(L, LT_STRING, 1);
+	const char *path = lua_tostring(L, 1);
+	bool success;
+
+	SECURITY_ATTRIBUTES attribs;
+	attribs.nLength = sizeof(SECURITY_ATTRIBUTES);
+	attribs.bInheritHandle = false;
+	attribs.lpSecurityDescriptor = NULL;
+	success = CreateDirectory(path, &attribs);
+
+	lua_pushboolean(L, success);
 	return 1;
 }
 

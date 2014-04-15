@@ -17,4 +17,6 @@
 
 	void sztolower(char *dest, const char *src, size_t max_len);
 	int wildfind(const std::string &format, const std::string &checkstring);
+
+	void securezero(void *, size_t);
 #endif

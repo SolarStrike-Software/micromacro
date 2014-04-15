@@ -9,6 +9,7 @@
 #include <string.h>
 #include <cstdarg>
 #include <stdio.h>
+#include "wininclude.h"
 
 // Just like strncpy, except ensures we always NULL-terminate
 size_t strlcpy(char *dest, const char* src, size_t max_len)
@@ -163,4 +164,10 @@ int wildfind(const std::string &format, const std::string &checkstring)
 		return true;
 	else
 		return false;
+}
+
+void securezero(void *addr, size_t len)
+{
+	for(unsigned int i = 0; i < len; i++)
+		*((char*)addr + i) = 0;
 }

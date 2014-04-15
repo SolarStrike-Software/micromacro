@@ -173,7 +173,7 @@ unsigned int Process_lua::readBatch_parsefmt(const char *fmt, std::vector<BatchJ
 		{
 			// Read the number as a string, convert to int, advance
 			char buffer[16];
-			memset(&buffer, 0, 16);
+			memset(&buffer, 0, sizeof(buffer));
 			for(unsigned int j = 0; j < 15; j++)
 			{
 				char p = fmt[i + j];

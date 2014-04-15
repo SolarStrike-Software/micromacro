@@ -9,6 +9,7 @@
 #include "error.h"
 #include "settings.h"
 #include "macro.h"
+#include "strl.h"
 
 #include "wininclude.h"
 #include <stdio.h>
@@ -45,9 +46,10 @@ int Hid::init()
 	}
 	catch( std::bad_alloc &ba ) { badAllocation(); }
 
-	memset(lastks, 0, sizeof(lastks) - 1);
-	memset(joyinfo, 0, sizeof(joyinfo) - 1);
-	memset(lastjoyinfo, 0, sizeof(lastjoyinfo) - 1);
+	// Use securezero instead of memset to prevent compiler optimization from ignoring the call
+	securezero((void *)lastks, sizeof(lastks));
+	memset(joyinfo, 0, sizeof(joyinfo));
+	memset(lastjoyinfo, 0, sizeof(lastjoyinfo));
 
 	// Initial polling
 	int unused = 0;
@@ -64,7 +66,7 @@ int Hid::init()
 		int success = joyGetPosEx(gamepad, &joyinfo[gamepad]);
 
 		if( success != JOYERR_NOERROR )
-			memset(&joyinfo[gamepad], 0, sizeof(JOYINFOEX)-1); // zero out
+			memset(&joyinfo[gamepad], 0, sizeof(JOYINFOEX)); // zero out
 		else
 			++gamepadsPolled;
 	}
@@ -107,7 +109,7 @@ void Hid::poll()
 		int success = joyGetPosEx(gamepad, &joyinfo[gamepad]);
 
 		if( success != JOYERR_NOERROR )
-			memset(&joyinfo[gamepad], 0, sizeof(JOYINFOEX)-1); // zero out
+			memset(&joyinfo[gamepad], 0, sizeof(JOYINFOEX)); // zero out
 		else
 			++gamepadsPolled;
 	}
