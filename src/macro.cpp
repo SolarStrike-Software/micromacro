@@ -16,6 +16,14 @@ extern "C"
 	#include <lualib.h>
 }
 
+#ifdef __cplusplus
+extern "C" {
+	#endif
+	BOOL WINAPI GetCurrentConsoleFont(HANDLE hConsoleOutput,BOOL bMaximumWindow,PCONSOLE_FONT_INFO lpConsoleCurrentFont);
+	#ifdef __cplusplus
+}
+#endif
+
 CMacro *CMacro::pinstance = 0;
 CMacro *CMacro::instance()
 {
@@ -59,6 +67,11 @@ int CMacro::init()
 	getAppHandle();				// ^
 	getProcId();				// ^
 	foregroundHwnd = appHwnd; 	// Assume we're focusing this window
+
+	CONSOLE_FONT_INFO fontInfo;
+	GetCurrentConsoleFont(GetStdHandle(STD_OUTPUT_HANDLE), false, &fontInfo);
+	consoleCharWidth = fontInfo.dwFontSize.X;
+	consoleCharHeight = fontInfo.dwFontSize.Y;
 
 	return MicroMacro::ERR_OK;
 }
@@ -132,6 +145,16 @@ HWND CMacro::getForegroundWindow()
 	return foregroundHwnd;
 }
 
+int CMacro::getConsoleFontWidth()
+{
+	return consoleCharWidth;
+}
+
+int CMacro::getConsoleFontHeight()
+{
+	return consoleCharHeight;
+}
+
 std::queue<Event> *CMacro::getEventQueue()
 {
 	return &eventQueue;
@@ -170,6 +193,7 @@ int CMacro::handleHidInput()
 				e.type = EVENT_KEYPRESSED;
 			else
 				e.type = EVENT_MOUSEPRESSED;
+
 			e.idata1 = i;
 			e.idata2 = hid.getToggleState(i);
 			try{ eventQueue.push(e); }

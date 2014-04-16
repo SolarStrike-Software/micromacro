@@ -22,6 +22,9 @@
 		private:
 			static CMacro *pinstance;
 
+			int consoleCharWidth;
+			int consoleCharHeight;
+
 		protected:
 			CMacro();
 			~CMacro();
@@ -52,6 +55,9 @@
 			HANDLE getAppHandle();
 			void pollForegroundWindow();
 			HWND getForegroundWindow();
+
+			int getConsoleFontWidth();
+			int getConsoleFontHeight();
 
 			std::queue<Event> *getEventQueue();
 			void flushEvents();

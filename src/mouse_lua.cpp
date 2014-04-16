@@ -30,6 +30,7 @@ int Mouse_lua::regmod(lua_State *L)
 		{"move", Mouse_lua::move},
 		{"setPosition", Mouse_lua::setPosition},
 		{"getPosition", Mouse_lua::getPosition},
+		{"getConsolePosition", Mouse_lua::getConsolePosition},
 		{"wheelMove", Mouse_lua::wheelMove},
 		{"virtualPress", Mouse_lua::virtualPress},
 		{"virtualHold", Mouse_lua::virtualHold},
@@ -275,6 +276,30 @@ int Mouse_lua::getPosition(lua_State *L)
 	GetCursorPos(&p);
 	lua_pushnumber(L, p.x);
 	lua_pushnumber(L, p.y);
+	return 2;
+}
+
+int Mouse_lua::getConsolePosition(lua_State *L)
+{
+	if( lua_gettop(L) != 0 )
+		wrongArgs(L);
+
+	POINT mousePos;
+	POINT winPos;
+	//RECT rect;
+	winPos.x = 0; winPos.y = 0;
+	GetCursorPos(&mousePos);
+	ClientToScreen(Macro::instance()->getAppHwnd(), &winPos);
+	//GetClientRect(appHwnd, &rect);
+
+	//if( mousePos.x > winPos.x && mousePos.x < (winPos.x + rect.right)
+	//	&& mousePos.y > winPos.y && mousePos.y < (winPos.y + rect.bottom) )
+
+	int cx = (mousePos.x - winPos.x) / Macro::instance()->getConsoleFontWidth();
+	int cy = (mousePos.y - winPos.y) / Macro::instance()->getConsoleFontHeight();
+
+	lua_pushinteger(L, cx);
+	lua_pushinteger(L, cy);
 	return 2;
 }
 

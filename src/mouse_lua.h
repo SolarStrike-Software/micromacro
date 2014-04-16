@@ -25,6 +25,7 @@
 			static int wheelMove(lua_State *);
 			static int setPosition(lua_State *);
 			static int getPosition(lua_State *);
+			static int getConsolePosition(lua_State *);
 
 			static int virtualPress(lua_State *);
 			static int virtualHold(lua_State *);
