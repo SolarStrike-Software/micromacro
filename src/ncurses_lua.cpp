@@ -38,12 +38,15 @@ int Ncurses_lua::regmod(lua_State *L)
 		{"clear", Ncurses_lua::clear},
 		{"move", Ncurses_lua::move},
 		{"createWindow", Ncurses_lua::createWindow},
+		{"resizeWindow", Ncurses_lua::resizeWindow},
+		{"moveWindow", Ncurses_lua::moveWindow},
 		{"getString", Ncurses_lua::getString},
 		{"setPair", Ncurses_lua::setPair},
 		{"getPair", Ncurses_lua::getPair},
 		{"attributeOn", Ncurses_lua::attributeOn},
 		{"attributeOff", Ncurses_lua::attributeOff},
 		{"setAttribute", Ncurses_lua::setAttribute},
+		{"getAttribute", Ncurses_lua::getAttribute},
 		{"setBackground", Ncurses_lua::setBackground},
 		{"getWindowSize", Ncurses_lua::getWindowSize},
 		{NULL, NULL}
@@ -313,6 +316,57 @@ int Ncurses_lua::createWindow(lua_State *L)
 
 	return 1;
 }
+
+/*	ncurses.resizeWindow(window win, number lines, number columns)
+	Returns:	boolean
+
+	Resize a window to the given columns/lines.
+	Returns true on success, false on failure.
+*/
+int Ncurses_lua::resizeWindow(lua_State *L)
+{
+	if( lua_gettop(L) != 3 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+	checkType(L, LT_NUMBER, 2);
+	checkType(L, LT_NUMBER, 3);
+
+	WINDOW **pw = NULL;
+	pw = (WINDOW **)lua_touserdata(L, 1);
+
+	int lines = lua_tointeger(L, 2);
+	int columns = lua_tointeger(L, 3);
+	int success = wresize(*pw, lines, columns);
+
+	lua_pushboolean(L, success != ERR);
+	return 1;
+}
+
+/*	ncurses.moveWindow(window win, number y, number x)
+	Returns:	boolean
+
+	Resize a window to the given columns/lines.
+	Returns true on success, false on failure.
+*/
+int Ncurses_lua::moveWindow(lua_State *L)
+{
+	if( lua_gettop(L) != 3 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+	checkType(L, LT_NUMBER, 2);
+	checkType(L, LT_NUMBER, 3);
+
+	WINDOW **pw = NULL;
+	pw = (WINDOW **)lua_touserdata(L, 1);
+
+	int y = lua_tointeger(L, 2);
+	int x = lua_tointeger(L, 3);
+	int success = mvwin(*pw, y, x);
+
+	lua_pushboolean(L, success != ERR);
+	return 1;
+}
+
 
 /* NOTE: This seems broken in this version of Ncurses... disabled for now
 void Ncurses_lua::hideCursor()
@@ -607,7 +661,7 @@ int Ncurses_lua::setAttribute(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
 		wrongArgs(L);
-	checkType(L, /*LT_NIL |*/ LT_USERDATA, 1);
+	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_NUMBER, 2);
 
 	WINDOW **pw = NULL;
@@ -618,6 +672,34 @@ int Ncurses_lua::setAttribute(lua_State *L)
 	return 0;
 }
 
+/*	ncurses.getAttribute(window win)
+	Returns (on success):	number attributes
+							number pair
+
+	Returns (on failure):	nil
+
+	Returns the attribute mask and color pair for a Ncurses window.
+*/
+int Ncurses_lua::getAttribute(lua_State *L)
+{
+	if( lua_gettop(L) != 1 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+
+	WINDOW **pw = NULL;
+	pw = (WINDOW **)lua_touserdata(L, 1);
+
+	attr_t attribs;
+	short pair;
+	int success = wattr_get(*pw, &attribs, &pair, NULL);
+
+	if( success == ERR )
+		return 0;
+
+	lua_pushinteger(L, attribs); // An attr_t is basically just an unsigned int
+	lua_pushinteger(L, pair); // Pair is a short, but same deal
+	return 2;
+}
 
 /*	ncurses.setBackground(window win, number attrib)
 	Returns:	nil

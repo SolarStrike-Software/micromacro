@@ -68,10 +68,24 @@ int CMacro::init()
 	getProcId();				// ^
 	foregroundHwnd = appHwnd; 	// Assume we're focusing this window
 
+	// Query font info
 	CONSOLE_FONT_INFO fontInfo;
 	GetCurrentConsoleFont(GetStdHandle(STD_OUTPUT_HANDLE), false, &fontInfo);
 	consoleCharWidth = fontInfo.dwFontSize.X;
 	consoleCharHeight = fontInfo.dwFontSize.Y;
+
+	// Get current console size
+	RECT winrect;
+	if( GetWindowRect(getAppHwnd(), &winrect) )
+	{
+		lastConsoleSizeX = winrect.right;
+		lastConsoleSizeY = winrect.bottom;
+	}
+	else
+	{
+		lastConsoleSizeX = 0;
+		lastConsoleSizeY = 0;
+	}
 
 	return MicroMacro::ERR_OK;
 }
@@ -137,6 +151,28 @@ void CMacro::pollForegroundWindow()
 		e.type = EVENT_FOCUSCHANGED;
 		e.idata1 = ((int)foregroundHwnd);
 		eventQueue.push(e);
+	}
+}
+
+void CMacro::pollConsoleResize()
+{
+	RECT winrect;
+	if( GetWindowRect(getAppHwnd(), &winrect) )
+	{
+		if( winrect.right != lastConsoleSizeX ||
+			winrect.bottom != lastConsoleSizeY )
+		{
+			// Update to our new size
+			lastConsoleSizeX = winrect.right;
+			lastConsoleSizeY = winrect.bottom;
+
+			// Trigger window resize event
+			Event e;
+			e.type = EVENT_CONSOLERESIZED;
+			e.idata1 = lastConsoleSizeX;
+			e.idata2 = lastConsoleSizeY;
+			eventQueue.push(e);
+		}
 	}
 }
 

@@ -38,6 +38,7 @@ extern "C"
 	#include <lualib.h>
 }
 
+
 LuaEngine::~LuaEngine()
 {
 	if( lstate )
@@ -478,6 +479,13 @@ int LuaEngine::runEvent(Event &e)
 			lua_pushstring(lstate, "warning");
 			lua_pushstring(lstate, e.msg.c_str());
 			nargs = 2;
+		break;
+
+		case EVENT_CONSOLERESIZED:
+			lua_pushstring(lstate, "consoleresized");
+			lua_pushinteger(lstate, e.idata1);
+			lua_pushinteger(lstate, e.idata2);
+			nargs = 3;
 		break;
 
 		case EVENT_QUIT:

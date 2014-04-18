@@ -251,6 +251,9 @@ int main(int argc, char **argv)
 			// Handle keyboard input
 			Macro::instance()->handleHidInput();
 
+			// Check for console resize
+			Macro::instance()->pollConsoleResize();
+
 			// Handle hotkeys
 			Hid *phid = Macro::instance()->getHid();
 			if( (Macro::instance()->getForegroundWindow() == Macro::instance()->getAppHwnd() &&

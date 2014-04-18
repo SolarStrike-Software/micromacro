@@ -30,12 +30,15 @@
 			static int clear(lua_State *);
 			static int move(lua_State *);
 			static int createWindow(lua_State *);
+			static int resizeWindow(lua_State *);
+			static int moveWindow(lua_State *);
 			static int getString(lua_State *);
 			static int setPair(lua_State *);
 			static int getPair(lua_State *);
 			static int attributeOn(lua_State *);
 			static int attributeOff(lua_State *);
 			static int setAttribute(lua_State *);
+			static int getAttribute(lua_State *);
 			static int setBackground(lua_State *);
 			static int getWindowSize(lua_State *);
 

@@ -279,6 +279,16 @@ int Mouse_lua::getPosition(lua_State *L)
 	return 2;
 }
 
+/*	mouse.getConsolePosition()
+	Returns:	number x
+				number y
+
+	Returns the position of the physical mouse cursor, in console characters.
+	NOTE: This returns the position inside the window, not globally.
+	Therefor, if the mouse is to the left or above the console window,
+	you can receive negative numbers.
+*/
+
 int Mouse_lua::getConsolePosition(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
@@ -286,14 +296,9 @@ int Mouse_lua::getConsolePosition(lua_State *L)
 
 	POINT mousePos;
 	POINT winPos;
-	//RECT rect;
 	winPos.x = 0; winPos.y = 0;
 	GetCursorPos(&mousePos);
 	ClientToScreen(Macro::instance()->getAppHwnd(), &winPos);
-	//GetClientRect(appHwnd, &rect);
-
-	//if( mousePos.x > winPos.x && mousePos.x < (winPos.x + rect.right)
-	//	&& mousePos.y > winPos.y && mousePos.y < (winPos.y + rect.bottom) )
 
 	int cx = (mousePos.x - winPos.x) / Macro::instance()->getConsoleFontWidth();
 	int cy = (mousePos.y - winPos.y) / Macro::instance()->getConsoleFontHeight();

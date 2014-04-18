@@ -39,6 +39,9 @@
 			Settings settings;
 			Hid hid;
 
+			int lastConsoleSizeX;
+			int lastConsoleSizeY;
+
 			std::queue<Event> eventQueue;
 
 		public:
@@ -54,6 +57,7 @@
 			HWND getAppHwnd();
 			HANDLE getAppHandle();
 			void pollForegroundWindow();
+			void pollConsoleResize();
 			HWND getForegroundWindow();
 
 			int getConsoleFontWidth();
