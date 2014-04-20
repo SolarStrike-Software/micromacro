@@ -10,6 +10,7 @@
 #include "macro.h"
 #include "strl.h"
 #include "luatypes.h"
+
 #include <algorithm>
 
 extern "C"
@@ -109,6 +110,12 @@ int Ncurses_lua::init(lua_State *L)
 	::keypad(::stdscr, true);
 	::leaveok(::stdscr, true);
 	::start_color();
+
+	/*	Certain mouse events cause blocking issues in non-blocking mode.
+		To avoid this, lets only listen to a single event that doesn't
+		cause any issues. Note that using 0 for the mask also doesn't help.
+	*/
+	mousemask(BUTTON1_PRESSED, NULL);
 
 	// Move/hide cursor
 	int y,x;
@@ -395,14 +402,28 @@ void Ncurses_lua::showCursor()
 */
 void Ncurses_lua::flush(WINDOW *pw)
 {
-	::flushinp(); // Flush Ncurses input
 	FlushConsoleInputBuffer(Macro::instance()->getAppHandle()); // Flush Windows' input
+	::flushinp(); // Flush Ncurses input
 
-	// Because for some reason there's still crap in the buffers...
-	// We manually read it till it's empty.
-	// Set to nodelay so we can catch its emptiness instead of freeze
-	nodelay(pw, true);
-	while( wgetch(pw) != ERR ) { }
+	/*	Because for some reason there's still crap in the buffers...
+		We manually read it till it's empty.
+		Set to nodelay so we can catch its emptiness instead of freeze.
+
+		TODO: Ncurses seems to block if a minimize/restore event gets
+		clogged in the queue, even when in non-blocking mode!
+	*/
+	int success = nodelay(pw, true);
+	int c = wgetch(pw);
+	while( c != ERR )
+	{
+		if( c == KEY_MOUSE )
+		{
+			MEVENT e;
+			getmouse(&e);
+		}
+		c = wgetch(pw);
+	}
+
 	nodelay(pw, false);
 }
 
@@ -486,6 +507,10 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 			else beep();
 		}
 	}
+
+	// Re-print it, in case the user repositioned the pointer, Ncurses might clear to EOL
+	mvwaddnstr(pw, y, x, buffer + outstart, (len < outwidth ? len : outwidth));
+	wrefresh(pw);
 
 	if( scrolling ) // Re-enable
 		::scrollok(pw, true);
