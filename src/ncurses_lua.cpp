@@ -408,11 +408,8 @@ void Ncurses_lua::flush(WINDOW *pw)
 	/*	Because for some reason there's still crap in the buffers...
 		We manually read it till it's empty.
 		Set to nodelay so we can catch its emptiness instead of freeze.
-
-		TODO: Ncurses seems to block if a minimize/restore event gets
-		clogged in the queue, even when in non-blocking mode!
 	*/
-	int success = nodelay(pw, true);
+	nodelay(pw, true);
 	int c = wgetch(pw);
 	while( c != ERR )
 	{
@@ -474,6 +471,10 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 			if( pos > 0 ) --pos; else beep();
 		else if( c == KEY_RIGHT )
 			if( pos < len ) ++pos; else beep();
+		else if( c == KEY_HOME )
+			pos = 0;
+		else if( c == KEY_END )
+			pos = len;
 		else if( c == VK_BACK || c == KEY_BACKSPACE ) // Remove left char
 			if( pos > 0 ) {
 				memmove(buffer+pos-1, buffer+pos, len-pos);
@@ -486,6 +487,8 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 				memmove(buffer+pos, buffer+pos+1, len-pos);
 				buffer[len] = '\0';
 				--len;
+				if( pos > len )
+					pos = len;
 			} else beep();
 		else if( c >= ' ' && c <= '~' ) // Make sure it is even printable
 		{

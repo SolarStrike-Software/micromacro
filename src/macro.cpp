@@ -169,8 +169,6 @@ void CMacro::pollConsoleResize()
 			// Trigger window resize event
 			Event e;
 			e.type = EVENT_CONSOLERESIZED;
-			e.idata1 = lastConsoleSizeX;
-			e.idata2 = lastConsoleSizeY;
 			eventQueue.push(e);
 		}
 	}

@@ -483,9 +483,7 @@ int LuaEngine::runEvent(Event &e)
 
 		case EVENT_CONSOLERESIZED:
 			lua_pushstring(lstate, "consoleresized");
-			lua_pushinteger(lstate, e.idata1);
-			lua_pushinteger(lstate, e.idata2);
-			nargs = 3;
+			nargs = 1;
 		break;
 
 		case EVENT_QUIT:
