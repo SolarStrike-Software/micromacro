@@ -567,7 +567,9 @@ int Process_lua::readPtr(lua_State *L)
 
 	unsigned int realAddress;
 	if( offsets.size() == 1 )
-		realAddress = readMemory<unsigned int>(*pHandle, address + offsets.at(0), err);
+	{
+		realAddress = readMemory<unsigned int>(*pHandle, address, err) + offsets.at(0);
+	}
 	else
 	{
 		realAddress = address;
@@ -1044,7 +1046,7 @@ int Process_lua::writePtr(lua_State *L)
 
 	unsigned int realAddress;
 	if( offsets.size() == 1 )
-		realAddress = readMemory<unsigned int>(*pHandle, address + offsets.at(0), err);
+		realAddress = readMemory<unsigned int>(*pHandle, address, err) + offsets.at(0);
 	else
 	{
 		realAddress = address;

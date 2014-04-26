@@ -484,9 +484,12 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 			else beep();
 		else if( c == KEY_DC ) // Remove pos char
 			if( pos <= len && len > 0 ) {
-				memmove(buffer+pos, buffer+pos+1, len-pos);
-				buffer[len] = '\0';
-				--len;
+				if( pos < len )
+				{
+					memmove(buffer+pos, buffer+pos+1, len-pos);
+					buffer[len] = '\0';
+					--len;
+				}
 				if( pos > len )
 					pos = len;
 			} else beep();
