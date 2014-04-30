@@ -11,6 +11,8 @@
 #include "strl.h"
 #include "luatypes.h"
 
+#include "global_addon.h"
+
 #include <algorithm>
 
 extern "C"
@@ -176,7 +178,8 @@ int Ncurses_lua::cleanup(lua_State *L)
 */
 int Ncurses_lua::print(lua_State *L)
 {
-	if( lua_gettop(L) < 2 )
+	int top = lua_gettop(L);
+	if( top < 2 )
 		wrongArgs(L);
 	checkType(L, LT_USERDATA, 1);
 	checkType(L, LT_STRING, 2);
@@ -184,7 +187,16 @@ int Ncurses_lua::print(lua_State *L)
 	WINDOW **pw = NULL;
 	pw = (WINDOW **)lua_touserdata(L, 1);
 
-	wprintw(*pw, lua_tostring(L, 2));
+	if( top == 2 )
+		wprintw(*pw, lua_tostring(L, 2));
+	else
+	{
+		lua_remove(L, 1); // Toss out the Window pointer
+		Global_addon::sprintf(L); // Format it, put result on top of stack
+		if( lua_isstring(L, -1) ) // If we can, print it
+			wprintw(*pw, lua_tostring(L, -1));
+	}
+
 	return 0;
 }
 
@@ -259,8 +271,8 @@ int Ncurses_lua::move(lua_State *L)
 	WINDOW **pw = NULL;
 	pw = (WINDOW **)lua_touserdata(L, 1);
 
-	int y = (int)lua_tonumber(L, 2);
-	int x = (int)lua_tonumber(L, 3);
+	int y = lua_tointeger(L, 2);
+	int x = lua_tointeger(L, 3);
 	wmove(*pw, y, x);
 	wrefresh(*pw);
 
@@ -286,10 +298,10 @@ int Ncurses_lua::createWindow(lua_State *L)
 
 	int height, width, starty, startx;
 	WINDOW **pw;
-	starty = (int)lua_tonumber(L, 1);
-	startx = (int)lua_tonumber(L, 2);
-	height = (int)lua_tonumber(L, 3);
-	width = (int)lua_tonumber(L, 4);
+	starty = lua_tointeger(L, 1);
+	startx = lua_tointeger(L, 2);
+	height = lua_tointeger(L, 3);
+	width = lua_tointeger(L, 4);
 
 	WINDOW *nWin = newwin(height, width, starty, startx);
 	if( nWin == NULL )
@@ -579,9 +591,9 @@ int Ncurses_lua::setColor(lua_State *L)
 	checkType(L, LT_NUMBER, 4);
 
 	short colIndex = (short)lua_tonumber(L, 1);
-	int colR = (int)lua_tonumber(L, 2);
-	int colG = (int)lua_tonumber(L, 3);
-	int colB = (int)lua_tonumber(L, 4);
+	int colR = lua_tointeger(L, 2);
+	int colG = lua_tointeger(L, 3);
+	int colB = lua_tointeger(L, 4);
 
 	return 0;
 }
@@ -600,9 +612,9 @@ int Ncurses_lua::setPair(lua_State *L)
 	checkType(L, LT_NUMBER, 2);
 	checkType(L, LT_NUMBER, 3);
 
-	int pairIndex = (int)lua_tonumber(L, 1);
-	int foreground = (int)lua_tonumber(L, 2);
-	int background = (int)lua_tonumber(L, 3);
+	int pairIndex = lua_tointeger(L, 1);
+	int foreground = lua_tointeger(L, 2);
+	int background = lua_tointeger(L, 3);
 
 	// Ensure index is not out of bounds
 	if( pairIndex < 1 || pairIndex >= COLOR_PAIRS )
@@ -631,7 +643,7 @@ int Ncurses_lua::getPair(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int pairIndex = (int)lua_tonumber(L, 1);
+	int pairIndex = lua_tointeger(L, 1);
 
 	// Ensure index is not out of bounds
 	if( pairIndex < 0 || pairIndex >= COLOR_PAIRS )
@@ -655,7 +667,7 @@ int Ncurses_lua::attributeOn(lua_State *L)
 
 	WINDOW **pw = NULL;
 	pw = (WINDOW **)lua_touserdata(L, 1);
-	int attribValue = (int)lua_tonumber(L, 2);
+	int attribValue = lua_tointeger(L, 2);
 	wattron(*pw, attribValue);
 
 	return 0;
@@ -676,7 +688,7 @@ int Ncurses_lua::attributeOff(lua_State *L)
 
 	WINDOW **pw = NULL;
 	pw = (WINDOW **)lua_touserdata(L, 1);
-	int attribValue = (int)lua_tonumber(L, 2);
+	int attribValue = lua_tointeger(L, 2);
 	wattroff(*pw, attribValue);
 
 	return 0;
@@ -697,7 +709,7 @@ int Ncurses_lua::setAttribute(lua_State *L)
 
 	WINDOW **pw = NULL;
 	pw = (WINDOW **)lua_touserdata(L, 1);
-	int attribValue = (int)lua_tonumber(L, 2);
+	int attribValue = lua_tointeger(L, 2);
 	wattrset(*pw, attribValue);
 
 	return 0;
@@ -747,7 +759,7 @@ int Ncurses_lua::setBackground(lua_State *L)
 	WINDOW **pw = NULL;
 	pw = (WINDOW **)lua_touserdata(L, 1);
 
-	int style = (int)lua_tonumber(L, 2);
+	int style = lua_tointeger(L, 2);
 	attr_t attribs = style;
 	wbkgd(*pw, attribs);
 	return 0;

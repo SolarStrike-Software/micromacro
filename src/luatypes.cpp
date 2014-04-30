@@ -324,18 +324,18 @@ int LuaType::int64_eq(lua_State *lstate)
 	// Get info from arg 2
 	if( lua_isnumber(lstate, 2) )
 	{
-		high1 = 0; low1 = (int)lua_tonumber(lstate, 2);
+		high1 = 0; low1 = lua_tointeger(lstate, 2);
 	}
 	else
 	{ // Must be a table
 		lua_pushstring(lstate, LuaType::highpart_name);
 		lua_gettable(lstate, -2);
-		high1 = (unsigned long)lua_tonumber(lstate, -1);
+		high1 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 
 		lua_pushstring(lstate, LuaType::lowpart_name);
 		lua_gettable(lstate, -2);
-		low1 = (unsigned long)lua_tonumber(lstate, -1);
+		low1 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 	}
 
@@ -345,18 +345,18 @@ int LuaType::int64_eq(lua_State *lstate)
 	// Get info from arg 1
 	if( lua_isnumber(lstate, 1) )
 	{
-		high2 = 0; low2 = (int)lua_tonumber(lstate, 1);
+		high2 = 0; low2 = lua_tointeger(lstate, 1);
 	}
 	else
 	{
 		lua_pushstring(lstate, LuaType::highpart_name);
 		lua_gettable(lstate, -2);
-		high2 = (unsigned long)lua_tonumber(lstate, -1);
+		high2 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 
 		lua_pushstring(lstate, LuaType::lowpart_name);
 		lua_gettable(lstate, -2);
-		low2 = (unsigned long)lua_tonumber(lstate, -1);
+		low2 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 	}
 
@@ -384,18 +384,18 @@ int LuaType::int64_lt(lua_State *lstate)
 	// Get info from arg 2
 	if( lua_isnumber(lstate, 2) )
 	{
-		high1 = 0; low1 = (int)lua_tonumber(lstate, 2);
+		high1 = 0; low1 = lua_tointeger(lstate, 2);
 	}
 	else
 	{ // Must be a table
 		lua_pushstring(lstate, LuaType::highpart_name);
 		lua_gettable(lstate, -2);
-		high1 = (unsigned long)lua_tonumber(lstate, -1);
+		high1 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 
 		lua_pushstring(lstate, LuaType::lowpart_name);
 		lua_gettable(lstate, -2);
-		low1 = (unsigned long)lua_tonumber(lstate, -1);
+		low1 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 	}
 
@@ -405,18 +405,18 @@ int LuaType::int64_lt(lua_State *lstate)
 	// Get info from arg 1
 	if( lua_isnumber(lstate, 1) )
 	{
-		high2 = 0; low2 = (int)lua_tonumber(lstate, 1);
+		high2 = 0; low2 = lua_tointeger(lstate, 1);
 	}
 	else
 	{
 		lua_pushstring(lstate, LuaType::highpart_name);
 		lua_gettable(lstate, -2);
-		high2 = (unsigned long)lua_tonumber(lstate, -1);
+		high2 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 
 		lua_pushstring(lstate, LuaType::lowpart_name);
 		lua_gettable(lstate, -2);
-		low2 = (unsigned long)lua_tonumber(lstate, -1);
+		low2 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 	}
 
@@ -444,18 +444,18 @@ int LuaType::int64_gt(lua_State *lstate)
 	// Get info from arg 2
 	if( lua_isnumber(lstate, 2) )
 	{
-		high1 = 0; low1 = (int)lua_tonumber(lstate, 2);
+		high1 = 0; low1 = lua_tointeger(lstate, 2);
 	}
 	else
 	{ // Must be a table
 		lua_pushstring(lstate, LuaType::highpart_name);
 		lua_gettable(lstate, -2);
-		high1 = (unsigned long)lua_tonumber(lstate, -1);
+		high1 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 
 		lua_pushstring(lstate, LuaType::lowpart_name);
 		lua_gettable(lstate, -2);
-		low1 = (unsigned long)lua_tonumber(lstate, -1);
+		low1 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 	}
 
@@ -465,18 +465,18 @@ int LuaType::int64_gt(lua_State *lstate)
 	// Get info from arg 1
 	if( lua_isnumber(lstate, 1) )
 	{
-		high2 = 0; low2 = (int)lua_tonumber(lstate, 1);
+		high2 = 0; low2 = lua_tointeger(lstate, 1);
 	}
 	else
 	{
 		lua_pushstring(lstate, LuaType::highpart_name);
 		lua_gettable(lstate, -2);
-		high2 = (unsigned long)lua_tonumber(lstate, -1);
+		high2 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 
 		lua_pushstring(lstate, LuaType::lowpart_name);
 		lua_gettable(lstate, -2);
-		low2 = (unsigned long)lua_tonumber(lstate, -1);
+		low2 = (unsigned long)lua_tointeger(lstate, -1);
 		lua_pop(lstate, 1);
 	}
 

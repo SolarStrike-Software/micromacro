@@ -18,7 +18,6 @@
 	{
 		protected:
 			static int printf(lua_State *);
-			static lua_CFunction sprintf; // We just use Lua's string.format
 			static int unpack2(lua_State *);
 			static int include(lua_State *);
 
@@ -26,6 +25,8 @@
 
 		public:
 			static int regmod(lua_State *);
+
+			static lua_CFunction sprintf; // We just use Lua's string.format, public so we can reuse it elsewhere
 	};
 
 #endif

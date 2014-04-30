@@ -167,8 +167,8 @@ int Gamepad_lua::press(lua_State *L)
 		checkType(L, LT_NIL | LT_NUMBER, 3);
 
 	bool async = true;
-	int gamepad = (int)lua_tonumber(L, 1);
-	int button = (int)lua_tonumber(L, 2);
+	int gamepad = lua_tointeger(L, 1);
+	int button = lua_tointeger(L, 2);
 	if( top == 3 )
 		async = (bool)lua_toboolean(L, 3);
 
@@ -184,8 +184,8 @@ int Gamepad_lua::hold(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	int gamepad = (int)lua_tonumber(L, 1);
-	int button = (int)lua_tonumber(L, 2);
+	int gamepad = lua_tointeger(L, 1);
+	int button = lua_tointeger(L, 2);
 
 	Macro::instance()->getHid()->joyHold(gamepad, button);
 
@@ -199,8 +199,8 @@ int Gamepad_lua::release(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	int gamepad = (int)lua_tonumber(L, 1);
-	int button = (int)lua_tonumber(L, 2);
+	int gamepad = lua_tointeger(L, 1);
+	int button = lua_tointeger(L, 2);
 
 	Macro::instance()->getHid()->joyRelease(gamepad, button);
 

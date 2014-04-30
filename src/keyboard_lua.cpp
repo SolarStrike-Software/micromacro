@@ -50,7 +50,7 @@ int Keyboard_lua::pressed(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		lua_pushboolean(L, Macro::instance()->getHid()->pressed(vk));
 	else
@@ -70,7 +70,7 @@ int Keyboard_lua::released(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		lua_pushboolean(L, Macro::instance()->getHid()->released(vk));
 	else
@@ -90,7 +90,7 @@ int Keyboard_lua::isDown(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		lua_pushboolean(L, Macro::instance()->getHid()->isDown(vk));
 	else
@@ -110,7 +110,7 @@ int Keyboard_lua::getToggleState(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		lua_pushboolean(L, Macro::instance()->getHid()->getToggleState(vk));
 	else
@@ -134,7 +134,7 @@ int Keyboard_lua::press(lua_State *L)
 	if( top == 2 )
 		checkType(L, LT_BOOLEAN, 2);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	bool async = true;
 	if( top == 2 )
 		async = lua_toboolean(L, 2);
@@ -154,7 +154,7 @@ int Keyboard_lua::hold(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->hold(vk);
 	return 0;
@@ -171,7 +171,7 @@ int Keyboard_lua::release(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->release(vk);
 	return 0;
@@ -195,8 +195,8 @@ int Keyboard_lua::virtualPress(lua_State *L)
 	if( top == 3 )
 		checkType(L, LT_BOOLEAN, 3);
 
-	HWND hwnd = (HWND)(int)lua_tonumber(L, 1);
-	int vk = (int)lua_tonumber(L, 2);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	int vk = lua_tointeger(L, 2);
 	bool async = true;
 	if( top == 3 )
 		async = lua_toboolean(L, 3);
@@ -219,8 +219,8 @@ int Keyboard_lua::virtualHold(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	HWND hwnd = (HWND)(int)lua_tonumber(L, 1);
-	int vk = (int)lua_tonumber(L, 2);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	int vk = lua_tointeger(L, 2);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->virtualHold(hwnd, vk);
 	return 0;
@@ -240,8 +240,8 @@ int Keyboard_lua::virtualRelease(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	HWND hwnd = (HWND)(int)lua_tonumber(L, 1);
-	int vk = (int)lua_tonumber(L, 2);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	int vk = lua_tointeger(L, 2);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->virtualRelease(hwnd, vk);
 	return 0;

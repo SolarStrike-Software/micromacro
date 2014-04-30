@@ -61,7 +61,7 @@ int Mouse_lua::pressed(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk <= VK_XBUTTON2 && vk != 0)
 		lua_pushboolean(L, Macro::instance()->getHid()->pressed(vk));
 	else
@@ -82,7 +82,7 @@ int Mouse_lua::released(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk <= VK_XBUTTON2 && vk != 0 )
 		lua_pushboolean(L, Macro::instance()->getHid()->released(vk));
 	else
@@ -103,7 +103,7 @@ int Mouse_lua::isDown(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk <= VK_XBUTTON2 && vk != 0 )
 		lua_pushboolean(L, Macro::instance()->getHid()->isDown(vk));
 	else
@@ -127,7 +127,7 @@ int Mouse_lua::press(lua_State *L)
 	if( top == 2 )
 		checkType(L, LT_BOOLEAN, 2);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	bool async = true;
 	if( top == 2 )
 		async = lua_toboolean(L, 2);
@@ -147,7 +147,7 @@ int Mouse_lua::hold(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk <= VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->hold(vk);
 	return 0;
@@ -164,7 +164,7 @@ int Mouse_lua::release(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int vk = (int)lua_tonumber(L, 1);
+	int vk = lua_tointeger(L, 1);
 	if( vk <= VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->release(vk);
 	return 0;
@@ -184,8 +184,8 @@ int Mouse_lua::move(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	int x = (int)lua_tonumber(L, 1);
-	int y = (int)lua_tonumber(L, 2);
+	int x = lua_tointeger(L, 1);
+	int y = lua_tointeger(L, 2);
 
 	INPUT inp;
 	inp.type = INPUT_MOUSE;
@@ -211,7 +211,7 @@ int Mouse_lua::wheelMove(lua_State *L)
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
-	int delta = (int)lua_tonumber(L, 1);
+	int delta = lua_tointeger(L, 1);
 
 	INPUT inp;
 	inp.type = INPUT_MOUSE;
@@ -326,8 +326,8 @@ int Mouse_lua::virtualPress(lua_State *L)
 	if( top == 3 )
 		checkType(L, LT_BOOLEAN, 3);
 
-	HWND hwnd = (HWND)(int)lua_tonumber(L, 1);
-	int vk = (int)lua_tonumber(L, 2);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	int vk = lua_tointeger(L, 2);
 	bool async = true;
 	if( top == 3 )
 		async = lua_toboolean(L, 3);
@@ -350,8 +350,8 @@ int Mouse_lua::virtualHold(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	HWND hwnd = (HWND)(int)lua_tonumber(L, 1);
-	int vk = (int)lua_tonumber(L, 2);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	int vk = lua_tointeger(L, 2);
 	if( vk <= VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->virtualHold(hwnd, vk);
 	return 0;
@@ -371,8 +371,8 @@ int Mouse_lua::virtualRelease(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	HWND hwnd = (HWND)(int)lua_tonumber(L, 1);
-	int vk = (int)lua_tonumber(L, 2);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	int vk = lua_tointeger(L, 2);
 	if( vk <= VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->virtualRelease(hwnd, vk);
 	return 0;
@@ -395,8 +395,8 @@ int Mouse_lua::virtualMove(lua_State *L)
 	int dx, dy;
 	int cx, cy;
 
-	dx = (int)lua_tonumber(L, 1);
-	dy = (int)lua_tonumber(L, 2);
+	dx = lua_tointeger(L, 1);
+	dy = lua_tointeger(L, 2);
 	Macro::instance()->getHid()->getVirtualMousePos(cx, cy);
 	Macro::instance()->getHid()->setVirtualMousePos(cx+dx, cy+dy);
 
@@ -419,8 +419,8 @@ int Mouse_lua::virtualWheelMove(lua_State *L)
 	int mx, my;
 	Macro::instance()->getHid()->getVirtualMousePos(mx, my);
 
-	HWND hwnd = (HWND)(int)lua_tonumber(L, 1);
-	int delta = (int)lua_tonumber(L, 2);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	int delta = lua_tointeger(L, 2);
 	WPARAM wparam = MAKEWPARAM(0, delta);
 	LPARAM lparam = MAKELPARAM(mx, my);
 	PostMessage(hwnd, WM_MOUSEWHEEL, wparam, lparam);
@@ -443,8 +443,8 @@ int Mouse_lua::setVirtualPosition(lua_State *L)
 	checkType(L, LT_NUMBER, 2);
 
 	unsigned int dx, dy;
-	dx = (int)lua_tonumber(L, 1);
-	dy = (int)lua_tonumber(L, 2);
+	dx = lua_tointeger(L, 1);
+	dy = lua_tointeger(L, 2);
 	Macro::instance()->getHid()->setVirtualMousePos(dx, dy);
 
 	return 0;
