@@ -42,6 +42,10 @@ CMacro::CMacro()
 	appHandle = NULL;
 	procId = 0;
 	foregroundHwnd = NULL;
+	consoleCharWidth = 0;
+	consoleCharHeight = 0;
+	lastConsoleSizeX = 0;
+	lastConsoleSizeY = 0;
 }
 
 CMacro::~CMacro()
@@ -245,7 +249,7 @@ int CMacro::handleHidInput()
 			{
 				Event e;
 				e.type = EVENT_GAMEPADPRESSED;
-				e.idata1 = i;
+				e.idata1 = i + 1;
 				e.idata2 = b + 1;
 				try{ eventQueue.push(e); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
@@ -254,7 +258,7 @@ int CMacro::handleHidInput()
 			{
 				Event e;
 				e.type = EVENT_GAMEPADRELEASED;
-				e.idata1 = i;
+				e.idata1 = i + 1;
 				e.idata2 = b + 1;
 				try{ eventQueue.push(e); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
@@ -266,7 +270,7 @@ int CMacro::handleHidInput()
 		{
 			Event e;
 			e.type = EVENT_GAMEPADPOVCHANGED;
-			e.idata1 = i;
+			e.idata1 = i + 1;
 			e.fdata2 = hid.joyPOV(i)/100;
 			try{ eventQueue.push(e); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
@@ -279,7 +283,7 @@ int CMacro::handleHidInput()
 			{
 				Event e;
 				e.type = EVENT_GAMEPADAXISCHANGED;
-				e.idata1 = i;
+				e.idata1 = i + 1;
 				e.idata2 = a;
 				e.fdata3 = hid.joyAxis(i, a)/65535.0f*100;
 				try{ eventQueue.push(e); }

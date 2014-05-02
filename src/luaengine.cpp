@@ -29,7 +29,9 @@
 #include "math_addon.h"
 #include "table_addon.h"
 
+#include "strl.h"
 #include "event.h"
+#include "version.h"
 
 extern "C"
 {
@@ -92,6 +94,15 @@ int LuaEngine::_macrotab_focusHwnd(lua_State *L)
 	return 1;
 }
 
+// Returns the version as a MAJOR.MINOR.BUILD string format (ie 2.1.4)
+int LuaEngine::_macrotab_getVersion(lua_State *L)
+{
+	char buffer[32];
+	slprintf(buffer, sizeof(buffer)-1, "%d.%d.%d", AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD);
+	lua_pushstring(L, buffer);
+	return 1;
+}
+
 /*	Push this into the stack and use it as the message handler
 	for lua_pcall(). This appends the stacktrace to any error
 	messages we might catch.
@@ -126,6 +137,7 @@ int LuaEngine::init()
 		{MACRO_EVENT_NAME, LuaEngine::_macrotab_event},
 		{"getAppHwnd", LuaEngine::_macrotab_appHwnd},
 		{"getFocusHwnd", LuaEngine::_macrotab_focusHwnd},
+		{"getVersion", LuaEngine::_macrotab_getVersion},
 		{NULL, NULL}
 	};
 

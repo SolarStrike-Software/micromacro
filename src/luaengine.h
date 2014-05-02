@@ -30,6 +30,7 @@
 			static int _macrotab_event(lua_State *);
 			static int _macrotab_appHwnd(lua_State *);
 			static int _macrotab_focusHwnd(lua_State *);
+			static int _macrotab_getVersion(lua_State *);
 
 			static int err_msgh(lua_State *);
 

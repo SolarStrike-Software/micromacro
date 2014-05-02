@@ -150,6 +150,12 @@ int main(int argc, char **argv)
 		{
 			clearCliScreen();
 			continue;
+		} else if( script == "buildinfo" )
+		{
+			printf("Version %ld.%ld.%ld, built on %s-%s-%s\n\n",
+				AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD,
+				AutoVersion::YEAR, AutoVersion::MONTH, AutoVersion::DATE);
+			continue;
 		} else if( args[0] == "exec" )
 		{
 			if( args.size() <= 1 ) // If they didn't actually give us anything to do...

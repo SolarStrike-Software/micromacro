@@ -49,7 +49,6 @@
 			};
 
 			Event() : type(EVENT_UNKNOWN), msg(""), idata1(0), idata2(0), idata3(0) { };
-			//void setMsg(const char *);
 			Event &operator=(const Event &);
 	};
 

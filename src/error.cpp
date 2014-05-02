@@ -118,6 +118,7 @@ int checkType(lua_State *L, int acceptableTypes, int arg)
 {
 	int ok = false;
 	std::vector<short> acceptableTypeIDs;
+	acceptableTypeIDs.reserve(10);
 
 	// Check each type
 	if( acceptableTypes & LT_NIL )

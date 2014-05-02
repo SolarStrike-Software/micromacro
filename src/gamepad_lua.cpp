@@ -63,7 +63,7 @@ int Gamepad_lua::pressed(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	int joyId = lua_tointeger(L, 1);
+	int joyId = lua_tointeger(L, 1) - 1;
 	int button = lua_tointeger(L, 2) - 1;
 
 	lua_pushboolean(L, Macro::instance()->getHid()->joyPressed(joyId, button) == 1);
@@ -83,7 +83,7 @@ int Gamepad_lua::released(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	int joyId = lua_tointeger(L, 1);
+	int joyId = lua_tointeger(L, 1) - 1;
 	int button = lua_tointeger(L, 2) - 1;
 
 	lua_pushboolean(L, Macro::instance()->getHid()->joyReleased(joyId, button) == 1);
@@ -104,7 +104,7 @@ int Gamepad_lua::isDown(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	int joyId = lua_tointeger(L, 1);
+	int joyId = lua_tointeger(L, 1) - 1;
 	int button = lua_tointeger(L, 2) - 1;
 
 	lua_pushboolean(L, Macro::instance()->getHid()->joyIsDown(joyId, button) == 1);
@@ -123,7 +123,7 @@ int Gamepad_lua::getPOV(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	int joyId = lua_tointeger(L, 1);
+	int joyId = lua_tointeger(L, 1) - 1;
 	lua_pushnumber(L, Macro::instance()->getHid()->joyPOV(joyId)/100);
 	return 1;
 }
@@ -147,7 +147,7 @@ int Gamepad_lua::getAxis(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 
-	int joyId = lua_tointeger(L, 1);
+	int joyId = lua_tointeger(L, 1) - 1;
 	int axisId = lua_tointeger(L, 2);
 	lua_pushnumber(L, Macro::instance()->getHid()->joyAxis(joyId, axisId)/65536.0f*100);
 	return 1;
