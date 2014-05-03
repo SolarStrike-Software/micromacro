@@ -135,6 +135,8 @@ int Window_lua::regmod(lua_State *L)
 		{"valid", Window_lua::valid},
 		{"getRect", Window_lua::getRect},
 		{"setRect", Window_lua::setRect},
+		{"getClientRect", Window_lua::getClientRect},
+		{"setClientRect", Window_lua::setClientRect},
 		{"show", Window_lua::show},
 		//{"openDC", Window_lua::openDC},
 		//{"closeDC", Window_lua::closeDC},
@@ -243,6 +245,7 @@ int Window_lua::find(lua_State *L)
 		e.type = EVENT_WARNING;
 		e.msg = buffer;
 		Macro::instance()->getEventQueue()->push(e);
+		return 0;
 	}
 
 	lua_pushinteger(L, (unsigned int)searchpair.hwnd);
@@ -481,7 +484,7 @@ int Window_lua::valid(lua_State *L)
 
 	Returns (on failure):	nil
 
-	Returns the position and size of a window's client area.
+	Returns the position and size of a window.
 */
 int Window_lua::getRect(lua_State *L)
 {
@@ -490,16 +493,12 @@ int Window_lua::getRect(lua_State *L)
 	checkType(L, LT_NUMBER, 1);
 	HWND hwnd = (HWND)lua_tointeger(L, 1);
 	RECT rect;
-	POINT point;
-	point.x = 0; point.y = 0;
 
-	// Translate coords, get rect
-	ClientToScreen(hwnd, &point);
-	GetClientRect(hwnd, &rect);
+	GetWindowRect(hwnd, &rect);
 
 	// Push results
-	lua_pushnumber(L, point.x);
-	lua_pushnumber(L, point.y);
+	lua_pushnumber(L, rect.left);
+	lua_pushnumber(L, rect.top);
 	lua_pushnumber(L, rect.right);
 	lua_pushnumber(L, rect.bottom);
 
@@ -527,13 +526,86 @@ int Window_lua::setRect(lua_State *L)
 	HWND hwnd = (HWND)lua_tointeger(L, 1);
 	RECT winrect;
 	GetWindowRect(hwnd, &winrect);
-	unsigned int flags = SWP_ASYNCWINDOWPOS|SWP_SHOWWINDOW;
 
 	int origLeft = winrect.left;
 	int origTop = winrect.top;
 
 	winrect.left = lua_tointeger(L, 2);
 	winrect.top = lua_tointeger(L, 3);
+	if( lua_isnumber(L, 4) )
+		winrect.right = lua_tointeger(L, 4) - origLeft;
+	else
+		winrect.right = winrect.right - origLeft;
+	if( lua_isnumber(L, 5) )
+		winrect.bottom = lua_tointeger(L, 5) - origTop;
+	else
+		winrect.bottom = winrect.bottom - origTop;
+
+	MoveWindow(hwnd, winrect.left, winrect.top, winrect.right, winrect.bottom, false);
+	return 0;
+}
+
+/*	window.getClientRect(number hwnd)
+	Returns (on success):	number x
+							number y
+							number width
+							number height
+
+	Returns (on failure):	nil
+
+	Returns the position and size of a window's client area.
+*/
+int Window_lua::getClientRect(lua_State *L)
+{
+	if( lua_gettop(L) != 1 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	RECT rect;
+	POINT point;
+	point.x = 0; point.y = 0;
+
+	// Translate coords, get rect
+	ClientToScreen(hwnd, &point);
+	GetClientRect(hwnd, &rect);
+
+	// Push results
+	lua_pushnumber(L, point.x);
+	lua_pushnumber(L, point.y);
+	lua_pushnumber(L, rect.right);
+	lua_pushnumber(L, rect.bottom);
+
+	return 4;
+}
+
+/*	window.setClientRect(number hwnd, number x, number y, number width, number height)
+	Returns:	nil
+
+	Change the position and size of a window's client area with handle 'hwnd'.
+*/
+int Window_lua::setClientRect(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top < 3 || top > 5 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1);
+	checkType(L, LT_NUMBER, 2);
+	checkType(L, LT_NUMBER, 3);
+	if( top >= 4 )
+		checkType(L, LT_NUMBER | LT_NIL, 4);
+	if( top >= 5 )
+		checkType(L, LT_NUMBER | LT_NIL, 5);
+
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	RECT winrect;
+	GetClientRect(hwnd, &winrect);
+	unsigned int flags = SWP_ASYNCWINDOWPOS|SWP_SHOWWINDOW;
+
+	winrect.left = 0; winrect.top = 0;
+	int origLeft = winrect.left;
+	int origTop = winrect.top;
+	int newLeft = lua_tointeger(L, 2);
+	int newTop = lua_tointeger(L, 3);
 	if( lua_isnumber(L, 4) )
 		winrect.right = lua_tointeger(L, 4);
 	else
@@ -543,10 +615,23 @@ int Window_lua::setRect(lua_State *L)
 	else
 		winrect.bottom = winrect.bottom - origTop;
 
-	SetWindowPos(hwnd, HWND_NOTOPMOST, winrect.left, winrect.top, winrect.right, winrect.bottom, flags);
+
+	// Adjust from client coordinates to screen
+    DWORD dwStyle = GetWindowLongPtr(hwnd, GWL_STYLE);
+    DWORD dwExStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+    HMENU menu = GetMenu(hwnd);
+	AdjustWindowRectEx(&winrect, dwStyle, menu != NULL, dwExStyle);
+
+	// Re-add borders
+	winrect.right = winrect.right - winrect.left;
+	winrect.bottom = winrect.bottom - winrect.top;
+
+	// Set it
+	SetWindowPos(hwnd, HWND_NOTOPMOST, newLeft + winrect.left, newTop + winrect.top, winrect.right, winrect.bottom, flags);
 
 	return 0;
 }
+
 
 /*	window.show(number hwnd, number cmd)
 	Returns:	nil

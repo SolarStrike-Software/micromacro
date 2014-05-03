@@ -199,6 +199,9 @@ int main(int argc, char **argv)
 		/* Change CWD to script's directory */
 		SetCurrentDirectory(getFilePath(args[0], false).c_str());
 
+		/* Flush any events we might have before running the new script */
+		Macro::instance()->flushEvents();
+
 		/* Run script */
 		printf("Running \'%s\'\n\n", script.c_str());
 		int success = Macro::instance()->getEngine()->loadFile(getFileName(args[0]).c_str());
@@ -215,7 +218,6 @@ int main(int argc, char **argv)
 			E->reinit();
 			continue;
 		}
-
 
 		/* Run initialization callback */
 		success = Macro::instance()->getEngine()->runInit(&args);
@@ -234,7 +236,6 @@ int main(int argc, char **argv)
 		}
 
 		/* Begin script main loop */
-		//Macro::instance()->flushEvents();
 		Macro::instance()->getHid()->poll();
 		Macro::instance()->pollForegroundWindow();
 		TimeType lastTime = getNow();

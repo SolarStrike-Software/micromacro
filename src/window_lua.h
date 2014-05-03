@@ -31,6 +31,8 @@
 			static int valid(lua_State *);
 			static int getRect(lua_State *);
 			static int setRect(lua_State *);
+			static int getClientRect(lua_State *);
+			static int setClientRect(lua_State *);
 			static int show(lua_State *);
 			static int flash(lua_State *);
 			//static int openDC(lua_State *); // No functions require a DC yet

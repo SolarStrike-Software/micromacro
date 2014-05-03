@@ -163,12 +163,14 @@ void CMacro::pollConsoleResize()
 	RECT winrect;
 	if( GetWindowRect(getAppHwnd(), &winrect) )
 	{
-		if( winrect.right != lastConsoleSizeX ||
-			winrect.bottom != lastConsoleSizeY )
+		int w = winrect.right - winrect.left;
+		int h = winrect.bottom - winrect.top;
+		if( w != lastConsoleSizeX ||
+			h != lastConsoleSizeY )
 		{
 			// Update to our new size
-			lastConsoleSizeX = winrect.right;
-			lastConsoleSizeY = winrect.bottom;
+			lastConsoleSizeX = w;
+			lastConsoleSizeY = h;
 
 			// Trigger window resize event
 			Event e;
