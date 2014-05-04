@@ -58,4 +58,27 @@
 		ALuint buffer;
 		ALuint source;
 	};
+
+	/* Holds data read from a process */
+	struct MemoryChunk
+	{
+		unsigned int address;
+		unsigned int size;
+		char *data;
+	};
+
+	template <class T>
+	T getChunkVariable(MemoryChunk *pChunk, unsigned int offset, int &err)
+	{
+		err = 0;
+		if( (offset+sizeof(T)) > pChunk->size )
+		{
+			err = -1;
+			return (T)0;
+		}
+
+		return *(T*)(pChunk->data+offset);
+	}
+
+	std::string getChunkString(MemoryChunk *pChunk, unsigned int offset, unsigned int length, int &err);
 #endif

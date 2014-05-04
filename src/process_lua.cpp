@@ -276,6 +276,7 @@ int Process_lua::regmod(lua_State *L)
 		{"read", Process_lua::read},
 		{"readPtr", Process_lua::readPtr},
 		{"readBatch", Process_lua::readBatch},
+		{"readChunk", Process_lua::readChunk},
 		{"write", Process_lua::write},
 		{"writePtr", Process_lua::writePtr},
 		{"findPattern", Process_lua::findPattern},
@@ -887,6 +888,66 @@ int Process_lua::readBatch(lua_State *L)
 			break;
 		}
 	}
+
+	return 1;
+}
+
+/*	process.readChunk(handle proc, string type, number address)
+	Returns:	chunk (class)
+
+	Read a chunk of memory.
+
+	Returns a chunk on success, nil on failure.
+*/
+int Process_lua::readChunk(lua_State *L)
+{
+	if( lua_gettop(L) != 3 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+	checkType(L, LT_NUMBER, 2);
+	checkType(L, LT_NUMBER, 3);
+
+	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
+	unsigned int address = lua_tointeger(L, 2);
+	unsigned int size = lua_tointeger(L, 3);
+
+	MemoryChunk *pChunk = static_cast<MemoryChunk *>(lua_newuserdata(L, sizeof(MemoryChunk)));
+	try {
+		pChunk->data = new char[size+1];
+	} catch( std::bad_alloc &ba ) { badAllocation(); }
+	pChunk->address = address;
+	pChunk->size = size;
+
+	DWORD bytesRead;
+	int success = ReadProcessMemory(*pHandle, (LPVOID)address, (void *)pChunk->data, size, &bytesRead);
+
+	if( !success || bytesRead != size )
+	{ // Error
+		lua_pop(L, 1); // Pop that memory chunk... looks like we don't need it!
+
+		lua_Debug ar;
+		lua_getstack(L, 1, &ar);
+		lua_getinfo(L, "nSl", &ar);
+		int line = ar.currentline;
+		const char *script = ar.short_src;
+
+		int errCode = GetLastError();
+		char buffer[4096];
+		slprintf(buffer, sizeof(buffer)-1,
+			"Failure read memory from 0x%X at 0x%X. "\
+			"%s:%d, Error code %i (%s)",
+			*pHandle, address, script, line, errCode, getWindowsErrorString(errCode).c_str());
+
+		Event e;
+		e.type = EVENT_ERROR;
+		e.msg = buffer;
+		Macro::instance()->getEventQueue()->push(e);
+		return 0;
+	}
+
+	// Set all the things
+	luaL_getmetatable(L, LuaType::metatable_memorychunk);
+	lua_setmetatable(L, -2);
 
 	return 1;
 }

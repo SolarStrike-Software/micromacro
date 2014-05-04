@@ -78,6 +78,7 @@
 			static int read(lua_State *);
 			static int readPtr(lua_State *);
 			static int readBatch(lua_State *);
+			static int readChunk(lua_State *);
 			static int write(lua_State *);
 			static int writePtr(lua_State *);
 			static int findPattern(lua_State *);

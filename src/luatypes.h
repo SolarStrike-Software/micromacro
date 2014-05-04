@@ -16,8 +16,6 @@ extern "C"
 }
 
 	typedef union _LARGE_INTEGER LARGE_INTEGER;
-	//typedef struct lua_State lua_State;
-	//typedef struct luaL_Reg luaL_Reg;
 
 	namespace LuaType
 	{
@@ -27,6 +25,7 @@ extern "C"
 		//extern const char *metatable_windowDC;
 		extern const char *metatable_audioResource;
 		extern const char *metatable_vector2d;
+		extern const char *metatable_memorychunk;
 
 		extern const char *highpart_name;
 		extern const char *lowpart_name;
@@ -64,6 +63,19 @@ extern "C"
 		const luaL_Reg vector2d_methods[] = {
 			{"set", vector2d_set},
 			{"length", vector2d_length},
+			{NULL, NULL}
+		};
+
+		int memorychunk_gc(lua_State *);
+		int memorychunk_tostring(lua_State *);
+		int memorychunk_getSize(lua_State *);
+		int memorychunk_getAddress(lua_State *);
+		int memorychunk_getData(lua_State *);
+
+		const luaL_Reg memorychunk_methods[] = {
+			{"getSize", memorychunk_getSize},
+			{"getAddress", memorychunk_getAddress},
+			{"getData", memorychunk_getData},
 			{NULL, NULL}
 		};
 	}
