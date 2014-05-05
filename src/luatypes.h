@@ -83,4 +83,5 @@ extern "C"
 	int registerLuaTypes(lua_State *);
 	LARGE_INTEGER lua_toint64(lua_State *, int);
 	bool lua_isint64(lua_State *, int);
+	void lua_pushint64(lua_State *, LARGE_INTEGER);
 #endif

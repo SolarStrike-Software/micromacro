@@ -41,23 +41,8 @@ int Timer_lua::getNow(lua_State *L)
 	if( lua_gettop(L) != 0 )
 		wrongArgs(L);
 
-
 	TimeType now = ::getNow();
-	unsigned long high, low;
-	high = (unsigned long)now.HighPart;
-	low = (unsigned long)now.LowPart;
-
-	lua_newtable(L);
-	luaL_getmetatable(L, LuaType::metatable_int64);
-	lua_setmetatable(L, -2);
-
-	lua_pushstring(L, LuaType::highpart_name); //key
-	lua_pushnumber(L, high); //value
-	lua_settable(L, -3);
-
-	lua_pushstring(L, LuaType::lowpart_name); //key
-	lua_pushnumber(L, low); //value
-	lua_settable(L, -3);
+	lua_pushint64(L, now);
 
 	return 1;
 }

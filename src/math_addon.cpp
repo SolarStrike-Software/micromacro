@@ -88,10 +88,6 @@ int Math_addon::vector2d(lua_State *L)
 
 	lua_newtable(L);
 	luaL_getmetatable(L, LuaType::metatable_vector2d);
-
-	luaL_newlib(L, LuaType::vector2d_methods);
-	lua_setfield(L, -2, "__index");
-
 	lua_setmetatable(L, -2);
 
 	lua_pushnumber(L, x);

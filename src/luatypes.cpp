@@ -119,6 +119,9 @@ int registerLuaTypes(lua_State *L)
 
 	// Vector2d
 	luaL_newmetatable(L, LuaType::metatable_vector2d);
+	luaL_newlib(L, LuaType::vector2d_methods);
+	lua_setfield(L, -2, "__index");
+
 	lua_pushstring(L, "__tostring");
 	lua_pushcfunction(L, LuaType::vector2d_tostring);
 	lua_settable(L, -3);
@@ -1035,4 +1038,19 @@ int LuaType::memorychunk_getData(lua_State *L)
 	}
 
 	return 1;
+}
+
+void lua_pushint64(lua_State *L, LARGE_INTEGER value)
+{
+	lua_newtable(L);
+	luaL_getmetatable(L, LuaType::metatable_int64);
+	lua_setmetatable(L, -2);
+
+	lua_pushstring(L, LuaType::highpart_name); //key
+	lua_pushnumber(L, (unsigned long)value.HighPart); //value
+	lua_settable(L, -3);
+
+	lua_pushstring(L, LuaType::lowpart_name); //key
+	lua_pushnumber(L, (unsigned long)value.LowPart); //value
+	lua_settable(L, -3);
 }
