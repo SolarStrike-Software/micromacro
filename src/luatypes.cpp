@@ -855,21 +855,7 @@ int LuaType::vector2d_div(lua_State *L)
 	// Prevent division by zero
 	if( std::isnan(nx) || std::isinf(nx) || std::isnan(ny) || std::isinf(ny) )
 	{
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Attempt to divide by zero or illegal operation. %s:%d",
-			script, line);
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Attempt to divide by zero or illegal operation.");
 		return 0;
 	}
 
@@ -1019,21 +1005,7 @@ int LuaType::memorychunk_getData(lua_State *L)
 	if( err )
 	{ // Throw error
 		lua_pop(L, lua_gettop(L) - top); // Remove anything we might've pushed
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Attempt to get data that is out of bounds. %s:%d",
-			script, line);
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Attempt to get data that is out of bounds.");
 		return 0;
 	}
 

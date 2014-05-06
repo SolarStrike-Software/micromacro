@@ -119,22 +119,9 @@ int System_lua::getClipboard(lua_State *L)
 
 	if( !success ) // Throw error (for real this time)
 	{
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to read clipboard data. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to read clipboard data. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 
 		return 0;
 	}
@@ -189,22 +176,9 @@ int System_lua::setClipboard(lua_State *L)
 
 	if( !success ) // Throw error
 	{
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to set clipboard data. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to set clipboard data. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 	}
 
 	lua_pushboolean(L, success);

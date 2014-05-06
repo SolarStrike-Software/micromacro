@@ -329,20 +329,7 @@ int Process_lua::open(lua_State *L)
 
 	if( handle == NULL )
 	{ // An error occurred!
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
-		char buffer[2048];
-		slprintf(buffer, sizeof(buffer)-1, "Error opening process. %s:%d", script, line);
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
-
+		pushLuaErrorEvent(L, "Error opening process.");
 		return 0;
 	}
 
@@ -478,23 +465,10 @@ int Process_lua::read(lua_State *L)
 
 	if( err )
 	{ // Throw an error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure reading memory from 0x%X at 0x%X. "\
-			"%s:%d, Error code %i (%s)",
-			*pHandle, address, script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure reading memory from 0x%X at 0x%X. "\
+			"Error code %i (%s).",
+			*pHandle, address, errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -670,23 +644,10 @@ int Process_lua::readPtr(lua_State *L)
 
 	if( err )
 	{ // Throw an error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure reading memory from 0x%X at 0x%X. "\
-			"%s:%d, Error code %i (%s)",
-			*pHandle, address, script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure reading memory from 0x%X at 0x%X. "\
+			"Error code %i (%s)",
+			*pHandle, address, errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -741,24 +702,10 @@ int Process_lua::readBatch(lua_State *L)
 	if( !success || bytesRead != readLen )
 	{ // Throw error
 		delete []readBuffer;
-
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure reading memory from 0x%X at 0x%X. "\
-			"%s:%d, Error code %i (%s)",
-			*pHandle, address, script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure reading memory from 0x%X at 0x%X. "\
+			"Error code %i (%s)",
+			*pHandle, address, errCode, getWindowsErrorString(errCode).c_str());
 	}
 
 	unsigned int cursorPos = 0;
@@ -924,24 +871,10 @@ int Process_lua::readChunk(lua_State *L)
 	if( !success || bytesRead != size )
 	{ // Error
 		lua_pop(L, 1); // Pop that memory chunk... looks like we don't need it!
-
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure read memory from 0x%X at 0x%X. "\
-			"%s:%d, Error code %i (%s)",
-			*pHandle, address, script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure read memory from 0x%X at 0x%X. "\
+			"Error code %i (%s)",
+			*pHandle, address, errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -1016,23 +949,10 @@ int Process_lua::write(lua_State *L)
 
 	if( err )
 	{ // Throw an error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure writing memory to 0x%X at 0x%X. "\
-			"%s:%d, Error code %i (%s)",
-			*pHandle, address, script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure writing memory to 0x%X at 0x%X. "\
+			"Error code %i (%s)",
+			*pHandle, address, errCode, getWindowsErrorString(errCode).c_str());
 	}
 
 	lua_pushboolean(L, err == 0);
@@ -1163,23 +1083,10 @@ int Process_lua::writePtr(lua_State *L)
 
 	if( err )
 	{ // Throw an error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure writing memory to 0x%X at 0x%X. "\
-			"%s:%d, Error code %i (%s)",
-			*pHandle, address, script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure writing memory to 0x%X at 0x%X. "\
+			"Error code %i (%s)",
+			*pHandle, address, errCode, getWindowsErrorString(errCode).c_str());
 	}
 
 	lua_pushboolean(L, err == 0);
@@ -1289,22 +1196,9 @@ int Process_lua::findByWindow(lua_State *L)
 
 	if( procId == 0 ) // Nothing found
 	{ // Throw warning
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to find process ID by window. %s:%d, Error code %i (%s)",
-			hwnd, script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_WARNING;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to find process ID by window. Error code %i (%s)",
+			hwnd, errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -1332,22 +1226,9 @@ int Process_lua::findByExe(lua_State *L)
 	int success = EnumProcesses(processes, sizeof(processes), &bytesReturned);
 	if( !success ) {
 		// Throw error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to enumerate processes. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to enumerate processes. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -1439,22 +1320,9 @@ int Process_lua::getModuleAddress(lua_State *L)
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId);
 	if( snapshot == INVALID_HANDLE_VALUE )
 	{ // Throw error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to find window. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to find window. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 	}
 
 	bool found = false;
@@ -1513,23 +1381,9 @@ int Process_lua::attachInput(lua_State *L)
 	}
 	else
 	{ // Throw error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure attaching input thread to process. "\
-			"%s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure attaching input thread to process. "\
+			"Error code %i (%s)", errCode, getWindowsErrorString(errCode).c_str());
 	}
 
 	lua_pushboolean(L, success);
@@ -1566,23 +1420,9 @@ int Process_lua::detachInput(lua_State *L)
 	}
 	else
 	{ // Throw error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure attaching input thread to process. "\
-			"%s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure attaching input thread to process. "\
+			"Error code %i (%s)", errCode, getWindowsErrorString(errCode).c_str());
 	}
 
 	lua_pushboolean(L, success);

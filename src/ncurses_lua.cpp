@@ -306,20 +306,7 @@ int Ncurses_lua::createWindow(lua_State *L)
 	WINDOW *nWin = newwin(height, width, starty, startx);
 	if( nWin == NULL )
 	{ // Throw an error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
-		char buffer[2048];
-		slprintf(buffer, sizeof(buffer)-1, "Error creating Ncurses window. %s:%d", script, line);
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
-
+		pushLuaErrorEvent(L, "Error creating Ncurses window.");
 		return 0;
 	}
 

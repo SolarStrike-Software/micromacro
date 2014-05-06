@@ -216,10 +216,36 @@ int checkType(lua_State *L, int acceptableTypes, int arg)
 	return 0;
 }
 
-int luaL_typerror(lua_State *s, int narg, const char *tname)
+int luaL_typerror(lua_State *L, int narg, const char *tname)
 {
-	const char *msg = lua_pushfstring(s, "%s expected, got %s", tname,
-		luaL_typename(s, narg));
+	const char *msg = lua_pushfstring(L, "%s expected, got %s", tname,
+		luaL_typename(L, narg));
 
-	return luaL_argerror(s, narg, msg);
+	return luaL_argerror(L, narg, msg);
+}
+
+void pushLuaErrorEvent(lua_State *L, const char *fmt, ...)
+{
+	// Get Lua state info
+	lua_Debug ar;
+	lua_getstack(L, 1, &ar);
+	lua_getinfo(L, "nSl", &ar);
+
+	// Prep a string that tells us where the error originated
+	char scriptinfo[256];
+	slprintf(scriptinfo, sizeof(scriptinfo)-1, " %s:%d", ar.short_src, ar.currentline);
+
+	// Actually format the error we were given
+	char buffer[2048];
+	va_list va_alist;
+	va_start(va_alist, fmt);
+	_vsnprintf(buffer, sizeof(buffer), fmt, va_alist);
+	va_end(va_alist);
+
+	// Queue it
+	Event e;
+	e.type = EVENT_ERROR;
+	e.msg = buffer;
+	e.msg += scriptinfo;
+	Macro::instance()->getEventQueue()->push(e);
 }

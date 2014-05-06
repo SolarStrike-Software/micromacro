@@ -229,22 +229,9 @@ int Window_lua::find(lua_State *L)
 
 	if( searchpair.hwnd == 0 )
 	{ // Throw warning
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to find window. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_WARNING;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to find window. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -350,22 +337,9 @@ int Window_lua::getTitle(lua_State *L)
 
 	if( !success )
 	{ // Throw error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to get window title. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to get window title. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -397,22 +371,9 @@ int Window_lua::setTitle(lua_State *L)
 
 	if( !success )
 	{ // Throw error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to set window title. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to set window title. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 	}
 
 	lua_pushboolean(L, success);
@@ -437,22 +398,9 @@ int Window_lua::getClassName(lua_State *L)
 
 	if( !success )
 	{ // Throw error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to get window class. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to get window class. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -726,22 +674,8 @@ int Window_lua::openDC(lua_State *L)
 	HDC hdc = ::GetWindowDC(hwnd);
 	if( hdc == NULL )
 	{ // An error occurred
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
-		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to open window device context. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to open window device context. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -793,22 +727,9 @@ int Window_lua::getPixel(lua_State *L)
 	HDC hdc = GetDC(NULL); // Open DC to desktop (not specified window)
 	if( !hdc )
 	{ // Throw error
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failure to open DC to desktop. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failure to open DC to desktop. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -916,23 +837,9 @@ int Window_lua::pixelSearch(lua_State *L)
 		DeleteDC(tmpHdc);
 		DeleteObject(hBmp);
 		ReleaseDC(NULL, hdcScreen);
-
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Unable to grab screenshot of target window. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Unable to grab screenshot of target window. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 
@@ -961,24 +868,9 @@ int Window_lua::pixelSearch(lua_State *L)
 		DeleteObject(hBmp);
 		ReleaseDC(NULL, hdcScreen);
 		delete []_pixels;
-
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Received invalid data or unable to allocate memory while reading image data. "
-			"%s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Received invalid data or unable to allocate memory while reading image data. "
+			"Error code %i (%s)", errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 

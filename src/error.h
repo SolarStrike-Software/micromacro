@@ -53,4 +53,6 @@
 	const char *getErrorString(int);
 	std::string getWindowsErrorString(int);
 
+	void pushLuaErrorEvent(lua_State *, const char *, ...);
+
 #endif

@@ -100,23 +100,9 @@ int Audio_lua::load(lua_State *L)
 	if( !success )
 	{ // Throw error
 		lua_pop(L, 1); // Pop our resource off the stack.
-
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "nSl", &ar);
-		int line = ar.currentline;
-		const char *script = ar.short_src;
-
 		int errCode = GetLastError();
-		char buffer[4096];
-		slprintf(buffer, sizeof(buffer)-1,
-			"Failed to load sound resource. %s:%d, Error code %i (%s)",
-			script, line, errCode, getWindowsErrorString(errCode).c_str());
-
-		Event e;
-		e.type = EVENT_ERROR;
-		e.msg = buffer;
-		Macro::instance()->getEventQueue()->push(e);
+		pushLuaErrorEvent(L, "Failed to load sound resource. Error code %i (%s).",
+			errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
 	}
 

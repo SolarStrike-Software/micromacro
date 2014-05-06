@@ -98,7 +98,7 @@ void CLogger::add(const char *fmt, ...)
 	outfile << (char*)&szTime << " : ";
 
 	va_list va_alist;
-	char logbuf[1024] = {0};
+	char logbuf[2048] = {0};
 	va_start(va_alist, fmt);
 	_vsnprintf(logbuf + strlen(logbuf), sizeof(logbuf) - strlen(logbuf),
 	fmt, va_alist);
