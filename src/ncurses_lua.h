@@ -8,10 +8,12 @@
 #ifndef NCURSES_LUA_H
 #define NCURSES_LUA_H
 
-	#define NCURSES_MODULE_NAME		"ncurses"
+	#define NCURSES_MODULE_NAME				"ncurses"
+	#define MAX_NCURSES_HISTORY_LINES		10
 
 	#include <ncursesw/ncurses.h>
-
+	#include <vector>
+	#include <string>
 
 	typedef struct lua_State lua_State;
 
@@ -20,6 +22,8 @@
 		protected:
 			static bool initialized;
 			static const char *stdscr_name;
+			static std::vector<std::string> history;
+			static int historyIndex;
 
 			static void flush(WINDOW *);
 			static void readline(WINDOW *, char *, size_t);

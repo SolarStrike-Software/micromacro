@@ -24,6 +24,8 @@ extern "C"
 
 bool Ncurses_lua::initialized = false;
 const char *Ncurses_lua::stdscr_name = "STDSCR";
+int Ncurses_lua::historyIndex = 0;
+std::vector<std::string> Ncurses_lua::history;
 
 int Ncurses_lua::is_initialized()
 {
@@ -113,6 +115,8 @@ int Ncurses_lua::init(lua_State *L)
 	::leaveok(::stdscr, true);
 	::start_color();
 
+	historyIndex = 0;
+
 	/*	Certain mouse events cause blocking issues in non-blocking mode.
 		To avoid this, lets only listen to a single event that doesn't
 		cause any issues. Note that using 0 for the mask also doesn't help.
@@ -149,6 +153,10 @@ int Ncurses_lua::init(lua_State *L)
 
 int Ncurses_lua::cleanup(lua_State *L)
 {
+	// Clear history
+	history.clear();
+	historyIndex = 0;
+
 	// Reset text/BG style
 	wbkgd(::stdscr, A_NORMAL);
 	wattrset(::stdscr, A_NORMAL);
@@ -429,6 +437,8 @@ void Ncurses_lua::flush(WINDOW *pw)
 */
 void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 {
+	historyIndex = history.size();
+
 	unsigned int pos = 0;
 	unsigned int len = 0;
 	unsigned int outstart = 0;
@@ -470,6 +480,22 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 			if( pos > 0 ) --pos; else beep();
 		else if( c == KEY_RIGHT )
 			if( pos < len ) ++pos; else beep();
+		else if( c == KEY_UP && historyIndex > 0 )
+		{
+			--historyIndex;
+			std::string str = history.at(historyIndex).c_str();
+			strlcpy(buffer, str.c_str(), bufflen);
+			len = str.length();
+			pos = len;
+		}
+		else if( c == KEY_DOWN && historyIndex < (history.size() - 1)  )
+		{
+			++historyIndex;
+			std::string str = history.at(historyIndex).c_str();
+			strlcpy(buffer, str.c_str(), bufflen);
+			len = str.length();
+			pos = len;
+		}
 		else if( c == KEY_HOME )
 			pos = 0;
 		else if( c == KEY_END )
@@ -521,6 +547,13 @@ void Ncurses_lua::readline(WINDOW *pw, char *buffer, size_t bufflen)
 		::scrollok(pw, true);
 
 	buffer[len] = 0; // Ensure NULL terminator
+
+	// Remove dropped history
+	if( history.size() >= MAX_NCURSES_HISTORY_LINES ) // Don't keep too many
+		history.erase(history.begin(), history.begin()+1);
+
+	// Insert history entry
+	history.push_back(buffer);
 }
 
 /*	ncurses.getString(window win)
