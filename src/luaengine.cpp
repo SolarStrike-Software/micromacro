@@ -29,6 +29,8 @@
 #include "math_addon.h"
 #include "table_addon.h"
 
+#include "vector3d_lua.h"
+
 #include "strl.h"
 #include "event.h"
 #include "version.h"
@@ -168,6 +170,8 @@ int LuaEngine::init()
 		String_addon::regmod,
 		Math_addon::regmod,
 		Table_addon::regmod,
+		/* Any other classes */
+		Vector3d_lua::regmod,
 		0 // NULL terminator
 	};
 

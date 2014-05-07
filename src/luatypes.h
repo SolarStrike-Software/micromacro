@@ -16,6 +16,7 @@ extern "C"
 }
 
 	typedef union _LARGE_INTEGER LARGE_INTEGER;
+	typedef struct Vector3d Vector3d;
 
 	namespace LuaType
 	{
@@ -24,7 +25,7 @@ extern "C"
 		extern const char *metatable_handle;
 		//extern const char *metatable_windowDC;
 		extern const char *metatable_audioResource;
-		extern const char *metatable_vector2d;
+		extern const char *metatable_vector3d;
 		extern const char *metatable_memorychunk;
 
 		extern const char *highpart_name;
@@ -51,21 +52,6 @@ extern "C"
 		int audioResource_gc(lua_State *);
 		int audioResource_tostring(lua_State *);
 
-		int vector2d_tostring(lua_State *);
-		int vector2d_add(lua_State *);
-		int vector2d_sub(lua_State *);
-		int vector2d_mul(lua_State *);
-		int vector2d_div(lua_State *);
-		int vector2d_set(lua_State *);
-		int vector2d_length(lua_State *);
-
-		//extern const luaL_Reg vector2d_methods[];
-		const luaL_Reg vector2d_methods[] = {
-			{"set", vector2d_set},
-			{"length", vector2d_length},
-			{NULL, NULL}
-		};
-
 		int memorychunk_gc(lua_State *);
 		int memorychunk_tostring(lua_State *);
 		int memorychunk_getSize(lua_State *);
@@ -84,4 +70,7 @@ extern "C"
 	LARGE_INTEGER lua_toint64(lua_State *, int);
 	bool lua_isint64(lua_State *, int);
 	void lua_pushint64(lua_State *, LARGE_INTEGER);
+
+	Vector3d lua_tovector3d(lua_State *, int );
+	void lua_pushvector3d(lua_State *, Vector3d &);
 #endif

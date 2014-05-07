@@ -23,7 +23,7 @@
 			static bool initialized;
 			static const char *stdscr_name;
 			static std::vector<std::string> history;
-			static int historyIndex;
+			static unsigned int historyIndex;
 
 			static void flush(WINDOW *);
 			static void readline(WINDOW *, char *, size_t);
