@@ -8,6 +8,7 @@
 #include "timer_lua.h"
 #include "timer.h"
 #include "luatypes.h"
+#include "int64_lua.h"
 #include "error.h"
 extern "C"
 {

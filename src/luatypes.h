@@ -28,8 +28,7 @@ extern "C"
 		extern const char *metatable_vector3d;
 		extern const char *metatable_memorychunk;
 
-		extern const char *highpart_name;
-		extern const char *lowpart_name;
+/*
 
 		int int64_add(lua_State *);
 		int int64_subtract(lua_State *);
@@ -39,6 +38,7 @@ extern "C"
 		int int64_lt(lua_State *);
 		int int64_gt(lua_State *);
 		int int64_tostring(lua_State *);
+*/
 
 		int ncursesWindow_gc(lua_State *);
 		int ncursesWindow_tostring(lua_State *);
@@ -67,10 +67,6 @@ extern "C"
 	}
 
 	int registerLuaTypes(lua_State *);
-	LARGE_INTEGER lua_toint64(lua_State *, int);
-	bool lua_isint64(lua_State *, int);
-	void lua_pushint64(lua_State *, LARGE_INTEGER);
-
 	Vector3d lua_tovector3d(lua_State *, int );
 	void lua_pushvector3d(lua_State *, Vector3d &);
 #endif
