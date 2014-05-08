@@ -24,7 +24,7 @@ extern "C"
 
 bool Ncurses_lua::initialized = false;
 const char *Ncurses_lua::stdscr_name = "STDSCR";
-int Ncurses_lua::historyIndex = 0;
+unsigned int Ncurses_lua::historyIndex = 0;
 std::vector<std::string> Ncurses_lua::history;
 
 int Ncurses_lua::is_initialized()

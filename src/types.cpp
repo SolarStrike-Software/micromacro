@@ -25,3 +25,11 @@ std::string getChunkString(MemoryChunk *pChunk, unsigned int offset, unsigned in
 
 	return std::string(pChunk->data+offset, length);
 }
+
+Vector3d &Vector3d::operator=(const Vector3d &o)
+{
+	x = o.x;
+	y = o.y;
+	z = o.z;
+	return *this;
+}

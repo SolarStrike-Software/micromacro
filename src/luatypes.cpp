@@ -30,18 +30,14 @@
 
 namespace LuaType
 {
-	/*const luaL_Reg vector2d_methods[] = {
-		{"set", vector2d_set},
-		{NULL, NULL}
-	};*/
-
 	// Metatable names
 	const char *metatable_int64 = "int64";
 	const char *metatable_ncursesWindow = "ncurses.window";
 	const char *metatable_handle = "process.handle";
 	const char *metatable_windowDC = "window.windowDC";
 	const char *metatable_audioResource = "audio.audioResource";
-	const char *metatable_vector2d = "vector2d";
+	//const char *metatable_vector2d = "vector2d";
+	const char *metatable_vector3d = "vector3d";
 	const char *metatable_memorychunk = "memorychunk";
 
 	// Parts of int64
@@ -118,6 +114,7 @@ int registerLuaTypes(lua_State *L)
 
 
 	// Vector2d
+/*	DEPRECATED; use Vector3d
 	luaL_newmetatable(L, LuaType::metatable_vector2d);
 	luaL_newlib(L, LuaType::vector2d_methods);
 	lua_setfield(L, -2, "__index");
@@ -142,6 +139,7 @@ int registerLuaTypes(lua_State *L)
 	lua_pushcfunction(L, LuaType::vector2d_div);
 	lua_settable(L, -3);
 	lua_pop(L, 1); // Pop metatable
+*/
 
 
 	// MemoryChunk
@@ -670,246 +668,6 @@ int LuaType::audioResource_tostring(lua_State *L)
 	return 1;
 }
 
-int LuaType::vector2d_tostring(lua_State *L)
-{
-	checkType(L, LT_TABLE, 1);
-
-	double x; double y;
-	lua_getfield(L, 1, "x");
-	x = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 1, "y");
-	y = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	char buffer[32];
-	slprintf(buffer, sizeof(buffer)-1, "(%0.1f, %0.1f)", x, y);
-
-	lua_pushstring(L, buffer);
-	return 1;
-}
-
-int LuaType::vector2d_add(lua_State *L)
-{
-	checkType(L, LT_TABLE, 1);
-	checkType(L, LT_TABLE, 2);
-
-	double x1, y1, x2, y2;
-
-	// Vector 1
-	lua_getfield(L, 1, "x");
-	x1 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 1, "y");
-	y1 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	// Vector 2
-	lua_getfield(L, 2, "x");
-	x2 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 2, "y");
-	y2 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	// Add them to a new table, return it.
-	lua_newtable(L);
-
-	luaL_getmetatable(L, LuaType::metatable_vector2d);
-	luaL_newlib(L, vector2d_methods);
-	lua_setfield(L, -2, "__index");
-	lua_setmetatable(L, -2);
-
-	lua_pushstring(L, "x");
-	lua_pushnumber(L, x1 + x2);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "y");
-	lua_pushnumber(L, y1 + y2);
-	lua_settable(L, -3);
-
-	return 1;
-}
-
-int LuaType::vector2d_sub(lua_State *L)
-{
-	checkType(L, LT_TABLE, 1);
-	checkType(L, LT_TABLE, 2);
-
-	double x1, y1, x2, y2;
-
-	// Vector 1
-	lua_getfield(L, 1, "x");
-	x1 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 1, "y");
-	y1 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	// Vector 2
-	lua_getfield(L, 2, "x");
-	x2 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 2, "y");
-	y2 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	// Add them to a new table, return it.
-	lua_newtable(L);
-
-	luaL_getmetatable(L, LuaType::metatable_vector2d);
-	luaL_newlib(L, vector2d_methods);
-	lua_setfield(L, -2, "__index");
-	lua_setmetatable(L, -2);
-
-	lua_pushstring(L, "x");
-	lua_pushnumber(L, x1 - x2);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "y");
-	lua_pushnumber(L, y1 - y2);
-	lua_settable(L, -3);
-
-	return 1;
-}
-
-int LuaType::vector2d_mul(lua_State *L)
-{
-	checkType(L, LT_TABLE, 1);
-	checkType(L, LT_TABLE, 2);
-
-	double x1, y1, x2, y2;
-
-	// Vector 1
-	lua_getfield(L, 1, "x");
-	x1 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 1, "y");
-	y1 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	// Vector 2
-	lua_getfield(L, 2, "x");
-	x2 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 2, "y");
-	y2 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	// Add them to a new table, return it.
-	lua_newtable(L);
-
-	luaL_getmetatable(L, LuaType::metatable_vector2d);
-	luaL_newlib(L, vector2d_methods);
-	lua_setfield(L, -2, "__index");
-	lua_setmetatable(L, -2);
-
-	lua_pushstring(L, "x");
-	lua_pushnumber(L, x1 * x2);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "y");
-	lua_pushnumber(L, y1 * y2);
-	lua_settable(L, -3);
-
-	return 1;
-}
-
-int LuaType::vector2d_div(lua_State *L)
-{
-	checkType(L, LT_TABLE, 1);
-	checkType(L, LT_TABLE, 2);
-
-	double x1, y1, x2, y2;
-
-	// Vector 1
-	lua_getfield(L, 1, "x");
-	x1 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 1, "y");
-	y1 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	// Vector 2
-	lua_getfield(L, 2, "x");
-	x2 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 2, "y");
-	y2 = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-
-	double nx, ny;
-	nx = x1 / x2;
-	ny = y1 / y2;
-
-	// Prevent division by zero
-	if( std::isnan(nx) || std::isinf(nx) || std::isnan(ny) || std::isinf(ny) )
-	{
-		pushLuaErrorEvent(L, "Attempt to divide by zero or illegal operation.");
-		return 0;
-	}
-
-	// Add them to a new table, return it.
-	lua_newtable(L);
-
-	luaL_getmetatable(L, LuaType::metatable_vector2d);
-	luaL_newlib(L, vector2d_methods);
-	lua_setfield(L, -2, "__index");
-	lua_setmetatable(L, -2);
-
-	lua_pushstring(L, "x");
-	lua_pushnumber(L, nx);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "y");
-	lua_pushnumber(L, ny);
-	lua_settable(L, -3);
-
-	return 1;
-}
-
-int LuaType::vector2d_set(lua_State *L)
-{
-	if( lua_gettop(L) != 3 )
-		wrongArgs(L);
-	checkType(L, LT_TABLE, 1);
-	checkType(L, LT_NUMBER, 2);
-	checkType(L, LT_NUMBER, 3);
-
-	lua_setfield(L, 1, "y"); // Set Y to value on top of stack, pop it
-	lua_setfield(L, 1, "x"); // Set X to value on top of stack, pop it
-	return 0;
-}
-
-int LuaType::vector2d_length(lua_State *L)
-{
-	if( lua_gettop(L) != 1 )
-		wrongArgs(L);
-	checkType(L, LT_TABLE, 1);
-
-	double x; double y;
-	lua_getfield(L, 1, "x");
-	x = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 1, "y");
-	y = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_pushnumber(L, sqrt(x*x + y*y));
-	return 1;
-}
-
 int LuaType::memorychunk_gc(lua_State *L)
 {
 	MemoryChunk *pChunk = static_cast<MemoryChunk *>(lua_touserdata(L, 1));
@@ -1025,4 +783,39 @@ void lua_pushint64(lua_State *L, LARGE_INTEGER value)
 	lua_pushstring(L, LuaType::lowpart_name); //key
 	lua_pushnumber(L, (unsigned long)value.LowPart); //value
 	lua_settable(L, -3);
+}
+
+Vector3d lua_tovector3d(lua_State *L, int index)
+{
+	Vector3d vec;
+	lua_getfield(L, index, "x");
+	vec.x = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "y");
+	vec.y = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "z");
+	vec.z = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	return vec;
+}
+
+void lua_pushvector3d(lua_State *L, Vector3d &vec)
+{
+	lua_newtable(L);
+
+	luaL_getmetatable(L, LuaType::metatable_vector3d);
+	lua_setmetatable(L, -2);
+
+	lua_pushnumber(L, vec.x);
+	lua_setfield(L, -2, "x");
+
+	lua_pushnumber(L, vec.y);
+	lua_setfield(L, -2, "y");
+
+	lua_pushnumber(L, vec.z);
+	lua_setfield(L, -2, "z");
 }
