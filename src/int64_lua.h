@@ -13,6 +13,7 @@
 
 	namespace LuaType
 	{
+		extern const char *metatable_int64;
 		extern const char *int64_highpart_name;
 		extern const char *int64_lowpart_name;
 	}

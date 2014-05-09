@@ -6,6 +6,7 @@
 ******************************************************************************/
 
 #include "process_lua.h"
+#include "memorychunk_lua.h"
 #include "luatypes.h"
 #include "error.h"
 #include "wininclude.h"

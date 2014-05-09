@@ -11,6 +11,11 @@
 	typedef struct lua_State lua_State;
 	typedef struct Vector3d Vector3d;
 
+	namespace LuaType
+	{
+		extern const char *metatable_vector3d;
+	}
+
 	class Vector3d_lua
 	{
 		protected:
@@ -30,5 +35,8 @@
 		public:
 			static int regmod(lua_State *);
 	};
+
+	Vector3d lua_tovector3d(lua_State *, int );
+	void lua_pushvector3d(lua_State *, Vector3d &);
 
 #endif

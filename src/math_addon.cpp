@@ -7,8 +7,8 @@
 
 #include "math_addon.h"
 #include "error.h"
-#include "luatypes.h"
 #include "types.h"
+#include "vector3d_lua.h"
 
 #include <math.h>
 

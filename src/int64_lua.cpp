@@ -19,6 +19,7 @@ extern "C"
 #include "strl.h"
 
 // Parts of int64
+const char *LuaType::metatable_int64 = "int64";
 const char *LuaType::int64_highpart_name = "high";
 const char *LuaType::int64_lowpart_name = "low";
 

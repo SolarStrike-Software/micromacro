@@ -21,6 +21,8 @@ extern "C"
 	#include <lualib.h>
 }
 
+const char *LuaType::metatable_vector3d = "vector3d";
+
 int Vector3d_lua::regmod(lua_State *L)
 {
 	const luaL_Reg meta[] = {
@@ -316,4 +318,40 @@ int Vector3d_lua::rotateAbout(lua_State *L)
 
 	lua_pushvector3d(L, vec);
 	return 1;
+}
+
+
+Vector3d lua_tovector3d(lua_State *L, int index)
+{
+	Vector3d vec;
+	lua_getfield(L, index, "x");
+	vec.x = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "y");
+	vec.y = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "z");
+	vec.z = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	return vec;
+}
+
+void lua_pushvector3d(lua_State *L, Vector3d &vec)
+{
+	lua_newtable(L);
+
+	luaL_getmetatable(L, LuaType::metatable_vector3d);
+	lua_setmetatable(L, -2);
+
+	lua_pushnumber(L, vec.x);
+	lua_setfield(L, -2, "x");
+
+	lua_pushnumber(L, vec.y);
+	lua_setfield(L, -2, "y");
+
+	lua_pushnumber(L, vec.z);
+	lua_setfield(L, -2, "z");
 }
