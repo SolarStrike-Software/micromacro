@@ -36,6 +36,7 @@
 			KeyHeldQueue keyHeldQueue;
 			int vMouseX, vMouseY;
 			unsigned int gamepadCount;
+			unsigned int gamepadMaxIndex;
 
 			bool keyIsExtended(int);
 
@@ -76,6 +77,7 @@
 			bool joyAxisChanged(int, int);
 
 			unsigned int getGamepadCount();
+			unsigned int getGamepadMaxIndex();
 			/* Lack of documentation on HW input simulation from Microsoft...
 			void joyPress(int, int, bool = true);
 			void joyHold(int, int);

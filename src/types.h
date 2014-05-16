@@ -88,5 +88,30 @@
 		Vector3d() : x(0), y(0), z(0) { };
 		Vector3d(double _x, double _y, double _z) : x(_x), y(_y), z(_z) { };
 		Vector3d &operator=(const Vector3d &);
+		Vector3d operator+(const Vector3d &);
+		Vector3d operator-(const Vector3d &);
+		Vector3d operator*(const Vector3d &);
+		Vector3d operator*(double);
+		Vector3d operator/(const Vector3d &);
+		Vector3d operator/(double);
+		Vector3d cross(const Vector3d &);
+		double dot(const Vector3d &);
+		Vector3d normal();
+		double magnitude();
+	};
+
+	struct Quaternion
+	{
+		double w, x, y, z;
+		Quaternion() : w(1), x(0), y(0), z(0) {};
+		Quaternion(double _w, double _x, double _y, double _z) : w(_w), x(_x), y(_y), z(_z) {};
+		Quaternion(Vector3d &);
+		Quaternion(Vector3d &, double);
+		Quaternion &operator=(const Quaternion &);
+		Quaternion operator*(double);
+		Vector3d operator*(const Vector3d &);
+		Quaternion operator*(const Quaternion &);
+		Quaternion conjugate();
+		Quaternion normal();
 	};
 #endif

@@ -71,6 +71,7 @@ int Hid::init()
 			++gamepadsPolled;
 	}
 	gamepadCount = gamepadsPolled;
+	gamepadMaxIndex = gamepadsPolled;
 
 	// Various other stuff
 	keyHoldDelayMs = 50;
@@ -100,7 +101,7 @@ void Hid::poll()
 
 	// Poll gamepad
 	unsigned int gamepadsPolled =  0;
-	for(unsigned int gamepad = 0; gamepad < GAMEPADS; gamepad++)
+	for(unsigned int gamepad = 0; gamepad < gamepadMaxIndex; gamepad++)
 	{
 		joyinfo[gamepad].dwSize = sizeof(JOYINFOEX);
 		lastjoyinfo[gamepad].dwSize = sizeof(JOYINFOEX);
@@ -598,6 +599,11 @@ void Hid::virtualJoyRelease(HWND hwnd, int gamepad, int button)
 unsigned int Hid::getGamepadCount()
 {
 	return gamepadCount;
+}
+
+unsigned int Hid::getGamepadMaxIndex()
+{
+	return gamepadMaxIndex;
 }
 
 void Hid::handleKeyHeldQueue()

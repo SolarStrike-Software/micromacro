@@ -24,19 +24,26 @@
 			static int sub(lua_State *);
 			static int mul(lua_State *);
 			static int div(lua_State *);
+			static int pow(lua_State *);
+			static int unm(lua_State *);
 			static int set(lua_State *);
 			static int length(lua_State *);
 			static int normal(lua_State *);
+			static int dot(lua_State *);
+			static int cross(lua_State *);
 			static int rotateAboutX(lua_State *);
 			static int rotateAboutY(lua_State *);
 			static int rotateAboutZ(lua_State *);
 			static int rotateAbout(lua_State *);
+			static int lerp(lua_State *);
+			static int slerp(lua_State *);
+			static int moveTowards(lua_State *);
 
 		public:
 			static int regmod(lua_State *);
 	};
 
 	Vector3d lua_tovector3d(lua_State *, int );
-	void lua_pushvector3d(lua_State *, Vector3d &);
+	void lua_pushvector3d(lua_State *, const Vector3d &);
 
 #endif

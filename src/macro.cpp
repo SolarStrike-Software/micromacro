@@ -242,7 +242,7 @@ int CMacro::handleHidInput()
 	}
 
 	// Handle gamepads
-	for(unsigned int i = 0; i < GAMEPADS; i++)
+	for(unsigned int i = 0; i < hid.getGamepadMaxIndex(); i++)
 	{
 		// Check all buttons on this gamepad
 		for(unsigned int b = 0; b < GAMEPAD_BUTTONS; b++)
