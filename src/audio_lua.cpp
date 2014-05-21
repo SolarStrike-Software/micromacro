@@ -5,6 +5,8 @@
 	License:	Modified BSD (see license.txt)
 ******************************************************************************/
 
+#ifdef AUDIO_ENABLED
+
 #include "audio_lua.h"
 #include "types.h"
 #include "luatypes.h"
@@ -13,6 +15,7 @@
 #include "event.h"
 #include "macro.h"
 #include "logger.h"
+#include "settings.h"
 
 extern "C"
 {
@@ -27,6 +30,11 @@ extern "C"
 
 int Audio_lua::regmod(lua_State *L)
 {
+	// If the user has opted to disable sound, do nothing!
+	int enabled = Macro::instance()->getSettings()->getInt(CONFVAR_AUDIO_ENABLED);
+	if( !enabled )
+		return MicroMacro::ERR_OK;
+
 	alutInit(0, NULL);
 	ALenum error = alGetError();
 	if( error != AL_NO_ERROR )
@@ -262,3 +270,5 @@ int Audio_lua::setVolume(lua_State *L)
 
 	return 0;
 }
+
+#endif

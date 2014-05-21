@@ -10,6 +10,8 @@
 #include "luatypes.h"
 #include "int64_lua.h"
 #include "error.h"
+#include "macro.h"
+
 extern "C"
 {
 	#include <lua.h>
@@ -23,6 +25,7 @@ int Timer_lua::regmod(lua_State *L)
 	static const luaL_Reg _funcs[] = {
 		{"getNow", Timer_lua::getNow},
 		{"deltaTime", Timer_lua::deltaTime},
+		{"diff", Timer_lua::diff},
 		{NULL, NULL}
 	};
 
@@ -48,14 +51,29 @@ int Timer_lua::getNow(lua_State *L)
 	return 1;
 }
 
-/*	timer.deltaTime(int64 t2, int64 t1)
+/*	timer.deltaTime()
+	Returns:	number delta
+
+	Returns the deltaTime for the current logic cycle
+*/
+int Timer_lua::deltaTime(lua_State *L)
+{
+	if( lua_gettop(L) != 0 )
+		wrongArgs(L);
+
+	float dt = Macro::instance()->getEngine()->getDeltaTime();
+	lua_pushnumber(L, dt);
+	return 1;
+}
+
+/*	timer.diff(int64 t2, int64 t1)
 	Returns:	number delta
 
 	Compares two high-precision time values (from timer.getNow())
 	and returns the amount of time that has elapsed between them
 	in seconds.
 */
-int Timer_lua::deltaTime(lua_State *L)
+int Timer_lua::diff(lua_State *L)
 {
 	if( lua_gettop(L) != 2 )
 		wrongArgs(L);

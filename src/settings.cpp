@@ -7,6 +7,20 @@
 
 #include "settings.h"
 
+
+const char *CONFIG_FILENAME = 							"config.lua";
+const char *CONFVAR_MEMORY_STRING_BUFFER_SIZE =			"memoryStringBufferSize";
+const char *CONFVAR_LOG_DIRECTORY =						"logDirectory";
+const char *CONFVAR_LOG_REMOVAL_DAYS =					"logRemovalDays";
+const char *CONFVAR_SCRIPT_DIRECTORY =					"scriptDirectory";
+const char *CONFVAR_AUDIO_ENABLED =						"audioEnabled";
+
+const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE =		128;
+const int CONFDEFAULT_LOG_REMOVAL_DAYS =				7;
+const char *CONFDEFAULT_LOG_DIRECTORY =					"logs";
+const char *CONFDEFAULT_SCRIPT_DIRECTORY =				"scripts";
+const int CONFDEFAULT_AUDIO_ENABLED =					1;
+
 /* Setting value stuff */
 CSettingValue::CSettingValue()
 {

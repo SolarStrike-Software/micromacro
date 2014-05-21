@@ -14,16 +14,18 @@
 	#include <map>
 
 
-	#define CONFIG_FILENAME								"config.lua"
-	#define CONFVAR_MEMORY_STRING_BUFFER_SIZE			"memoryStringBufferSize"
-	#define CONFVAR_LOG_DIRECTORY						"logDirectory"
-	#define CONFVAR_LOG_REMOVAL_DAYS					"logRemovalDays"
-	#define CONFVAR_SCRIPT_DIRECTORY					"scriptDirectory"
+	extern const char *CONFIG_FILENAME;
+	extern const char *CONFVAR_MEMORY_STRING_BUFFER_SIZE;
+	extern const char *CONFVAR_LOG_DIRECTORY;
+	extern const char *CONFVAR_LOG_REMOVAL_DAYS;
+	extern const char *CONFVAR_SCRIPT_DIRECTORY;
+	extern const char *CONFVAR_AUDIO_ENABLED;
 
-	#define CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE		128
-	#define CONFDEFAULT_LOG_REMOVAL_DAYS				7
-	#define CONFDEFAULT_LOG_DIRECTORY					"logs"
-	#define CONFDEFAULT_SCRIPT_DIRECTORY				"scripts"
+	extern const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE;
+	extern const int CONFDEFAULT_LOG_REMOVAL_DAYS;
+	extern const char *CONFDEFAULT_LOG_DIRECTORY;
+	extern const char *CONFDEFAULT_SCRIPT_DIRECTORY;
+	extern const int CONFDEFAULT_AUDIO_ENABLED;
 
 	class CSettings;
 	class CSettingValue;

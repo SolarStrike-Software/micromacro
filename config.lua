@@ -16,3 +16,8 @@ scriptDirectory = "./scripts";
 	memoryStringBufferSize		Size of the buffer (in bytes) used when handling strings in memory
 ]]
 memoryStringBufferSize = 128;
+
+
+--[[ Other things
+]]
+audioEnabled = true;

@@ -15,7 +15,6 @@
 	{
 		protected:
 			static int distance(lua_State *);
-			static int vector3d(lua_State *);
 
 		public:
 			static int regmod(lua_State *);

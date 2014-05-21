@@ -8,6 +8,8 @@
 #include "class_lua.h"
 #include "error.h"
 #include "strl.h"
+#include "vector3d_lua.h"
+#include "types.h"
 
 extern "C"
 {
@@ -20,6 +22,7 @@ int Class_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
 		{"new", Class_lua::_new},
+		{"vector3d", Class_lua::vector3d},
 		{NULL, NULL}
 	};
 
@@ -172,5 +175,45 @@ int Class_lua::__tostring(lua_State *L)
 
 	slprintf(buffer, sizeof(buffer)-1, "Class: 0x%X", lua_topointer(L, 1));
 	lua_pushstring(L, buffer);
+	return 1;
+}
+
+
+/*	class.vector3d([number x, number y, number z])
+	Returns:	table (class)
+
+	Create a new table (class) of vector3d.
+	If x and y are given, the new vector3d retains
+	the given values.
+
+	The vector3d class contains metamethods for
+	operations such as vector scaling and dot product.
+*/
+int Class_lua::vector3d(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 0 && top !=2 && top != 3 )
+		wrongArgs(L);
+
+	Vector3d vec(0.0, 0.0, 0.0);
+	if( top == 3 )
+	{
+		checkType(L, LT_NUMBER, 1);
+		checkType(L, LT_NUMBER, 2);
+		checkType(L, LT_NUMBER, 3);
+		vec.x = lua_tonumber(L, 1);
+		vec.y = lua_tonumber(L, 2);
+		vec.z = lua_tonumber(L, 3);
+	}
+	else if( top == 2 )
+	{
+		checkType(L, LT_NUMBER, 1);
+		checkType(L, LT_NUMBER, 2);
+		vec.x = lua_tonumber(L, 1);
+		vec.y = lua_tonumber(L, 2);
+		vec.z = 0;
+	}
+
+	lua_pushvector3d(L, vec);
 	return 1;
 }

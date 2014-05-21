@@ -66,7 +66,19 @@ int main(int argc, char **argv)
 	char origCWD[MAX_PATH+1];
 	GetCurrentDirectory(MAX_PATH,(LPTSTR)&origCWD);
 
-	{ // Initiate our macro singleton
+
+	{	/* Run configs */
+		int success = loadConfig(CONFIG_FILENAME);
+		if( success != MicroMacro::ERR_OK )
+		{
+			fprintf(stderr, "Failed loading config file. Err code: %d (%s)\n",
+				success, getErrorString(success));
+			system("pause");
+			return success;
+		}
+	}
+
+	{	/* Initiate our macro singleton */
 		int success;
 		success = Macro::instance()->init();
 		if( success != MicroMacro::ERR_OK )
@@ -80,18 +92,6 @@ int main(int argc, char **argv)
 	/* Set debug privileges on self */
 	if( !modifyPermission(GetCurrentProcess(), "SeDebugPrivilege", true) )
 		Logger::instance()->add("Warning: Failed to enable SeDebugPrivilege.");
-
-
-	{	/* Run configs */
-		int success = loadConfig(CONFIG_FILENAME);
-		if( success != MicroMacro::ERR_OK )
-		{
-			fprintf(stderr, "Failed loading config file. Err code: %d (%s)\n",
-				success, getErrorString(success));
-			system("pause");
-			return success;
-		}
-	}
 
 	// Ensure we seed the RNG
 	random(0, 1);
@@ -238,8 +238,7 @@ int main(int argc, char **argv)
 		/* Begin script main loop */
 		Macro::instance()->getHid()->poll();
 		Macro::instance()->pollForegroundWindow();
-		TimeType lastTime = getNow();
-		TimeType now;
+
 		int runState = success;
 		while( runState == MicroMacro::ERR_OK )
 		{
@@ -293,12 +292,8 @@ int main(int argc, char **argv)
 				break;
 			}
 
-			// Get delta time
-			now = getNow();
-			double dt = deltaTime(now, lastTime);
-
 			// Run main callback
-			runState = Macro::instance()->getEngine()->runMain(dt);
+			runState = Macro::instance()->getEngine()->runMain();
 
 			if( runState == MicroMacro::ERR_CLOSE )
 			{ // Script requested to end
@@ -324,7 +319,7 @@ int main(int argc, char **argv)
 				break;
 			}
 
-			lastTime = now; // Record time
+			// Don't waste CPU cycles
 			Sleep(1);
 		}
 
@@ -537,6 +532,8 @@ int getConfigInt(lua_State *L, const char *key, int defaultValue)
 
 	if( lua_isnumber(L, -1) )
 		num = lua_tointeger(L, -1);
+	else if( lua_isboolean(L, -1) )
+		num = (int)lua_toboolean(L, -1);
 	else
 		num = defaultValue;
 
@@ -586,21 +583,29 @@ int loadConfig(const char *filename)
 
 
 	// Copy from the settings file into our settings manager
-	double fval;
+	double fval = 0.0;
+	int ival = 0;
 	std::string szval;
 	Settings *psettings = Macro::instance()->getSettings();
 
-	fval = getConfigInt(lstate, CONFVAR_MEMORY_STRING_BUFFER_SIZE, CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE);
-	psettings->setInt(CONFVAR_MEMORY_STRING_BUFFER_SIZE, fval);
+	ival = getConfigInt(lstate, CONFVAR_MEMORY_STRING_BUFFER_SIZE, CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE);
+	psettings->setInt(CONFVAR_MEMORY_STRING_BUFFER_SIZE, ival);
 
-	fval = getConfigInt(lstate, CONFVAR_LOG_REMOVAL_DAYS, CONFDEFAULT_LOG_REMOVAL_DAYS);
-	psettings->setInt(CONFVAR_LOG_REMOVAL_DAYS, fval);
+	ival = getConfigInt(lstate, CONFVAR_LOG_REMOVAL_DAYS, CONFDEFAULT_LOG_REMOVAL_DAYS);
+	psettings->setInt(CONFVAR_LOG_REMOVAL_DAYS, ival);
 
 	szval = getConfigString(lstate, CONFVAR_LOG_DIRECTORY, CONFDEFAULT_LOG_DIRECTORY);
 	psettings->setString(CONFVAR_LOG_DIRECTORY, szval);
 
 	szval = getConfigString(lstate, CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY);
 	psettings->setString(CONFVAR_SCRIPT_DIRECTORY, szval);
+
+	#ifdef AUDIO_ENABLED
+	ival = getConfigInt(lstate, CONFVAR_AUDIO_ENABLED, CONFDEFAULT_AUDIO_ENABLED);
+	psettings->setInt(CONFVAR_AUDIO_ENABLED, ival);
+	#else
+	psettings->setInt(CONFVAR_AUDIO_ENABLED, 0);
+	#endif
 
 	lua_close(lstate);
 	return retval;

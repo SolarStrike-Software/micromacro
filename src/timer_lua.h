@@ -16,6 +16,7 @@
 		protected:
 			static int getNow(lua_State *);
 			static int deltaTime(lua_State *);
+			static int diff(lua_State *);
 
 		public:
 			static int regmod(lua_State *);

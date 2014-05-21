@@ -20,9 +20,11 @@
 #include "filesystem_lua.h"
 #include "process_lua.h"
 #include "window_lua.h"
-#include "audio_lua.h"
 #include "class_lua.h"
 #include "log_lua.h"
+#ifdef AUDIO_ENABLED
+	#include "audio_lua.h"
+#endif
 
 #include "global_addon.h"
 #include "string_addon.h"
@@ -163,7 +165,9 @@ int LuaEngine::init()
 		Filesystem_lua::regmod,
 		Process_lua::regmod,
 		Window_lua::regmod,
+		#ifdef AUDIO_ENABLED
 		Audio_lua::regmod,
+		#endif
 		Class_lua::regmod,
 		Log_lua::regmod,
 		/* Addons */
@@ -191,6 +195,9 @@ int LuaEngine::init()
 		++i; // Next module
 	}
 
+	lastTimestamp.QuadPart = 0;
+	fDeltaTime = 0.0;
+
 	return MicroMacro::ERR_OK;
 }
 
@@ -212,7 +219,9 @@ int LuaEngine::cleanup()
 	if( !lstate )
 		return MicroMacro::ERR_CLEANUP_FAIL;
 
+	#ifdef AUDIO_ENABLED
 	Audio_lua::cleanup(lstate);
+	#endif
 
 	if( Ncurses_lua::is_initialized() )
 		Ncurses_lua::cleanup(lstate);
@@ -337,6 +346,10 @@ int LuaEngine::runInit(std::vector<std::string> *opt_args)
 	}
 
 	lua_pop(lstate, 2); // Pop traceback, macro table
+
+	// Set our first timestamp so we can calculate deltaTime in main
+	lastTimestamp = getNow();
+
 	return retval;
 }
 
@@ -344,8 +357,13 @@ int LuaEngine::runInit(std::vector<std::string> *opt_args)
 	Pushes delta time (in seconds) as first argument
 	Expects one boolean in return: true(continue execution) or false(stop execution)
 */
-int LuaEngine::runMain(double dt)
+int LuaEngine::runMain()
 {
+	// Calc delta time
+	TimeType now = getNow();
+	fDeltaTime = deltaTime(now, lastTimestamp);
+	lastTimestamp = now;
+
 	// Push our message handler before arguments
 	int stackbase = lua_gettop(lstate);
 	lua_pushcfunction(lstate, LuaEngine::err_msgh);
@@ -366,7 +384,7 @@ int LuaEngine::runMain(double dt)
 		return MicroMacro::ERR_NOFUNCTION;
 	}
 
-	lua_pushnumber(lstate, dt);
+	lua_pushnumber(lstate, fDeltaTime);
 	int failstate = lua_pcall(lstate, 1, 1, stackbase+1);
 	int retval = MicroMacro::ERR_OK;
 	if( failstate )
@@ -533,6 +551,11 @@ int LuaEngine::runEvent(Event &e)
 
 	lua_pop(lstate, 2); // Pop stacktrace, macro table
 	return retval;
+}
+
+float LuaEngine::getDeltaTime()
+{
+	return fDeltaTime;
 }
 
 // Returns the last error on the Lua state as a string
