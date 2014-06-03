@@ -14,12 +14,14 @@ const char *CONFVAR_LOG_DIRECTORY =						"logDirectory";
 const char *CONFVAR_LOG_REMOVAL_DAYS =					"logRemovalDays";
 const char *CONFVAR_SCRIPT_DIRECTORY =					"scriptDirectory";
 const char *CONFVAR_AUDIO_ENABLED =						"audioEnabled";
+const char *CONFVAR_YIELD_TIME_SLICE =					"yieldTimeSlice";
 
 const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE =		128;
 const int CONFDEFAULT_LOG_REMOVAL_DAYS =				7;
 const char *CONFDEFAULT_LOG_DIRECTORY =					"logs";
 const char *CONFDEFAULT_SCRIPT_DIRECTORY =				"scripts";
 const int CONFDEFAULT_AUDIO_ENABLED =					1;
+const int CONFDEFAULT_YIELD_TIME_SLICE =				1;
 
 /* Setting value stuff */
 CSettingValue::CSettingValue()

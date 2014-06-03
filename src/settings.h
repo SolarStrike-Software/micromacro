@@ -20,12 +20,14 @@
 	extern const char *CONFVAR_LOG_REMOVAL_DAYS;
 	extern const char *CONFVAR_SCRIPT_DIRECTORY;
 	extern const char *CONFVAR_AUDIO_ENABLED;
+	extern const char *CONFVAR_YIELD_TIME_SLICE;
 
 	extern const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE;
 	extern const int CONFDEFAULT_LOG_REMOVAL_DAYS;
 	extern const char *CONFDEFAULT_LOG_DIRECTORY;
 	extern const char *CONFDEFAULT_SCRIPT_DIRECTORY;
 	extern const int CONFDEFAULT_AUDIO_ENABLED;
+	extern const int CONFDEFAULT_YIELD_TIME_SLICE;
 
 	class CSettings;
 	class CSettingValue;

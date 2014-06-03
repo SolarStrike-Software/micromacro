@@ -597,11 +597,15 @@ int Window_lua::show(lua_State *L)
 	HWND hwnd = (HWND)lua_tointeger(L, 1);
 	int cmd = lua_tointeger(L, 2);
 
+	if( hwnd == 0 )
+		hwnd = GetDesktopWindow();
+
 	ShowWindowAsync(hwnd, cmd);
-	SetForegroundWindow(hwnd);
 
 	if( cmd == SW_SHOW || cmd == SW_SHOWNORMAL || cmd == SW_RESTORE )
 	{
+		SetForegroundWindow(hwnd);
+
 		WINDOWPLACEMENT wp;
 		GetWindowPlacement(hwnd, &wp);
 

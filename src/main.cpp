@@ -114,6 +114,7 @@ int main(int argc, char **argv)
 
 	/* Begin main loop */
 	running = true;
+	bool yieldTimeSlice = Macro::instance()->getSettings()->getInt(CONFVAR_YIELD_TIME_SLICE, CONFDEFAULT_YIELD_TIME_SLICE);
 	while(running)
 	{
 		// Reset CWD
@@ -320,7 +321,10 @@ int main(int argc, char **argv)
 			}
 
 			// Don't waste CPU cycles
-			Sleep(1);
+			if( yieldTimeSlice )
+				Sleep(1);
+			else
+				Sleep(0);
 		}
 
 		// Shut down Ncurses
@@ -606,6 +610,9 @@ int loadConfig(const char *filename)
 	#else
 	psettings->setInt(CONFVAR_AUDIO_ENABLED, 0);
 	#endif
+
+	ival = getConfigInt(lstate, CONFVAR_YIELD_TIME_SLICE, CONFDEFAULT_YIELD_TIME_SLICE);
+	psettings->setInt(CONFVAR_YIELD_TIME_SLICE, ival);
 
 	lua_close(lstate);
 	return retval;

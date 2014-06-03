@@ -35,7 +35,7 @@ int Gamepad_lua::regmod(lua_State *L)
 	lua_pushnumber(L, JOY_POVBACKWARD/100);
 	lua_setglobal(L, "JOY_POVBACKWARD");
 
-	lua_pushnumber(L, JOY_POVFORWARD/100);
+	lua_pushnumber(L, JOY_POVFORWARD); // Is 0, no reason to divide
 	lua_setglobal(L, "JOY_POVFORWARD");
 
 	lua_pushnumber(L, JOY_POVCENTERED/100);

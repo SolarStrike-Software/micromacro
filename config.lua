@@ -19,5 +19,8 @@ memoryStringBufferSize = 128;
 
 
 --[[ Other things
+	audioEnabled				Whether or not to enable OpenAl sound output
+	yieldTimeSlice				Whether or not to yield time back to the system. true = reduce CPU usage, false = max CPU usage, but still yield to other processes
 ]]
 audioEnabled = true;
+yieldTimeSlice = true;

@@ -120,7 +120,7 @@ int Audio_lua::load(lua_State *L)
 /*	audio.unload(userdata audioresource)
 	Returns:	nil
 
-	Unloads a audioresource and sets its buffer & sources to empty (AL_NONE)
+	Unloads an audioresource and sets its buffer & sources to empty (AL_NONE)
 */
 int Audio_lua::unload(lua_State *L)
 {

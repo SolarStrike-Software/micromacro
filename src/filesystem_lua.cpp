@@ -134,7 +134,7 @@ int Filesystem_lua::isDirectory(lua_State *L)
 /*	filesystem.makeDirectory(string path)
 	Returns:	boolean
 
-	Creates a directory at 'path', returns true on success, else false.
+	Creates a directory at 'path'. Returns true on success, else false.
 */
 int Filesystem_lua::makeDirectory(lua_State *L)
 {

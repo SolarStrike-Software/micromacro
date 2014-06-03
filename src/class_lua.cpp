@@ -183,7 +183,7 @@ int Class_lua::__tostring(lua_State *L)
 	Returns:	table (class)
 
 	Create a new table (class) of vector3d.
-	If x and y are given, the new vector3d retains
+	If x, y and z are given, the new vector3d retains
 	the given values.
 
 	The vector3d class contains metamethods for
