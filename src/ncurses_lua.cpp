@@ -359,7 +359,7 @@ int Ncurses_lua::resizeWindow(lua_State *L)
 /*	ncurses.moveWindow(window win, number y, number x)
 	Returns:	boolean
 
-	Resize a window to the given columns/lines.
+	Move a window to the given position.
 	Returns true on success, false on failure.
 */
 int Ncurses_lua::moveWindow(lua_State *L)
@@ -767,7 +767,7 @@ int Ncurses_lua::getAttribute(lua_State *L)
 /*	ncurses.setBackground(window win, number attrib)
 	Returns:	nil
 
-	Sets an background on the given window to the attribute mask.
+	Sets a background on the given window to the attribute mask.
 */
 int Ncurses_lua::setBackground(lua_State *L)
 {

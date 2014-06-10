@@ -204,7 +204,7 @@ int Mouse_lua::move(lua_State *L)
 	Attempts to move the physical mouse wheel.
 	'delta' specified the amount to move; 120 = 1 wheel click.
 	If 'delta' is positive, moves the wheel up (away from user).
-	If 'delta' is negitive, moves the wheel down (towards user).
+	If 'delta' is negative, moves the wheel down (towards user).
 */
 int Mouse_lua::wheelMove(lua_State *L)
 {

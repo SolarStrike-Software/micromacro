@@ -40,6 +40,8 @@
 			static int getPixel(lua_State *);
 			static int pixelSearch(lua_State *);
 			static int saveScreenshot(lua_State *);
+			static int getAppHwnd(lua_State *);
+			static int getFocusHwnd(lua_State *);
 
 		public:
 			static int regmod(lua_State *);

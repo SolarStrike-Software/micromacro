@@ -85,20 +85,6 @@ int LuaEngine::_macrotab_event(lua_State *)
 	return 0;
 }
 
-// Return the main application's HWND
-int LuaEngine::_macrotab_appHwnd(lua_State *L)
-{
-	lua_pushnumber(L, (int)Macro::instance()->getAppHwnd());
-	return 1;
-}
-
-// Return the main focused HWND
-int LuaEngine::_macrotab_focusHwnd(lua_State *L)
-{
-	lua_pushnumber(L, (int)Macro::instance()->getForegroundWindow());
-	return 1;
-}
-
 // Returns the version as a MAJOR.MINOR.BUILD string format (ie 2.1.4)
 int LuaEngine::_macrotab_getVersion(lua_State *L)
 {
@@ -140,8 +126,6 @@ int LuaEngine::init()
 		{MACRO_INIT_NAME, LuaEngine::_macrotab_init},
 		{MACRO_MAIN_NAME, LuaEngine::_macrotab_main},
 		{MACRO_EVENT_NAME, LuaEngine::_macrotab_event},
-		{"getAppHwnd", LuaEngine::_macrotab_appHwnd},
-		{"getFocusHwnd", LuaEngine::_macrotab_focusHwnd},
 		{"getVersion", LuaEngine::_macrotab_getVersion},
 		{NULL, NULL}
 	};

@@ -840,7 +840,7 @@ int Process_lua::readBatch(lua_State *L)
 	return 1;
 }
 
-/*	process.readChunk(handle proc, string type, number address)
+/*	process.readChunk(handle proc, number address, number size)
 	Returns:	chunk (class)
 
 	Read a chunk of memory.
@@ -886,7 +886,7 @@ int Process_lua::readChunk(lua_State *L)
 	return 1;
 }
 
-/*	process.write(handle proc, string type, number address)
+/*	process.write(handle proc, string type, number address, string|number data)
 	Returns:	boolean
 
 	Attempt to write memory to process 'proc' at the given address.
@@ -960,7 +960,7 @@ int Process_lua::write(lua_State *L)
 	return 1;
 }
 
-/*	process.writePtr(handle proc, string type, number address, number|table offsets])
+/*	process.writePtr(handle proc, string type, number address, number|table offsets, number|string data)
 	Returns:	boolean
 
 	Attempt to write memory to process 'proc' at the given address + offsets.

@@ -144,6 +144,8 @@ int Window_lua::regmod(lua_State *L)
 		{"getPixel", Window_lua::getPixel},
 		{"pixelSearch", Window_lua::pixelSearch},
 		{"saveScreenshot", Window_lua::saveScreenshot},
+		{"getAppHwnd", Window_lua::getAppHwnd},
+		{"getFocusHwnd", Window_lua::getFocusHwnd},
 		{NULL, NULL}
 	};
 
@@ -1025,4 +1027,18 @@ int Window_lua::saveScreenshot(lua_State *L)
 	delete []pbBits;
 
 	return 0;
+}
+
+// Return the main application's HWND
+int Window_lua::getAppHwnd(lua_State *L)
+{
+	lua_pushnumber(L, (int)Macro::instance()->getAppHwnd());
+	return 1;
+}
+
+// Return the main focused HWND
+int Window_lua::getFocusHwnd(lua_State *L)
+{
+	lua_pushnumber(L, (int)Macro::instance()->getForegroundWindow());
+	return 1;
 }
