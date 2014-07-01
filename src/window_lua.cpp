@@ -131,6 +131,7 @@ int Window_lua::regmod(lua_State *L)
 		{"findList", Window_lua::findList},
 		{"getParent", Window_lua::getParent},
 		{"getTitle", Window_lua::getTitle},
+        {"setTitle", Window_lua::setTitle},
 		{"getClassName", Window_lua::getClassName},
 		{"valid", Window_lua::valid},
 		{"getRect", Window_lua::getRect},
@@ -386,7 +387,7 @@ int Window_lua::setTitle(lua_State *L)
 	Returns (on success):	string
 	Returns (on failure):	nil
 
-	Returns a window's title.
+	Returns a window's class name.
 */
 int Window_lua::getClassName(lua_State *L)
 {
@@ -749,7 +750,7 @@ int Window_lua::getPixel(lua_State *L)
 	return 3;
 }
 
-/*	window.pixelSearch(number hwnd, number r, number b, number b,
+/*	window.pixelSearch(number hwnd, number r, number g, number b,
 						number x1, number y1, number x2, number y2,
 						number accuracy, number step)
 

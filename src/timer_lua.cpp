@@ -67,27 +67,41 @@ int Timer_lua::deltaTime(lua_State *L)
 }
 
 /*	timer.diff(int64 t2, int64 t1)
+    timer.diff(int64 t1)
 	Returns:	number delta
 
 	Compares two high-precision time values (from timer.getNow())
 	and returns the amount of time that has elapsed between them
 	in seconds.
+    If only one parameter is given, it compares that time value
+    against now.
 */
 int Timer_lua::diff(lua_State *L)
 {
-	if( lua_gettop(L) != 2 )
+    int top = lua_gettop(L);
+	if( top != 1 && top != 2 )
 		wrongArgs(L);
-	checkType(L, LT_TABLE, 1);
-	checkType(L, LT_TABLE, 2);
-
-	if( !lua_isint64(L, 1) )
-		luaL_typerror(L, 1, LuaType::metatable_int64);
-	if( !lua_isint64(L, 2) )
-		luaL_typerror(L, 2, LuaType::metatable_int64);
 
 	TimeType t2, t1;
-	t2 = lua_toint64(L, 1);
-	t1 = lua_toint64(L, 2);
+
+	checkType(L, LT_TABLE, 1);
+	if( !lua_isint64(L, 1) )
+		luaL_typerror(L, 1, LuaType::metatable_int64);
+
+    if( top == 2 )
+    {
+        checkType(L, LT_TABLE, 2);
+        if( !lua_isint64(L, 2) )
+            luaL_typerror(L, 2, LuaType::metatable_int64);
+
+        t2 = lua_toint64(L, 1);
+        t1 = lua_toint64(L, 2);
+    }
+    else
+    {
+        t2 = ::getNow();
+        t1 = lua_toint64(L, 1);
+    }
 
 	double dt = ::deltaTime(t2, t1);
 	lua_pushnumber(L, dt);

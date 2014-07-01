@@ -30,25 +30,48 @@ int Math_addon::regmod(lua_State *L)
 }
 
 /*	math.distance(x1, y1, x2, y2)
+    math.distance(x1, y1, z1, x2, y2, z2)
 	Returns:	number
 
 	Fairly standard distance function: returns the
 	distance between two points.
+    Accepts either 2D or 3D points.
 */
 int Math_addon::distance(lua_State *L)
 {
-	if( lua_gettop(L) != 4 )
+    int top = lua_gettop(L);
+	if( top != 4 && top != 6 )
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
 	checkType(L, LT_NUMBER, 3);
 	checkType(L, LT_NUMBER, 4);
+    if( top >= 6 )
+    {
+        checkType(L, LT_NUMBER, 5);
+        checkType(L, LT_NUMBER, 6);
+    }
 
-	double x1 = lua_tonumber(L, 1);
-	double y1 = lua_tonumber(L, 2);
-	double x2 = lua_tonumber(L, 3);
-	double y2 = lua_tonumber(L, 4);
+    if( top == 4 )
+    {
+        double x1 = lua_tonumber(L, 1);
+        double y1 = lua_tonumber(L, 2);
+        double x2 = lua_tonumber(L, 3);
+        double y2 = lua_tonumber(L, 4);
 
-	lua_pushnumber(L, sqrt((y2-y1)*(y2-y1) + (x2-x1)*(x2-x1)));
+        lua_pushnumber(L, sqrt((y2-y1)*(y2-y1) + (x2-x1)*(x2-x1)));
+    }
+    else if( top == 6 )
+    {
+        double x1 = lua_tonumber(L, 1);
+        double y1 = lua_tonumber(L, 2);
+        double z1 = lua_tonumber(L, 3);
+        double x2 = lua_tonumber(L, 4);
+        double y2 = lua_tonumber(L, 5);
+        double z2 = lua_tonumber(L, 6);
+
+        lua_pushnumber(L, sqrt((z2-z1)*(z2-z1) + (y2-y1)*(y2-y1) + (x2-x1)*(x2-x1)));
+    }
+
 	return 1;
 }
