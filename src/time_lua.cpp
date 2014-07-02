@@ -5,7 +5,7 @@
 	License:	Modified BSD (see license.txt)
 ******************************************************************************/
 
-#include "timer_lua.h"
+#include "time_lua.h"
 #include "timer.h"
 #include "luatypes.h"
 #include "int64_lua.h"
@@ -20,27 +20,27 @@ extern "C"
 }
 
 
-int Timer_lua::regmod(lua_State *L)
+int Time_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
-		{"getNow", Timer_lua::getNow},
-		{"deltaTime", Timer_lua::deltaTime},
-		{"diff", Timer_lua::diff},
+		{"getNow", Time_lua::getNow},
+		{"deltaTime", Time_lua::deltaTime},
+		{"diff", Time_lua::diff},
 		{NULL, NULL}
 	};
 
 	luaL_newlib(L, _funcs);
-	lua_setglobal(L, TIMER_MODULE_NAME);
+	lua_setglobal(L, TIME_MODULE_NAME);
 
 	return MicroMacro::ERR_OK;
 }
 
-/*	timer.getNow()
+/*	time.getNow()
 	Returns:	table (int64)
 
 	Returns the current high-precision time as an int64 table.
 */
-int Timer_lua::getNow(lua_State *L)
+int Time_lua::getNow(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
 		wrongArgs(L);
@@ -51,12 +51,12 @@ int Timer_lua::getNow(lua_State *L)
 	return 1;
 }
 
-/*	timer.deltaTime()
+/*	time.deltaTime()
 	Returns:	number delta
 
 	Returns the deltaTime for the current logic cycle
 */
-int Timer_lua::deltaTime(lua_State *L)
+int Time_lua::deltaTime(lua_State *L)
 {
 	if( lua_gettop(L) != 0 )
 		wrongArgs(L);
@@ -66,17 +66,17 @@ int Timer_lua::deltaTime(lua_State *L)
 	return 1;
 }
 
-/*	timer.diff(int64 t2, int64 t1)
-    timer.diff(int64 t1)
+/*	time.diff(int64 t2, int64 t1)
+    time.diff(int64 t1)
 	Returns:	number delta
 
-	Compares two high-precision time values (from timer.getNow())
+	Compares two high-precision time values (from time.getNow())
 	and returns the amount of time that has elapsed between them
 	in seconds.
     If only one parameter is given, it compares that time value
     against now.
 */
-int Timer_lua::diff(lua_State *L)
+int Time_lua::diff(lua_State *L)
 {
     int top = lua_gettop(L);
 	if( top != 1 && top != 2 )

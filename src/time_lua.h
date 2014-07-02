@@ -5,13 +5,13 @@
 	License:	Modified BSD (see license.txt)
 ******************************************************************************/
 
-#ifndef TIMER_LUA_H
-#define TIMER_LUA_H
+#ifndef TIME_LUA_H
+#define TIME_LUA_H
 
-	#define TIMER_MODULE_NAME		"timer"
+	#define TIME_MODULE_NAME		"time"
 	typedef struct lua_State lua_State;
 
-	class Timer_lua
+	class Time_lua
 	{
 		protected:
 			static int getNow(lua_State *);

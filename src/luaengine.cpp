@@ -11,7 +11,7 @@
 #include "logger.h"
 
 #include "ncurses_lua.h"
-#include "timer_lua.h"
+#include "time_lua.h"
 #include "keyboard_lua.h"
 #include "mouse_lua.h"
 #include "key_lua.h"
@@ -140,7 +140,7 @@ int LuaEngine::init()
 	const lua_CFunction regModFuncs[] = {
 		/* Modules */
 		Ncurses_lua::regmod,
-		Timer_lua::regmod,
+		Time_lua::regmod,
 		Keyboard_lua::regmod,
 		Mouse_lua::regmod,
 		Key_lua::regmod,
