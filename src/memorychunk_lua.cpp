@@ -63,6 +63,11 @@ int MemoryChunk_lua::tostring(lua_State *L)
 	return 1;
 }
 
+/*	memorychunk:getSize()
+	Returns:	number
+
+    Returns the size, in bytes, of a memory chunk.
+*/
 int MemoryChunk_lua::getSize(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -75,6 +80,11 @@ int MemoryChunk_lua::getSize(lua_State *L)
 	return 1;
 }
 
+/*	memorychunk:getAddress()
+	Returns:	number
+
+    Returns the address that a memory chunk has started reading from.
+*/
 int MemoryChunk_lua::getAddress(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -87,6 +97,14 @@ int MemoryChunk_lua::getAddress(lua_State *L)
 	return 1;
 }
 
+/*	memorychunk:getAddress()
+	Returns:	number
+
+    Extracts an actual, usable piece of data, such as a number or string, from a memory chunk.
+
+    'type' should be a string that represents the type of data to read ("byte", "ubyte", "int", "uint", "float", "string", etc.)
+    'offset' should be the number of bytes after the start address to read data from.
+*/
 int MemoryChunk_lua::getData(lua_State *L)
 {
 	int top = lua_gettop(L);

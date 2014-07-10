@@ -378,7 +378,7 @@ int Process_lua::read(lua_State *L)
 	int err = 0;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
 	std::string type = (char *)lua_tostring(L, 2);
-	unsigned long address = (unsigned long)lua_tointeger(L, 3);
+	unsigned long address = (unsigned long)lua_tounsigned(L, 3);
 	if( *pHandle == 0 )
 		luaL_error(L, szInvalidHandleError);
 
@@ -386,42 +386,42 @@ int Process_lua::read(lua_State *L)
 	{
 		char value = readMemory<char>(*pHandle, address, err);
 		if( !err )
-			lua_pushnumber(L, value);
+			lua_pushinteger(L, value);
 		else
 			lua_pushnil(L);
 	} else if( type == "ubyte" )
 	{
 		unsigned char value = readMemory<unsigned char>(*pHandle, address, err);
 		if( !err )
-			lua_pushnumber(L, value);
+			lua_pushunsigned(L, value);
 		else
 			lua_pushnil(L);
 	} else if( type == "short" )
 	{
 		short value = readMemory<short>(*pHandle, address, err);
 		if( !err )
-			lua_pushnumber(L, value);
+			lua_pushinteger(L, value);
 		else
 			lua_pushnil(L);
 	} else if( type == "ushort" )
 	{
 		unsigned short value = readMemory<unsigned short>(*pHandle, address, err);
 		if( !err )
-			lua_pushnumber(L, value);
+			lua_pushunsigned(L, value);
 		else
 			lua_pushnil(L);
 	} else if( type == "int" )
 	{
 		int value = readMemory<int>(*pHandle, address, err);
 		if( !err )
-			lua_pushnumber(L, value);
+			lua_pushinteger(L, value);
 		else
 			lua_pushnil(L);
 	} else if( type == "uint" )
 	{
 		unsigned int value = readMemory<unsigned int>(*pHandle, address, err);
 		if( !err )
-			lua_pushnumber(L, value);
+			lua_pushunsigned(L, value);
 		else
 			lua_pushnil(L);
 	} else if( type == "float" )
@@ -501,7 +501,7 @@ int Process_lua::readPtr(lua_State *L)
 	std::vector<int> offsets;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
 	std::string type = (char *)lua_tostring(L, 2);
-	unsigned long address = (unsigned long)lua_tointeger(L, 3);
+	unsigned long address = (unsigned long)lua_tounsigned(L, 3);
 	if( *pHandle == 0 )
 		luaL_error(L, szInvalidHandleError);
 
@@ -564,42 +564,42 @@ int Process_lua::readPtr(lua_State *L)
 		{
 			char value = readMemory<char>(*pHandle, realAddress, err);
 			if( !err )
-				lua_pushnumber(L, value);
+				lua_pushinteger(L, value);
 			else
 				lua_pushnil(L);
 		} else if( type == "ubyte" )
 		{
 			unsigned char value = readMemory<unsigned char>(*pHandle, realAddress, err);
 			if( !err )
-				lua_pushnumber(L, value);
+				lua_pushunsigned(L, value);
 			else
 				lua_pushnil(L);
 		} else if( type == "short" )
 		{
 			short value = readMemory<short>(*pHandle, realAddress, err);
 			if( !err )
-				lua_pushnumber(L, value);
+				lua_pushinteger(L, value);
 			else
 				lua_pushnil(L);
 		} else if( type == "ushort" )
 		{
 			unsigned short value = readMemory<unsigned short>(*pHandle, realAddress, err);
 			if( !err )
-				lua_pushnumber(L, value);
+				lua_pushunsigned(L, value);
 			else
 				lua_pushnil(L);
 		} else if( type == "int" )
 		{
 			int value = readMemory<int>(*pHandle, realAddress, err);
 			if( !err )
-				lua_pushnumber(L, value);
+				lua_pushinteger(L, value);
 			else
 				lua_pushnil(L);
 		} else if( type == "uint" )
 		{
 			unsigned int value = readMemory<unsigned int>(*pHandle, realAddress, err);
 			if( !err )
-				lua_pushnumber(L, value);
+				lua_pushunsigned(L, value);
 			else
 				lua_pushnil(L);
 		} else if( type == "float" )
@@ -686,7 +686,7 @@ int Process_lua::readBatch(lua_State *L)
 	checkType(L, LT_STRING, 3);
 
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
-	unsigned int address = lua_tointeger(L, 2);
+	unsigned int address = lua_tounsigned(L, 2);
 	const char *fmt = lua_tostring(L, 3);
 
 	std::vector<BatchJob> jobs;
@@ -728,8 +728,8 @@ int Process_lua::readBatch(lua_State *L)
 				{
 					char data = readBuffer[cursorPos];
 					cursorPos += sizeof(char);
-					lua_pushnumber(L, tableIndex); // Push key
-					lua_pushnumber(L, data); // Push value
+					lua_pushinteger(L, tableIndex); // Push key
+					lua_pushinteger(L, data); // Push value
 					lua_settable(L, -3); // Set it
 					++tableIndex;
 				}
@@ -739,8 +739,8 @@ int Process_lua::readBatch(lua_State *L)
 				{
 					unsigned char data = readBuffer[cursorPos];
 					cursorPos += sizeof(unsigned char);
-					lua_pushnumber(L, tableIndex); // Push key
-					lua_pushnumber(L, data); // Push value
+					lua_pushinteger(L, tableIndex); // Push key
+					lua_pushunsigned(L, data); // Push value
 					lua_settable(L, -3); // Set it
 					++tableIndex;
 				}
@@ -750,8 +750,8 @@ int Process_lua::readBatch(lua_State *L)
 				{
 					short data = *(short*)&readBuffer[cursorPos];
 					cursorPos += sizeof(short);
-					lua_pushnumber(L, tableIndex); // Push key
-					lua_pushnumber(L, data); // Push value
+					lua_pushinteger(L, tableIndex); // Push key
+					lua_pushinteger(L, data); // Push value
 					lua_settable(L, -3); // Set it
 					++tableIndex;
 				}
@@ -761,8 +761,8 @@ int Process_lua::readBatch(lua_State *L)
 				{
 					unsigned short data = *(unsigned short*)&readBuffer[cursorPos];
 					cursorPos += sizeof(unsigned short);
-					lua_pushnumber(L, tableIndex); // Push key
-					lua_pushnumber(L, data); // Push value
+					lua_pushinteger(L, tableIndex); // Push key
+					lua_pushunsigned(L, data); // Push value
 					lua_settable(L, -3); // Set it
 					++tableIndex;
 				}
@@ -772,8 +772,8 @@ int Process_lua::readBatch(lua_State *L)
 				{
 					int data = *(int*)&readBuffer[cursorPos];
 					cursorPos += sizeof(int);
-					lua_pushnumber(L, tableIndex); // Push key
-					lua_pushnumber(L, data); // Push value
+					lua_pushinteger(L, tableIndex); // Push key
+					lua_pushunsigned(L, data); // Push value
 					lua_settable(L, -3); // Set it
 					++tableIndex;
 				}
@@ -783,8 +783,8 @@ int Process_lua::readBatch(lua_State *L)
 				{
 					unsigned int data = *(unsigned int*)&readBuffer[cursorPos];
 					cursorPos += sizeof(unsigned int);
-					lua_pushnumber(L, tableIndex); // Push key
-					lua_pushnumber(L, data); // Push value
+					lua_pushinteger(L, tableIndex); // Push key
+					lua_pushunsigned(L, data); // Push value
 					lua_settable(L, -3); // Set it
 					++tableIndex;
 				}
@@ -795,7 +795,7 @@ int Process_lua::readBatch(lua_State *L)
 					float data = *(float*)&readBuffer[cursorPos];
 					cursorPos += sizeof(float);
 					printf("Do float... %f\n", data);
-					lua_pushnumber(L, tableIndex); // Push key
+					lua_pushinteger(L, tableIndex); // Push key
 					lua_pushnumber(L, data); // Push value
 					lua_settable(L, -3); // Set it
 					++tableIndex;
@@ -806,7 +806,7 @@ int Process_lua::readBatch(lua_State *L)
 				{
 					double data = *(double*)&readBuffer[cursorPos];
 					cursorPos += sizeof(double);
-					lua_pushnumber(L, tableIndex); // Push key
+					lua_pushinteger(L, tableIndex); // Push key
 					lua_pushnumber(L, data); // Push value
 					lua_settable(L, -3); // Set it
 					++tableIndex;
@@ -823,7 +823,7 @@ int Process_lua::readBatch(lua_State *L)
 				// Copy this string segment into our buffer, push it, delete it
 				strlcpy(buffer, (char*)&readBuffer[cursorPos], len);
 				cursorPos += len;
-				lua_pushnumber(L, tableIndex); // Push key
+				lua_pushinteger(L, tableIndex); // Push key
 				lua_pushstring(L, buffer);
 				lua_settable(L, -3); // Set it
 				++tableIndex;
@@ -906,7 +906,7 @@ int Process_lua::write(lua_State *L)
 	int err = 0;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
 	std::string type = (char *)lua_tostring(L, 2);
-	unsigned long address = (unsigned long)lua_tointeger(L, 3);
+	unsigned long address = (unsigned long)lua_tounsigned(L, 3);
 
 	if( *pHandle == 0 )
 		luaL_error(L, szInvalidHandleError);
@@ -986,7 +986,7 @@ int Process_lua::writePtr(lua_State *L)
 	std::vector<int> offsets;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
 	std::string type = (char *)lua_tostring(L, 2);
-	unsigned long address = (unsigned long)lua_tointeger(L, 3);
+	unsigned long address = (unsigned long)lua_tounsigned(L, 3);
 	if( *pHandle == 0 )
 		luaL_error(L, szInvalidHandleError);
 
@@ -1117,8 +1117,8 @@ int Process_lua::findPattern(lua_State *L)
 	size_t bmaskLen;
 	size_t szMaskLen;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
-	unsigned int address = lua_tointeger(L, 2);
-	unsigned int scanLen = lua_tointeger(L, 3);
+	unsigned int address = lua_tounsigned(L, 2);
+	unsigned int scanLen = lua_tounsigned(L, 3);
 	const char *bmask = lua_tolstring(L, 4, &bmaskLen);
 	const char *szMask = lua_tolstring(L, 5, &szMaskLen);
 
@@ -1175,7 +1175,7 @@ int Process_lua::findPattern(lua_State *L)
 	if( !found ) // If we didn't find anything, don't return anything
 		return 0;
 
-	lua_pushinteger(L, foundAddr);
+	lua_pushunsigned(L, foundAddr);
 	return 1;
 }
 
@@ -1203,7 +1203,7 @@ int Process_lua::findByWindow(lua_State *L)
 		return 0;
 	}
 
-	lua_pushnumber(L, (unsigned int)procId);
+	lua_pushunsigned(L, (unsigned int)procId);
 	return 1;
 }
 
@@ -1290,7 +1290,7 @@ int Process_lua::findByExe(lua_State *L)
 	if( foundProcId == 0 )
 		return 0;
 
-	lua_pushnumber(L, foundProcId);
+	lua_pushunsigned(L, foundProcId);
 	return 1;
 }
 
@@ -1356,7 +1356,7 @@ int Process_lua::getModuleAddress(lua_State *L)
 
 	if( !found )
 		return 0;
-	lua_pushinteger(L, addrFound);
+	lua_pushunsigned(L, addrFound);
 	return 1;
 }
 
