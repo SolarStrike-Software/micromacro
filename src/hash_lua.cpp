@@ -31,6 +31,11 @@ int Hash_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+/*	sha1(string str)
+	Returns:	string
+
+	Returns the SHA1 hash of a string.
+*/
 int Hash_lua::sha1(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
@@ -45,6 +50,11 @@ int Hash_lua::sha1(lua_State *L)
     return 1;
 }
 
+/*	sha1_file(string filename)
+	Returns:	string
+
+	Returns the SHA1 hash of a file.
+*/
 int Hash_lua::sha1_file(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )

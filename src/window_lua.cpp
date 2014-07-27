@@ -443,15 +443,24 @@ int Window_lua::getRect(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 	HWND hwnd = (HWND)lua_tointeger(L, 1);
-	RECT rect;
+//	RECT rect;
+//	GetWindowRect(hwnd, &rect);
 
-	GetWindowRect(hwnd, &rect);
+    WINDOWPLACEMENT wp;
+    memset(&wp, 0, sizeof(WINDOWPLACEMENT));
+    wp.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(hwnd, &wp);
 
 	// Push results
-	lua_pushnumber(L, rect.left);
-	lua_pushnumber(L, rect.top);
-	lua_pushnumber(L, rect.right);
-	lua_pushnumber(L, rect.bottom);
+	//lua_pushnumber(L, rect.left);
+	//lua_pushnumber(L, rect.top);
+	//lua_pushnumber(L, rect.right);
+	//lua_pushnumber(L, rect.bottom);
+
+    lua_pushinteger(L, wp.rcNormalPosition.left);
+    lua_pushinteger(L, wp.rcNormalPosition.top);
+    lua_pushinteger(L, wp.rcNormalPosition.right - wp.rcNormalPosition.left);
+    lua_pushinteger(L, wp.rcNormalPosition.bottom - wp.rcNormalPosition.top);
 
 	return 4;
 }
@@ -475,24 +484,28 @@ int Window_lua::setRect(lua_State *L)
 		checkType(L, LT_NUMBER | LT_NIL, 5);
 
 	HWND hwnd = (HWND)lua_tointeger(L, 1);
-	RECT winrect;
-	GetWindowRect(hwnd, &winrect);
+	//RECT winrect;
+	//GetWindowRect(hwnd, &winrect);
+    WINDOWPLACEMENT wp;
+    memset(&wp, 0, sizeof(WINDOWPLACEMENT));
+    wp.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(hwnd, &wp);
 
-	int origLeft = winrect.left;
-	int origTop = winrect.top;
+	int origLeft = wp.rcNormalPosition.left;
+	int origTop = wp.rcNormalPosition.top;
 
-	winrect.left = lua_tointeger(L, 2);
-	winrect.top = lua_tointeger(L, 3);
+	wp.rcNormalPosition.left = lua_tointeger(L, 2);
+	wp.rcNormalPosition.top = lua_tointeger(L, 3);
 	if( lua_isnumber(L, 4) )
-		winrect.right = lua_tointeger(L, 4) - origLeft;
+		wp.rcNormalPosition.right = lua_tointeger(L, 4);
 	else
-		winrect.right = winrect.right - origLeft;
+		wp.rcNormalPosition.right = wp.rcNormalPosition.right - origLeft;
 	if( lua_isnumber(L, 5) )
-		winrect.bottom = lua_tointeger(L, 5) - origTop;
+		wp.rcNormalPosition.bottom = lua_tointeger(L, 5);
 	else
-		winrect.bottom = winrect.bottom - origTop;
+		wp.rcNormalPosition.bottom = wp.rcNormalPosition.bottom - origTop;
 
-	MoveWindow(hwnd, winrect.left, winrect.top, winrect.right, winrect.bottom, false);
+	MoveWindow(hwnd, wp.rcNormalPosition.left, wp.rcNormalPosition.top, wp.rcNormalPosition.right, wp.rcNormalPosition.bottom, false);
 	return 0;
 }
 
@@ -512,19 +525,23 @@ int Window_lua::getClientRect(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 	HWND hwnd = (HWND)lua_tointeger(L, 1);
-	RECT rect;
+	//RECT rect;
 	POINT point;
 	point.x = 0; point.y = 0;
 
 	// Translate coords, get rect
 	ClientToScreen(hwnd, &point);
-	GetClientRect(hwnd, &rect);
+	//GetClientRect(hwnd, &rect);
+    WINDOWPLACEMENT wp;
+    memset(&wp, 0, sizeof(WINDOWPLACEMENT));
+    wp.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(hwnd, &wp);
 
 	// Push results
 	lua_pushnumber(L, point.x);
 	lua_pushnumber(L, point.y);
-	lua_pushnumber(L, rect.right);
-	lua_pushnumber(L, rect.bottom);
+	lua_pushnumber(L, wp.rcNormalPosition.right - point.x);
+	lua_pushnumber(L, wp.rcNormalPosition.bottom - point.y);
 
 	return 4;
 }
@@ -560,11 +577,11 @@ int Window_lua::setClientRect(lua_State *L)
 	if( lua_isnumber(L, 4) )
 		winrect.right = lua_tointeger(L, 4);
 	else
-		winrect.right = winrect.right - origLeft;
+		winrect.right = winrect.right + (newLeft-origLeft);
 	if( lua_isnumber(L, 5) )
 		winrect.bottom = lua_tointeger(L, 5);
 	else
-		winrect.bottom = winrect.bottom - origTop;
+		winrect.bottom = winrect.bottom;
 
 
 	// Adjust from client coordinates to screen
