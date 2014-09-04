@@ -44,6 +44,7 @@ CMacro::CMacro()
 	foregroundHwnd = NULL;
 	consoleCharWidth = 0;
 	consoleCharHeight = 0;
+	consoleDefaultAttributes = 0;
 	lastConsoleSizeX = 0;
 	lastConsoleSizeY = 0;
 }
@@ -74,7 +75,7 @@ int CMacro::init()
 
 	// Query font info
 	CONSOLE_FONT_INFO fontInfo;
-	GetCurrentConsoleFont(GetStdHandle(STD_OUTPUT_HANDLE), false, &fontInfo);
+	GetCurrentConsoleFont(getAppHandle()/*GetStdHandle(STD_OUTPUT_HANDLE)*/, false, &fontInfo);
 	consoleCharWidth = fontInfo.dwFontSize.X;
 	consoleCharHeight = fontInfo.dwFontSize.Y;
 
@@ -90,6 +91,11 @@ int CMacro::init()
 		lastConsoleSizeX = 0;
 		lastConsoleSizeY = 0;
 	}
+
+	// Obtain the default attributes
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(getAppHandle(), &csbi);
+	consoleDefaultAttributes = csbi.wAttributes;
 
 	return MicroMacro::ERR_OK;
 }
@@ -193,6 +199,11 @@ int CMacro::getConsoleFontWidth()
 int CMacro::getConsoleFontHeight()
 {
 	return consoleCharHeight;
+}
+
+DWORD CMacro::getConsoleDefaultAttributes()
+{
+	return consoleDefaultAttributes;
 }
 
 std::queue<Event> *CMacro::getEventQueue()

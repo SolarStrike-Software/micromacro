@@ -22,8 +22,6 @@
 			static int getActiveCodePage(lua_State *);
 			static int getConsoleCodePage(lua_State *);
 			static int setPriority(lua_State *);
-			static int getConsoleAttributes(lua_State *);
-			static int setConsoleAttributes(lua_State *);
 
 		public:
 			static int regmod(lua_State *);

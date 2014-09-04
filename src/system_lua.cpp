@@ -32,8 +32,6 @@ int System_lua::regmod(lua_State *L)
 		{"getActiveCodePage", System_lua::getActiveCodePage},
 		{"getConsoleCodePage", System_lua::getConsoleCodePage},
 		{"setPriority", System_lua::setPriority},
-		{"getConsoleAttributes", System_lua::getConsoleAttributes},
-		{"setConsoleAttributes", System_lua::setConsoleAttributes},
 		{NULL, NULL}
 	};
 
@@ -233,101 +231,5 @@ int System_lua::setPriority(lua_State *L)
 		priority = NORMAL_PRIORITY_CLASS;
 
 	SetPriorityClass(GetCurrentProcess(), priority);
-	return 0;
-}
-
-/*	system.getConsoleAttributes()
-	Returns (on success):	number windowWidth
-							number windowHeight
-							number bufferWidth
-							number bufferHeight
-							number cursorX
-							number cursorY
-
-	Returns (on failure): nil
-
-	Returns a set of console attributes.
-	Values are in characters, not pixels!
-*/
-int System_lua::getConsoleAttributes(lua_State *L)
-{
-	if( lua_gettop(L) != 0 )
-		wrongArgs(L);
-
-	CONSOLE_SCREEN_BUFFER_INFO lpcsbi;
-	if( GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &lpcsbi) )
-	{
-		lua_pushnumber(L, lpcsbi.srWindow.Right + 1);
-		lua_pushnumber(L, lpcsbi.srWindow.Bottom - lpcsbi.srWindow.Top + 1);
-		lua_pushnumber(L, lpcsbi.dwSize.X);
-		lua_pushnumber(L, lpcsbi.dwSize.Y);
-		lua_pushnumber(L, lpcsbi.dwCursorPosition.X + 1);
-		lua_pushnumber(L, lpcsbi.dwCursorPosition.Y + 1);
-		return 6;
-	}
-	else
-		return 0; // Error
-}
-
-/*	system.getConsoleAttributes(number windowWidth, number windowHeight,
-								number bufferWidth, number bufferHeight)
-	Returns:	nil
-
-	Modify the console's attributes.
-	Values should be in characters, not pixels.
-*/
-int System_lua::setConsoleAttributes(lua_State *L)
-{
-	int args = lua_gettop(L);
-	if( args != 2 && args != 4 )
-		wrongArgs(L);
-
-	checkType(L, LT_NUMBER, 1);
-	checkType(L, LT_NUMBER, 2);
-
-	if( args >= 4 )
-	{
-		checkType(L, LT_NUMBER, 3);
-		checkType(L, LT_NUMBER, 4);
-	}
-
-	// Get original buffer size
-	CONSOLE_SCREEN_BUFFER_INFO lpcsbi;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &lpcsbi);
-
-	// For window size
-	SMALL_RECT rect;
-	rect.Right = lua_tointeger(L, 1) - 1;
-	rect.Bottom = lua_tointeger(L, 2) - 1;
-	rect.Left = 0;
-	rect.Top = 0;
-
-	// For buffer size
-	COORD coord;
-	coord.X = lpcsbi.dwSize.X;
-	coord.Y = lpcsbi.dwSize.Y;
-
-	// Set buffer size
-	if( args >= 4 )
-	{
-		coord.X = lua_tointeger(L, 3);
-		coord.Y = lua_tointeger(L, 4);
-	}
-
-	// Ensure that the buffer will be of proper size
-	COORD tmpCoord;
-	tmpCoord.X = coord.X;
-	tmpCoord.Y = coord.Y;
-	if( lpcsbi.dwSize.X > tmpCoord.X )
-		tmpCoord.X = lpcsbi.dwSize.X;
-	if( lpcsbi.dwSize.Y > tmpCoord.Y )
-		tmpCoord.Y = lpcsbi.dwSize.Y;
-
-	// Note: We set the buffer both before and after because it is
-	// easier than checking current vs. future screen size vs. buffer size
-	SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), tmpCoord);
-	SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &rect);
-	SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-
 	return 0;
 }

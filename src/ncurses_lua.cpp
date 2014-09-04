@@ -58,50 +58,51 @@ int Ncurses_lua::regmod(lua_State *L)
 	};
 
 	luaL_newlib(L, _funcs);
-	lua_setglobal(L, NCURSES_MODULE_NAME);
 
 	/* Set global vars */
 	// Colors
-	lua_pushnumber(L, COLOR_BLACK);
-	lua_setglobal(L, "COLOR_BLACK");
-	lua_pushnumber(L, COLOR_RED);
-	lua_setglobal(L, "COLOR_RED");
-	lua_pushnumber(L, COLOR_GREEN);
-	lua_setglobal(L, "COLOR_GREEN");
-	lua_pushnumber(L, COLOR_YELLOW);
-	lua_setglobal(L, "COLOR_YELLOW");
-	lua_pushnumber(L, COLOR_BLUE);
-	lua_setglobal(L, "COLOR_BLUE");
-	lua_pushnumber(L, COLOR_MAGENTA);
-	lua_setglobal(L, "COLOR_MAGENTA");
-	lua_pushnumber(L, COLOR_CYAN);
-	lua_setglobal(L, "COLOR_CYAN");
-	lua_pushnumber(L, COLOR_WHITE);
-	lua_setglobal(L, "COLOR_WHITE");
+	lua_pushinteger(L, COLOR_BLACK);
+	lua_setfield(L, -2, "BLACK");
+	lua_pushinteger(L, COLOR_RED);
+	lua_setfield(L, -2, "RED");
+	lua_pushinteger(L, COLOR_GREEN);
+	lua_setfield(L, -2, "GREEN");
+	lua_pushinteger(L, COLOR_YELLOW);
+	lua_setfield(L, -2, "YELLOW");
+	lua_pushinteger(L, COLOR_BLUE);
+	lua_setfield(L, -2, "BLUE");
+	lua_pushinteger(L, COLOR_MAGENTA);
+	lua_setfield(L, -2, "MAGENTA");
+	lua_pushinteger(L, COLOR_CYAN);
+	lua_setfield(L, -2, "CYAN");
+	lua_pushinteger(L, COLOR_WHITE);
+	lua_setfield(L, -2, "WHITE");
 
 	// Styles
-	lua_pushnumber(L, A_NORMAL);
-	lua_setglobal(L, "A_NORMAL");
-	lua_pushnumber(L, A_STANDOUT);
-	lua_setglobal(L, "A_STANDOUT");
-	lua_pushnumber(L, A_UNDERLINE);
-	lua_setglobal(L, "A_UNDERLINE");
-	lua_pushnumber(L, A_REVERSE);
-	lua_setglobal(L, "A_REVERSE");
-	lua_pushnumber(L, A_BLINK);
-	lua_setglobal(L, "A_BLINK");
-	lua_pushnumber(L, A_DIM);
-	lua_setglobal(L, "A_DIM");
-	lua_pushnumber(L, A_BOLD);
-	lua_setglobal(L, "A_BOLD");
-	lua_pushnumber(L, A_PROTECT);
-	lua_setglobal(L, "A_PROTECT");
-	lua_pushnumber(L, A_INVIS);
-	lua_setglobal(L, "A_INVIS");
-	lua_pushnumber(L, A_ALTCHARSET);
-	lua_setglobal(L, "A_ALTCHARSET");
-	lua_pushnumber(L, A_CHARTEXT);
-	lua_setglobal(L, "A_CHARTEXT");
+	lua_pushinteger(L, A_NORMAL);
+	lua_setfield(L, -2, "NORMAL");
+	lua_pushinteger(L, A_STANDOUT);
+	lua_setfield(L, -2, "STANDOUT");
+	lua_pushinteger(L, A_UNDERLINE);
+	lua_setfield(L, -2, "UNDERLINE");
+	lua_pushinteger(L, A_REVERSE);
+	lua_setfield(L, -2, "REVERSE");
+	lua_pushinteger(L, A_BLINK);
+	lua_setfield(L, -2, "BLINK");
+	lua_pushinteger(L, A_DIM);
+	lua_setfield(L, -2, "DIM");
+	lua_pushinteger(L, A_BOLD);
+	lua_setfield(L, -2, "BOLD");
+	lua_pushinteger(L, A_PROTECT);
+	lua_setfield(L, -2, "PROTECT");
+	lua_pushinteger(L, A_INVIS);
+	lua_setfield(L, -2, "INVIS");
+	lua_pushinteger(L, A_ALTCHARSET);
+	lua_setfield(L, -2, "ALTCHARSET");
+	lua_pushinteger(L, A_CHARTEXT);
+	lua_setfield(L, -2, "CHARTEXT");
+
+	lua_setglobal(L, NCURSES_MODULE_NAME);
 
 	return MicroMacro::ERR_OK;
 }

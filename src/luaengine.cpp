@@ -23,6 +23,7 @@
 #include "class_lua.h"
 #include "log_lua.h"
 #include "hash_lua.h"
+#include "cli_lua.h"
 #ifdef AUDIO_ENABLED
 	#include "audio_lua.h"
 #endif
@@ -155,7 +156,8 @@ int LuaEngine::init()
 		#endif
 		Class_lua::regmod,
 		Log_lua::regmod,
-        Hash_lua::regmod,
+		Hash_lua::regmod,
+		Cli_lua::regmod,
 		/* Addons */
 		Global_addon::regmod,
 		String_addon::regmod,

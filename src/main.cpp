@@ -210,6 +210,9 @@ int main(int argc, char **argv)
 		{
 			LuaEngine *E = Macro::instance()->getEngine();
 
+			// Reset text color (just in case)
+			SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
+
 			char buffer[1024];
 			slprintf(buffer, sizeof(buffer)-1, "Load file error code: %d (%s)\n%s\n",
 				success, getErrorString(success), E->getLastErrorMessage().c_str());
@@ -225,6 +228,9 @@ int main(int argc, char **argv)
 		if( success != MicroMacro::ERR_OK )
 		{
 			LuaEngine *E = Macro::instance()->getEngine();
+
+			// Reset text color (just in case)
+			SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
 
 			char buffer[1024];
 			slprintf(buffer, sizeof(buffer)-1, "Failed to run init function, err code: %d (%s)\n%s\n",
@@ -268,6 +274,9 @@ int main(int argc, char **argv)
 				|| ((phid->pressed('L') && phid->isDown(VK_CONTROL) && phid->isDown(VK_SHIFT) &&
 				phid->isDown(VK_MENU))) ) // Global CTRL SHIFT ALT L
 			{
+				// Reset text color (just in case)
+				SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
+
 				printf("\nScript forcibly terminated.\n");
 				break;
 			}
@@ -277,6 +286,9 @@ int main(int argc, char **argv)
 			if( success != MicroMacro::ERR_OK )
 			{
 				LuaEngine *E = Macro::instance()->getEngine();
+
+				// Reset text color (just in case)
+				SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
 
 				char buffer[1024];
 				slprintf(buffer, sizeof(buffer)-1, "Failed to run event function, err code: %d (%s)\n%s\n",
@@ -298,12 +310,18 @@ int main(int argc, char **argv)
 
 			if( runState == MicroMacro::ERR_CLOSE )
 			{ // Script requested to end
+				// Reset text color (just in case)
+				SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
+
 				printf("\nScript requested termination.\n");
 				break;
 			}
 			else if( runState != MicroMacro::ERR_OK )
 			{ // An actual error occurred
 				LuaEngine *E = Macro::instance()->getEngine();
+
+				// Reset text color (just in case)
+				SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
 
 				char buffer[1024];
 				slprintf(buffer, sizeof(buffer)-1, "Error in main loop. Error code %d (%s)\n%s\n",

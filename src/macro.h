@@ -24,6 +24,7 @@
 
 			int consoleCharWidth;
 			int consoleCharHeight;
+			DWORD consoleDefaultAttributes;
 
 		protected:
 			CMacro();
@@ -62,6 +63,7 @@
 
 			int getConsoleFontWidth();
 			int getConsoleFontHeight();
+			DWORD getConsoleDefaultAttributes();
 
 			std::queue<Event> *getEventQueue();
 			void flushEvents();
