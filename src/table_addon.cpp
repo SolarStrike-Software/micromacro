@@ -47,15 +47,14 @@ int Table_addon::regmod(lua_State *L)
 */
 int Table_addon::copy(lua_State *L)
 {
-	if( lua_gettop(L) != 1 )
-		wrongArgs(L);
+	int top = lua_gettop(L);
 
 	lua_newtable(L);
 	int newtab_index = lua_gettop(L);
 
 	// Copy methods & variables
 	lua_pushnil(L);
-	while( lua_next(L, 1) )
+	while( lua_next(L, top) )
 	{
 		lua_pushvalue(L, -2); // Make a copy of key for next iteration
 		lua_insert(L, -2); // Move our copy down the stack so it remains after the following
@@ -64,8 +63,8 @@ int Table_addon::copy(lua_State *L)
 		{ // We need to copy this sub-table
 			copy(L);
 		}
-		else
-			lua_settable(L, newtab_index); // We can just copy it directly
+
+		lua_settable(L, newtab_index); // We can just copy it directly
 	}
 
 	// Copy metatable

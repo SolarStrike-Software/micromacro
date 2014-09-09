@@ -646,7 +646,7 @@ int loadConfig(const char *filename)
 void printStdHead()
 {
 	WORD color = 3; // Green
-	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE handle = Macro::instance()->getAppHandle()/*GetStdHandle(STD_OUTPUT_HANDLE)*/;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 	// Get current text settings
@@ -665,7 +665,7 @@ void printStdHead()
 // Clear the screen, much like the cls command
 void clearCliScreen()
 {
-	HANDLE stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE stdOut = Macro::instance()->getAppHandle()/*GetStdHandle(STD_OUTPUT_HANDLE)*/;
 	COORD coord = {0, 0};
 	DWORD count;
 
