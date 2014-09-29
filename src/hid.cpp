@@ -14,10 +14,6 @@
 #include "wininclude.h"
 #include <stdio.h>
 
-#define POSTMESSAGE_NORMAL		  	0x00000001 /* for normal messages */
-#define POSTMESSAGE_EXTENDED		0x01000001 /* for extended messages */
-#define POSTMESSAGE_UP				0xC0000000 /* for key up messages */
-
 bool Hid::keyIsExtended(int vk)
 {
 	static int extList[] = {

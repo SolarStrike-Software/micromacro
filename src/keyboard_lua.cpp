@@ -16,6 +16,7 @@ extern "C"
 	#include <lualib.h>
 }
 
+
 int Keyboard_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
@@ -29,6 +30,7 @@ int Keyboard_lua::regmod(lua_State *L)
 		{"virtualPress", Keyboard_lua::virtualPress},
 		{"virtualHold", Keyboard_lua::virtualHold},
 		{"virtualRelease", Keyboard_lua::virtualRelease},
+		{"getKeyName", Keyboard_lua::getKeyName},
 		{NULL, NULL}
 	};
 
@@ -245,4 +247,31 @@ int Keyboard_lua::virtualRelease(lua_State *L)
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->virtualRelease(hwnd, vk);
 	return 0;
+}
+
+/*	keyboard.getKeyName(number vk)
+	Returns:	string (key name)
+
+	Accepts a virtual key and returns the key's name as a string.
+*/
+int Keyboard_lua::getKeyName(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1);
+
+	int key = lua_tointeger(L, 1);
+
+	UINT scan = MapVirtualKey(key, 0);
+	LPARAM lparam;
+	if( Macro::instance()->getHid()->keyIsExtended(key) )
+		lparam = (scan << 16) | POSTMESSAGE_EXTENDED;
+	else
+		lparam = (scan << 16);
+	char buf[256];
+
+	GetKeyNameText(lparam, buf, sizeof(buf)-1);
+	lua_pushstring(L, buf);
+	return 1;
 }

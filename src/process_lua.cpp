@@ -1189,7 +1189,7 @@ int Process_lua::findByWindow(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
-	checkType(L, LT_STRING, 1);
+	checkType(L, LT_NUMBER, 1);
 
 	HWND hwnd = (HWND)(int)lua_tointeger(L, 1);
 	DWORD procId;

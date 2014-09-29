@@ -17,6 +17,10 @@
 	#define GAMEPAD_BUTTONS		32
 	#define GAMEPAD_AXIS_COUNT	6
 
+	#define POSTMESSAGE_NORMAL		  	0x00000001 /* for normal messages */
+	#define POSTMESSAGE_EXTENDED		0x01000001 /* for extended messages */
+	#define POSTMESSAGE_UP				0xC0000000 /* for key up messages */
+
 	// Key pair types; KTP_KEYBOARD is for keyboard AND mouse!
 	enum KTP_TYPE{KTP_KEYBOARD, KTP_GAMEPAD};
 
@@ -37,8 +41,6 @@
 			int vMouseX, vMouseY;
 			unsigned int gamepadCount;
 			unsigned int gamepadMaxIndex;
-
-			bool keyIsExtended(int);
 
 		public:
 			int init();
@@ -65,6 +67,8 @@
 
 			void getVirtualMousePos(int &, int &);
 			void setVirtualMousePos(int, int);
+
+			bool keyIsExtended(int);
 
 			// Gamepads
 			bool joyPressed(int, int);

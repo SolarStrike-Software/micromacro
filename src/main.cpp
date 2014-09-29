@@ -349,6 +349,15 @@ int main(int argc, char **argv)
 		if( Ncurses_lua::is_initialized() )
 			Ncurses_lua::cleanup(Macro::instance()->getEngine()->getLuaState());
 
+		// Grab the user's attention
+		FLASHWINFO fwi;
+		fwi.hwnd = Macro::instance()->getAppHwnd();
+		fwi.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
+		fwi.cbSize = sizeof(FLASHWINFO);
+		fwi.uCount = 3;
+		fwi.dwTimeout = 0;
+		FlashWindowEx(&fwi);
+
 		/* Do cleanup, reinit */
 		Macro::instance()->getEngine()->reinit();
 	}
