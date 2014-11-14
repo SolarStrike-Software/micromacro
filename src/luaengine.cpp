@@ -151,9 +151,7 @@ int LuaEngine::init()
 		Filesystem_lua::regmod,
 		Process_lua::regmod,
 		Window_lua::regmod,
-		#ifdef AUDIO_ENABLED
-		Audio_lua::regmod,
-		#endif
+
 		Class_lua::regmod,
 		Log_lua::regmod,
 		Hash_lua::regmod,
@@ -182,6 +180,19 @@ int LuaEngine::init()
 		}
 		++i; // Next module
 	}
+
+	#ifdef AUDIO_ENABLED
+	{
+		int regSuccess = Audio_lua::regmod(lstate);
+		if( regSuccess != MicroMacro::ERR_OK )
+		{ // Error occurred while loading module
+			const char *err = "Failed to load audio module; disabling sound and moving on.\n";
+			fprintf(stderr, err);
+			Logger::instance()->add(err);
+			Macro::instance()->getSettings()->setInt(CONFVAR_AUDIO_ENABLED, 0);
+		}
+	}
+	#endif
 
 	lastTimestamp.QuadPart = 0;
 	fDeltaTime = 0.0;
