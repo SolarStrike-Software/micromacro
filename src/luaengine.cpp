@@ -24,6 +24,13 @@
 #include "log_lua.h"
 #include "hash_lua.h"
 #include "cli_lua.h"
+#include "memorychunk_lua.h"
+
+#ifdef NETWORKING_ENABLED
+	#include "network_lua.h"
+	#include "socket_lua.h"
+#endif
+
 #ifdef AUDIO_ENABLED
 	#include "audio_lua.h"
 #endif
@@ -151,6 +158,11 @@ int LuaEngine::init()
 		Filesystem_lua::regmod,
 		Process_lua::regmod,
 		Window_lua::regmod,
+		MemoryChunk_lua::regmod,	// Is this needed?
+#ifdef NETWORKING_ENABLED
+		Network_lua::regmod,
+		Socket_lua::regmod,
+#endif
 
 		Class_lua::regmod,
 		Log_lua::regmod,
@@ -519,6 +531,44 @@ int LuaEngine::runEvent(Event &e)
 		case EVENT_CONSOLERESIZED:
 			lua_pushstring(lstate, "consoleresized");
 			nargs = 1;
+		break;
+
+		case EVENT_SOCKETCONNECTED:
+		{
+			lua_pushstring(lstate, "socketconnected");
+			Socket *pSocket = static_cast<Socket *>(lua_newuserdata(lstate, sizeof(Socket)));
+			memset(pSocket, 0, sizeof(Socket));
+			pSocket->socket		= e.socket.socket;
+			pSocket->port		= e.socket.port;
+			pSocket->protocol	= e.socket.protocol;
+			pSocket->hThread	= e.socket.hThread;
+
+			// Give it a metatable
+			luaL_getmetatable(lstate, LuaType::metatable_socket);
+			lua_setmetatable(lstate, -2);
+
+			nargs = 2;
+		}
+		break;
+
+		case EVENT_SOCKETRECEIVED:
+			lua_pushstring(lstate, "socketreceived");
+			lua_pushunsigned(lstate, e.idata1);
+			lua_pushlstring(lstate, e.msg.c_str(), e.msg.size());
+			nargs = 3;
+		break;
+
+		case EVENT_SOCKETDISCONNECTED:
+			lua_pushstring(lstate, "socketdisconnected");
+			lua_pushunsigned(lstate, e.idata1);
+			nargs = 2;
+		break;
+
+		case EVENT_SOCKETERROR:
+			lua_pushstring(lstate, "socketerror");
+			lua_pushunsigned(lstate, e.idata1);
+			lua_pushunsigned(lstate, e.idata2);
+			nargs = 3;
 		break;
 
 		case EVENT_QUIT:

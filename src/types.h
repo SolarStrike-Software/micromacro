@@ -114,4 +114,14 @@
 		Quaternion conjugate();
 		Quaternion normal();
 	};
+
+	#ifdef NETWORKING_ENABLED
+	struct Socket
+	{
+		SOCKET socket;
+		HANDLE hThread;
+		int protocol;
+		int port;
+	};
+	#endif
 #endif

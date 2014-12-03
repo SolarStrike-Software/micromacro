@@ -65,11 +65,14 @@
 			int getConsoleFontHeight();
 			DWORD getConsoleDefaultAttributes();
 
-			std::queue<Event> *getEventQueue();
+			//std::queue<Event> *getEventQueue();
+			void pushEvent(Event &);
 			void flushEvents();
 
 			int handleHidInput();
 			int handleEvents();
+
+			HANDLE eventQueueLock;
 	};
 
 #endif

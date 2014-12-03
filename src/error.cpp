@@ -247,5 +247,6 @@ void pushLuaErrorEvent(lua_State *L, const char *fmt, ...)
 	e.type = EVENT_ERROR;
 	e.msg = buffer;
 	e.msg += scriptinfo;
-	Macro::instance()->getEventQueue()->push(e);
+	//Macro::instance()->getEventQueue()->push(e);
+	Macro::instance()->pushEvent(e);
 }

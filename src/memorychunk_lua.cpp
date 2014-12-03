@@ -124,25 +124,25 @@ int MemoryChunk_lua::getData(lua_State *L)
 		lua_pushinteger(L, data);
 	} else if( type == "ubyte" ) {
 		unsigned char data = getChunkVariable<unsigned char>(pChunk, offset, err);
-		lua_pushinteger(L, data);
+		lua_pushunsigned(L, data);
 	} else if( type == "short" ) {
 		short data = getChunkVariable<short>(pChunk, offset, err);
 		lua_pushinteger(L, data);
 	} else if( type == "ushort" ) {
 		unsigned short data = getChunkVariable<unsigned short>(pChunk, offset, err);
-		lua_pushinteger(L, data);
+		lua_pushunsigned(L, data);
 	} else if( type == "int" ) {
 		int data = getChunkVariable<int>(pChunk, offset, err);
 		lua_pushinteger(L, data);
 	} else if( type == "uint" ) {
 		unsigned int data = getChunkVariable<unsigned int>(pChunk, offset, err);
-		lua_pushinteger(L, data);
+		lua_pushunsigned(L, data);
 	} else if( type == "float" ) {
 		float data = getChunkVariable<float>(pChunk, offset, err);
-		lua_pushinteger(L, data);
+		lua_pushnumber(L, data);
 	} else if( type == "double" ) {
 		double data = getChunkVariable<double>(pChunk, offset, err);
-		lua_pushinteger(L, data);
+		lua_pushnumber(L, data);
 	} else if( type == "string" ) {
 		checkType(L, LT_NUMBER, 4);
 		unsigned int length = lua_tointeger(L, 4);

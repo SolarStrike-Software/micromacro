@@ -27,6 +27,8 @@
 			static int virtualHold(lua_State *);
 			static int virtualRelease(lua_State *);
 
+			static int virtualType(lua_State *);
+
 			static int getKeyName(lua_State *);
 
 		public:

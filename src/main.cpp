@@ -18,6 +18,7 @@
 
 #include "macro.h"
 #include "ncurses_lua.h"
+#include "network_lua.h"
 #include "filesystem.h"
 #include "logger.h"
 #include "timer.h"
@@ -54,6 +55,10 @@ std::string getOsName();
 void clearCliScreen();
 static BOOL WINAPI consoleControlCallback(DWORD);
 int modifyPermission(HANDLE, const char *, bool);
+
+#ifdef NETWORKING_ENABLED
+WSADATA wsadata;
+#endif
 
 int main(int argc, char **argv)
 {
@@ -111,6 +116,14 @@ int main(int argc, char **argv)
 			CreateDirectory(scriptsDir, &attribs);
 		}
 	}
+
+	#ifdef NETWORKING_ENABLED
+		if( WSAStartup(MAKEWORD(2,2), &wsadata) != 0 )
+		{
+			fprintf(stderr, "Failed. Error code: %d\n", WSAGetLastError());
+			return MicroMacro::ERR_ERR;
+		}
+	#endif
 
 	/* Begin main loop */
 	running = true;
@@ -349,6 +362,11 @@ int main(int argc, char **argv)
 		if( Ncurses_lua::is_initialized() )
 			Ncurses_lua::cleanup(Macro::instance()->getEngine()->getLuaState());
 
+		#ifdef NETWORKING_ENABLED
+			// Make sure we cleanup any networking stuff
+			Network_lua::cleanup();
+		#endif
+
 		// Grab the user's attention
 		FLASHWINFO fwi;
 		fwi.hwnd = Macro::instance()->getAppHwnd();
@@ -361,6 +379,14 @@ int main(int argc, char **argv)
 		/* Do cleanup, reinit */
 		Macro::instance()->getEngine()->reinit();
 	}
+
+	#ifdef NETWORKING_ENABLED
+		// Make sure we cleanup any networking stuff
+		Network_lua::cleanup();
+
+		WSACleanup();
+	#endif
+
 	Logger::instance()->add("All done. Closing down.\n");
 
 	printf("Shutting down; execution finished.\n");

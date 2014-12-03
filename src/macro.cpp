@@ -8,6 +8,7 @@
 #include "macro.h"
 #include "logger.h"
 #include "ncurses_lua.h"
+#include "strl.h"
 
 extern "C"
 {
@@ -47,6 +48,7 @@ CMacro::CMacro()
 	consoleDefaultAttributes = 0;
 	lastConsoleSizeX = 0;
 	lastConsoleSizeY = 0;
+	eventQueueLock = NULL;
 }
 
 CMacro::~CMacro()
@@ -97,6 +99,14 @@ int CMacro::init()
 	GetConsoleScreenBufferInfo(getAppHandle(), &csbi);
 	consoleDefaultAttributes = csbi.wAttributes;
 
+	// Create lock for event queue
+	eventQueueLock = CreateMutex(NULL, FALSE, NULL);
+	if( !eventQueueLock )
+	{
+		Logger::instance()->add("CreateMutex() failed in CMacro::init(); err code: %d", GetLastError());
+		return MicroMacro::ERR_ERR;
+	}
+
 	return MicroMacro::ERR_OK;
 }
 
@@ -106,6 +116,9 @@ int CMacro::cleanup()
 	success = engine.cleanup();
 	if( success != MicroMacro::ERR_OK )
 		return success;
+
+	CloseHandle(eventQueueLock);
+	eventQueueLock = NULL;
 
 	return MicroMacro::ERR_OK;
 }
@@ -160,7 +173,7 @@ void CMacro::pollForegroundWindow()
 		Event e;
 		e.type = EVENT_FOCUSCHANGED;
 		e.idata1 = ((int)foregroundHwnd);
-		eventQueue.push(e);
+		pushEvent(e);
 	}
 }
 
@@ -181,7 +194,7 @@ void CMacro::pollConsoleResize()
 			// Trigger window resize event
 			Event e;
 			e.type = EVENT_CONSOLERESIZED;
-			eventQueue.push(e);
+			pushEvent(e);
 		}
 	}
 }
@@ -205,17 +218,60 @@ DWORD CMacro::getConsoleDefaultAttributes()
 {
 	return consoleDefaultAttributes;
 }
-
+/*
 std::queue<Event> *CMacro::getEventQueue()
 {
 	return &eventQueue;
+}*/
+
+void CMacro::pushEvent(Event &e)
+{
+	DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
+	switch(dwWaitResult)
+	{
+		case WAIT_OBJECT_0:
+				eventQueue.push(e);
+
+			if( !ReleaseMutex(eventQueueLock) )
+			{ // Uh oh... That's not good.
+				char errBuff[1024];
+				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
+					"CMacro", __FUNCTION__);
+				fprintf(stderr, errBuff);
+				Logger::instance()->add(errBuff);
+			}
+		break;
+
+		case WAIT_ABANDONED: // TODO: What should we do here? Error?
+		break;
+	}
 }
 
 void CMacro::flushEvents()
 {
-	// Quickest and easiest way is to just make a new queue, then swap.
-	std::queue<Event> emptyQueue;
-	swap(eventQueue, emptyQueue);
+	DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
+	switch(dwWaitResult)
+	{
+		case WAIT_OBJECT_0:
+		{
+			// Quickest and easiest way is to just make a new queue, then swap.
+			std::queue<Event> emptyQueue;
+			swap(eventQueue, emptyQueue);
+
+			if( !ReleaseMutex(eventQueueLock) )
+			{ // Uh oh... That's not good.
+				char errBuff[1024];
+				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
+					"CMacro", __FUNCTION__);
+				fprintf(stderr, errBuff);
+				Logger::instance()->add(errBuff);
+			}
+		}
+		break;
+
+		case WAIT_ABANDONED: // TODO: What should we do here? Error?
+		break;
+	}
 }
 
 int CMacro::handleHidInput()
@@ -234,7 +290,7 @@ int CMacro::handleHidInput()
 				e.type = EVENT_MOUSERELEASED;
 			e.idata1 = i;
 			e.idata2 = hid.getToggleState(i);
-			try{ eventQueue.push(e); }
+			try{ pushEvent(e); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
 		else if( hid.pressed(i) )
@@ -247,7 +303,7 @@ int CMacro::handleHidInput()
 
 			e.idata1 = i;
 			e.idata2 = hid.getToggleState(i);
-			try{ eventQueue.push(e); }
+			try{ pushEvent(e); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
 	}
@@ -264,7 +320,7 @@ int CMacro::handleHidInput()
 				e.type = EVENT_GAMEPADPRESSED;
 				e.idata1 = i + 1;
 				e.idata2 = b + 1;
-				try{ eventQueue.push(e); }
+				try{ pushEvent(e); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}
 			else if( hid.joyReleased(i, b) )
@@ -273,7 +329,7 @@ int CMacro::handleHidInput()
 				e.type = EVENT_GAMEPADRELEASED;
 				e.idata1 = i + 1;
 				e.idata2 = b + 1;
-				try{ eventQueue.push(e); }
+				try{ pushEvent(e); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}
 		}
@@ -285,7 +341,7 @@ int CMacro::handleHidInput()
 			e.type = EVENT_GAMEPADPOVCHANGED;
 			e.idata1 = i + 1;
 			e.fdata2 = hid.joyPOV(i)/100;
-			try{ eventQueue.push(e); }
+			try{ pushEvent(e); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
 
@@ -299,7 +355,7 @@ int CMacro::handleHidInput()
 				e.idata1 = i + 1;
 				e.idata2 = a;
 				e.fdata3 = hid.joyAxis(i, a)/65535.0f*100;
-				try{ eventQueue.push(e); }
+				try{ pushEvent(e); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}
 		}
@@ -311,17 +367,38 @@ int CMacro::handleHidInput()
 int CMacro::handleEvents()
 {
 	int success = MicroMacro::ERR_OK;
-	while( !eventQueue.empty() )
-	{
-		Event e = eventQueue.front();
-		success = engine.runEvent(e);
-		eventQueue.pop();
 
-		if( success != MicroMacro::ERR_OK )
-		{
-			lua_pop(engine.getLuaState(), 1);
-			return success;
-		}
+
+
+	DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
+	switch(dwWaitResult)
+	{
+		case WAIT_OBJECT_0:
+			while( !eventQueue.empty() )
+			{
+				Event e = eventQueue.front();
+				success = engine.runEvent(e);
+				eventQueue.pop();
+
+				if( success != MicroMacro::ERR_OK )
+				{
+					lua_pop(engine.getLuaState(), 1);
+					return success;
+				}
+			}
+
+			if( !ReleaseMutex(eventQueueLock) )
+			{ // Uh oh... That's not good.
+				char errBuff[1024];
+				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
+					"CMacro", __FUNCTION__);
+				fprintf(stderr, errBuff);
+				Logger::instance()->add(errBuff);
+			}
+		break;
+
+		case WAIT_ABANDONED: // TODO: What should we do here? Error?
+		break;
 	}
 
 	return success;

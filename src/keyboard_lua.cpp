@@ -30,6 +30,7 @@ int Keyboard_lua::regmod(lua_State *L)
 		{"virtualPress", Keyboard_lua::virtualPress},
 		{"virtualHold", Keyboard_lua::virtualHold},
 		{"virtualRelease", Keyboard_lua::virtualRelease},
+		{"virtualType", Keyboard_lua::virtualType},
 		{"getKeyName", Keyboard_lua::getKeyName},
 		{NULL, NULL}
 	};
@@ -246,6 +247,32 @@ int Keyboard_lua::virtualRelease(lua_State *L)
 	int vk = lua_tointeger(L, 2);
 	if( vk > VK_XBUTTON2 && vk != 0 )
 		Macro::instance()->getHid()->virtualRelease(hwnd, vk);
+	return 0;
+}
+
+/*	keyboard.virtualType(number hwnd, string msg)
+	Returns:	nil
+
+	Attempts to send a synthetic message to a window, as if the user typed it.
+*/
+int Keyboard_lua::virtualType(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 2 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1);
+	checkType(L, LT_STRING, 2);
+
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	std::string msg = lua_tostring(L, 2);
+
+	for(unsigned int i = 0; i < msg.size(); i++)
+	{
+		char chr = msg.at(i);
+		LPARAM lparam = 0;
+		PostMessage(hwnd, WM_CHAR, chr, lparam);
+	}
+
 	return 0;
 }
 

@@ -10,6 +10,8 @@
 
 	#include <string>
 
+	#include "types.h"
+
 	enum EventType
 	{
 		EVENT_UNKNOWN,
@@ -25,6 +27,10 @@
 		EVENT_GAMEPADAXISCHANGED,
 		EVENT_FOCUSCHANGED,
 		EVENT_CONSOLERESIZED,
+		EVENT_SOCKETCONNECTED,
+		EVENT_SOCKETDISCONNECTED,
+		EVENT_SOCKETRECEIVED,
+		EVENT_SOCKETERROR,
 		EVENT_QUIT
 	};
 
@@ -38,6 +44,7 @@
 			union {
 				int idata1;
 				double fdata1;
+				Socket socket;
 			};
 			union {
 				int idata2;
