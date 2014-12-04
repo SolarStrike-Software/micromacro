@@ -378,7 +378,7 @@ int Mouse_lua::virtualRelease(lua_State *L)
 	return 0;
 }
 
-/*	mouse.virtualMove(number dx, number dy)
+/*	mouse.virtualMove(number hwnd, number dx, number dy)
 	Returns:	nil
 
 	Moves the virtual mouse cursor by dx, dy.
@@ -387,18 +387,25 @@ int Mouse_lua::virtualRelease(lua_State *L)
 */
 int Mouse_lua::virtualMove(lua_State *L)
 {
-	if( lua_gettop(L) != 2 )
+	if( lua_gettop(L) != 3 )
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
+	checkType(L, LT_NUMBER, 3);
 
 	int dx, dy;
 	int cx, cy;
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	dx = lua_tointeger(L, 2);
+	dy = lua_tointeger(L, 3);
 
-	dx = lua_tointeger(L, 1);
-	dy = lua_tointeger(L, 2);
+
+	// Update the virtual mouse's position
 	Macro::instance()->getHid()->getVirtualMousePos(cx, cy);
 	Macro::instance()->getHid()->setVirtualMousePos(cx+dx, cy+dy);
+
+	// Post a message about its movement
+	PostMessage(hwnd, WM_MOUSEMOVE, MK_LBUTTON, MAKELPARAM(cx+dx, cy+dy));
 
 	return 0;
 }
@@ -428,7 +435,7 @@ int Mouse_lua::virtualWheelMove(lua_State *L)
 	return 0;
 }
 
-/*	mouse.setVirtualPosition(number x, number y)
+/*	mouse.setVirtualPosition(number hwnd, number x, number y)
 	Returns:	nil
 
 	Sets the virtual mouse cursor to x, y.
@@ -437,15 +444,20 @@ int Mouse_lua::virtualWheelMove(lua_State *L)
 */
 int Mouse_lua::setVirtualPosition(lua_State *L)
 {
-	if( lua_gettop(L) != 2 )
+	if( lua_gettop(L) != 3 )
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 	checkType(L, LT_NUMBER, 2);
+	checkType(L, LT_NUMBER, 3);
 
 	unsigned int dx, dy;
-	dx = lua_tointeger(L, 1);
-	dy = lua_tointeger(L, 2);
+	HWND hwnd = (HWND)lua_tointeger(L, 1);
+	dx = lua_tointeger(L, 2);
+	dy = lua_tointeger(L, 3);
 	Macro::instance()->getHid()->setVirtualMousePos(dx, dy);
+
+	// Post a message about its movement
+	PostMessage(hwnd, WM_MOUSEMOVE, MK_LBUTTON, MAKELPARAM(dx, dy));
 
 	return 0;
 }
