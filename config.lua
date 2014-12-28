@@ -3,7 +3,7 @@
 	logDirectory				Location to store log files
 ]]
 logRemovalDays = 1; 
-logDirectory = "logs";
+logDirectory = "./logs";
 
 
 --[[ Script settings ----------------------------------------------------------
@@ -13,10 +13,14 @@ scriptDirectory = "./scripts";
 
 
 --[[ Memory & Process settings ------------------------------------------------
-	memoryStringBufferSize		Size of the buffer (in bytes) used when handling strings in memory
+	memoryStringBufferSize		Size of the buffer (in bytes) used when handling strings in memory.
 ]]
 memoryStringBufferSize = 128;
 
+--[[ Network settings ---------------------------------------------------------
+	networkBufferSize			Size of the buffer (in bytes) used when reading socket data.
+]]
+networkBufferSize = 10240;
 
 --[[ Other things
 	audioEnabled				Whether or not to enable OpenAl sound output

@@ -36,6 +36,7 @@ extern "C"
 }
 
 const char *basicTitle = "MicroMacro v%ld.%ld.%ld";
+char baseDirectory[MAX_PATH+1];
 
 std::string scriptGUIDialog(std::string);
 std::string promptForScript();
@@ -60,6 +61,7 @@ int modifyPermission(HANDLE, const char *, bool);
 WSADATA wsadata;
 #endif
 
+
 int main(int argc, char **argv)
 {
 	bool running;
@@ -71,9 +73,15 @@ int main(int argc, char **argv)
 	char origCWD[MAX_PATH+1];
 	GetCurrentDirectory(MAX_PATH,(LPTSTR)&origCWD);
 
+	/* CD to MicroMacro's path to load configs */
+	strlcpy(baseDirectory, getFilePath(argv[0], false).c_str(), sizeof(baseDirectory)-1);
+	SetCurrentDirectory(origCWD);
 
 	{	/* Run configs */
-		int success = loadConfig(CONFIG_FILENAME);
+		std::string configFilename = baseDirectory;
+		configFilename += "/";
+		configFilename += CONFIG_FILENAME;
+		int success = loadConfig(configFilename.c_str());
 		if( success != MicroMacro::ERR_OK )
 		{
 			fprintf(stderr, "Failed loading config file. Err code: %d (%s)\n",
@@ -107,13 +115,25 @@ int main(int argc, char **argv)
 	{ // Ensure scripts directory exists
 		const char *scriptsDir = Macro::instance()->getSettings()->getString(
 			CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY).c_str();
-		if( !directoryExists(scriptsDir) )
+		std::string scriptsFullPath = "";
+		if( PathIsRelative(scriptsDir) )
+		{
+			scriptsFullPath = baseDirectory;
+			scriptsFullPath += scriptsFullPath;
+			scriptsFullPath += "\\";
+			scriptsFullPath += scriptsDir;
+			scriptsFullPath = fixSlashes(fixFileRelatives(scriptsFullPath), SLASHES_TO_WINDOWS);
+		}
+		else
+			scriptsFullPath = scriptsDir;
+
+		if( !directoryExists(scriptsFullPath.c_str()) )
 		{
 			SECURITY_ATTRIBUTES attribs;
 			attribs.nLength = sizeof(SECURITY_ATTRIBUTES);
 			attribs.bInheritHandle = false;
 			attribs.lpSecurityDescriptor = NULL;
-			CreateDirectory(scriptsDir, &attribs);
+			CreateDirectory(scriptsFullPath.c_str(), &attribs);
 		}
 	}
 
@@ -124,6 +144,11 @@ int main(int argc, char **argv)
 			return MicroMacro::ERR_ERR;
 		}
 	#endif
+
+	/* If the script was passed in as a command-line argument... autoload it */
+	std::string autoloadScript;
+	if( argc > 1 )
+		autoloadScript = argv[1];
 
 	/* Begin main loop */
 	running = true;
@@ -145,9 +170,17 @@ int main(int argc, char **argv)
 			SendMessage(Macro::instance()->getAppHwnd(), WM_SETTEXT, (WPARAM)0, (LPARAM)title);
 		}
 
-		/* Prompt for script */
+		/* Prompt for script, if needed */
 		std::vector<std::string> args;
-		std::string script = promptForScript();
+		std::string script;
+		if( autoloadScript.length() )
+		{
+			script = autoloadScript;
+			autoloadScript.clear();
+		}
+		else
+			script = promptForScript();
+
 		if( script == "" )
 		{ // We need something to run, duh!
 			fprintf(stderr, "Error: You didn\'t even give me a script to run, silly!\n\n");
@@ -664,6 +697,13 @@ int loadConfig(const char *filename)
 	psettings->setInt(CONFVAR_AUDIO_ENABLED, 0);
 	#endif
 
+	#ifdef NETWORKING_ENABLED
+	ival = getConfigInt(lstate, CONFVAR_NETWORK_BUFFER_SIZE, CONFDEFAULT_NETWORK_BUFFER_SIZE);
+	if( ival < 16 ) // Make sure it is reasonable...
+		ival = CONFDEFAULT_NETWORK_BUFFER_SIZE;
+	psettings->setInt(CONFVAR_NETWORK_BUFFER_SIZE, ival);
+	#endif
+
 	ival = getConfigInt(lstate, CONFVAR_YIELD_TIME_SLICE, CONFDEFAULT_YIELD_TIME_SLICE);
 	psettings->setInt(CONFVAR_YIELD_TIME_SLICE, ival);
 
@@ -760,19 +800,30 @@ void openLog()
 	const char *logDir = psettings->getString(CONFVAR_LOG_DIRECTORY).c_str();
 	unsigned int logRemovalDays = (unsigned int)psettings->getInt(CONFVAR_LOG_REMOVAL_DAYS);
 
+	std::string logFullPath;
+	if(	PathIsRelative(logDir) )
+	{
+		logFullPath = baseDirectory;
+		logFullPath += "\\";
+		logFullPath += logDir;
+		logFullPath = fixSlashes(fixFileRelatives(logFullPath), SLASHES_TO_WINDOWS);
+	}
+	else
+		logFullPath = logDir;
+
 	// Ensure log directory exists
-	if( !directoryExists(logDir) )
+	if( !directoryExists(logFullPath.c_str()) )
 	{
 		SECURITY_ATTRIBUTES attribs;
 		attribs.nLength = sizeof(SECURITY_ATTRIBUTES);
 		attribs.bInheritHandle = false;
 		attribs.lpSecurityDescriptor = NULL;
-		CreateDirectory(logDir, &attribs);
+		CreateDirectory(logFullPath.c_str(), &attribs);
 	}
 
 	// Remove old logs, open a new log file
 	if( logRemovalDays > 0 )
-		deleteOldLogs(logDir, logRemovalDays); // Remove old stuff before creating a new log
+		deleteOldLogs(logFullPath.c_str(), logRemovalDays); // Remove old stuff before creating a new log
 
 	char logfileName[MAX_PATH];
 	char szTime[256];
@@ -788,11 +839,11 @@ void openLog()
 	{
 		strftime(szTime, sizeof(szTime)-1, "%Y-%m-%d", timeinfo);
 		slprintf(logfileName, sizeof(logfileName)-1,
-			"%s/%s-%02u.txt", logDir, szTime, fileCount);
-
+			"%s\\%s-%02u.txt", logFullPath.c_str(), szTime, fileCount);
 		nameFound = !fileExists(logfileName);
 		++fileCount;
 	}
+
 	Logger::instance()->open(logfileName);
 	if( Logger::instance()->is_open() )
 		fprintf(stdout, "Logging to %s\n\n", logfileName);

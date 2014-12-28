@@ -22,6 +22,8 @@ extern "C"
 }
 
 #include <ws2tcpip.h>
+#include "macro.h"
+#include "settings.h"
 
 const char *LuaType::metatable_socket = "socket";
 
@@ -30,7 +32,7 @@ std::vector<Socket *> Socket_lua::socketList;
 
 DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
 {
-	char readBuff[READ_BUFFER+1];
+	char readBuff[Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_BUFFER_SIZE) + 1];
 
 	while(true)
 	{
@@ -224,7 +226,7 @@ int Socket_lua::regmod(lua_State *L)
 		{"listen", listen},
 		{"send", send},
 		{"close", close},
-		{"socket", socket},
+		{"id", id},
 		{NULL, NULL}
 	};
 
@@ -479,7 +481,7 @@ int Socket_lua::close(lua_State *L)
 	return 0;
 }
 
-int Socket_lua::socket(lua_State *L)
+int Socket_lua::id(lua_State *L)
 {
 	Socket *pSocket = static_cast<Socket *>(lua_touserdata(L, 1));
 	lua_pushunsigned(L, pSocket->socket);

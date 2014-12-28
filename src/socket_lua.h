@@ -13,7 +13,6 @@
 	#include <winsock2.h>
 	#include <vector>
 
-	#define READ_BUFFER			10240
 	#define LISTEN_BUFFER		10
 
 	typedef struct lua_State lua_State;
@@ -35,7 +34,7 @@
 			static int send(lua_State *);
 			static int close(lua_State *);
 
-			static int socket(lua_State *);
+			static int id(lua_State *);
 
 			static HANDLE socketListLock;
 			static std::vector<Socket *> socketList;

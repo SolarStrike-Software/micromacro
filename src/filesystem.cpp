@@ -103,6 +103,8 @@ std::string fixSlashes(std::string instr, int type)
 		else if( type == SLASHES_TO_WINDOWS ) {
 			instr.replace(i, 1, "\\");
 			i = instr.find("/", i+1); }
+		else // Invalid conversion
+			break;
 	}
 
 	return instr;
