@@ -206,6 +206,20 @@ int LuaEngine::init()
 	}
 	#endif
 
+	/* Set path */
+	lua_getglobal(lstate, "package");
+	lua_getfield(lstate, -1, "path");
+	std::string curPath = lua_tostring(lstate, -1);		// Grab path
+	lua_pop(lstate, 1);									// Remove the old
+	curPath.append(";");								// Add the new
+	curPath.append(basePath);
+	curPath.append("/lib/?;");
+	curPath.append(basePath);
+	curPath.append("/lib/?.lua");
+	lua_pushstring(lstate, curPath.c_str());
+	lua_setfield(lstate, -2, "path");
+	lua_pop(lstate, 1);									// Reset stack
+
 	lastTimestamp.QuadPart = 0;
 	fDeltaTime = 0.0;
 
@@ -616,4 +630,14 @@ std::string LuaEngine::getLastErrorMessage()
 lua_State *LuaEngine::getLuaState()
 {
 	return lstate;
+}
+
+std::string LuaEngine::getBasePath()
+{
+	return basePath;
+}
+
+void LuaEngine::setBasePath(std::string np)
+{
+	basePath = np;
 }

@@ -35,7 +35,7 @@ extern "C"
 	#include <lualib.h>
 }
 
-const char *basicTitle = "MicroMacro v%ld.%ld.%ld";
+const char *basicTitle = "MicroMacro v%ld.%02ld.%ld";
 char baseDirectory[MAX_PATH+1];
 
 std::string scriptGUIDialog(std::string);
@@ -73,9 +73,11 @@ int main(int argc, char **argv)
 	char origCWD[MAX_PATH+1];
 	GetCurrentDirectory(MAX_PATH,(LPTSTR)&origCWD);
 
-	/* CD to MicroMacro's path to load configs */
+	/* CopyMicroMacro's path to load configs */
 	strlcpy(baseDirectory, getFilePath(argv[0], false).c_str(), sizeof(baseDirectory)-1);
-	SetCurrentDirectory(origCWD);
+
+	/* Copy the base path into the Lua engine; Do this *before* initializing! */
+	Macro::instance()->getEngine()->setBasePath(baseDirectory);
 
 	{	/* Run configs */
 		std::string configFilename = baseDirectory;

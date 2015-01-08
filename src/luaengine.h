@@ -33,6 +33,7 @@
 
 			void stdError();
 
+			std::string basePath;
 			std::string lastErrorMsg;
 			TimeType lastTimestamp;			// Holds the timestamp so we can compute delta time
 			float fDeltaTime;				// Holds the time elapsed between last cycle and current logic cycle
@@ -54,6 +55,9 @@
 			float getDeltaTime();
 			std::string getLastErrorMessage();
 			lua_State *getLuaState();
+
+			std::string getBasePath();
+			void setBasePath(std::string);
 	};
 
 
