@@ -207,31 +207,63 @@ int main(int argc, char **argv)
 			continue;
 		} else if( args[0] == "exec" )
 		{
-			if( args.size() <= 1 ) // If they didn't actually give us anything to do...
-				continue;
-
-			// Prep the string, then run it
-			size_t fpos = script.find_first_of(' ');
-			if( fpos == std::string::npos )
-				continue;
-
-			std::string cmd = script.substr(fpos+1);
-			printf("Execute string: %s\n\n", cmd.c_str());
-
-			// Run the string
-			LuaEngine *E = Macro::instance()->getEngine();
-			int success = E->loadString(cmd.c_str());
-			if( success != MicroMacro::ERR_OK )
+			int argc = args.size();
+			if( argc <= 1 ) // If they didn't actually give us a command...
 			{
-				char buffer[1024];
-				slprintf(buffer, sizeof(buffer)-1, "String execution error code: %d (%s)\n%s\n",
-					success, getErrorString(success), E->getLastErrorMessage().c_str());
-				fprintf(stderr, "%s\n", buffer);
-				Logger::instance()->add(buffer);
-			}
+				while(true)
+				{
+					// Prompt for command
+					printf("> ");
 
-			// Make sure we re-initialize our Lua state before we move on
-			E->reinit();
+					std::string fullcmd;
+					std::cin.clear();
+					getline(std::cin, fullcmd);
+					std::cin.clear();
+
+					if( fullcmd == "exit" ) // Leave interactive mode
+					{
+						printf("\n\n");
+						break;
+					}
+
+					// Run the string
+					LuaEngine *E = Macro::instance()->getEngine();
+					int success = E->loadString(fullcmd.c_str());
+					if( success != MicroMacro::ERR_OK )
+					{
+						char buffer[1024];
+						slprintf(buffer, sizeof(buffer)-1, "String execution error code: %d (%s)\n%s\n",
+							success, getErrorString(success), E->getLastErrorMessage().c_str());
+						fprintf(stderr, "%s\n", buffer);
+						Logger::instance()->add(buffer);
+					}
+				}
+			}
+			else
+			{
+				// Prep the string, then run it
+				size_t fpos = script.find_first_of(' ');
+				if( fpos == std::string::npos )
+					continue;
+
+				std::string cmd = script.substr(fpos+1);
+				printf("Execute string: %s\n\n", cmd.c_str());
+
+				// Run the string
+				LuaEngine *E = Macro::instance()->getEngine();
+				int success = E->loadString(cmd.c_str());
+				if( success != MicroMacro::ERR_OK )
+				{
+					char buffer[1024];
+					slprintf(buffer, sizeof(buffer)-1, "String execution error code: %d (%s)\n%s\n",
+						success, getErrorString(success), E->getLastErrorMessage().c_str());
+					fprintf(stderr, "%s\n", buffer);
+					Logger::instance()->add(buffer);
+				}
+
+				// Make sure we re-initialize our Lua state before we move on
+				E->reinit();
+			}
 			continue;
 		}
 
