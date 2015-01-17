@@ -567,21 +567,21 @@ int LuaEngine::runEvent(Event &e)
 
 		case EVENT_SOCKETRECEIVED:
 			lua_pushstring(lstate, "socketreceived");
-			lua_pushunsigned(lstate, e.idata1);
+			lua_pushinteger(lstate, e.idata1);
 			lua_pushlstring(lstate, e.msg.c_str(), e.msg.size());
 			nargs = 3;
 		break;
 
 		case EVENT_SOCKETDISCONNECTED:
 			lua_pushstring(lstate, "socketdisconnected");
-			lua_pushunsigned(lstate, e.idata1);
+			lua_pushinteger(lstate, e.idata1);
 			nargs = 2;
 		break;
 
 		case EVENT_SOCKETERROR:
 			lua_pushstring(lstate, "socketerror");
-			lua_pushunsigned(lstate, e.idata1);
-			lua_pushunsigned(lstate, e.idata2);
+			lua_pushinteger(lstate, e.idata1);
+			lua_pushinteger(lstate, e.idata2);
 			nargs = 3;
 		break;
 

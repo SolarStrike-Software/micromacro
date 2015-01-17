@@ -201,15 +201,17 @@ int main(int argc, char **argv)
 			continue;
 		} else if( script == "buildinfo" )
 		{
-			printf("Version %ld.%ld.%ld, built on %s-%s-%s\n\n",
+			printf("Version %ld.%ld.%ld, built on %s-%s-%s\n%s\n\n",
 				AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD,
-				AutoVersion::YEAR, AutoVersion::MONTH, AutoVersion::DATE);
+				AutoVersion::YEAR, AutoVersion::MONTH, AutoVersion::DATE,
+				LUA_VERSION);
 			continue;
 		} else if( args[0] == "exec" )
 		{
 			int argc = args.size();
 			if( argc <= 1 ) // If they didn't actually give us a command...
 			{
+				printf("\nEntering interactive mode. Enter 'exit' to quit.\n");
 				while(true)
 				{
 					// Prompt for command

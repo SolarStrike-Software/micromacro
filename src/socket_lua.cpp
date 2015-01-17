@@ -484,7 +484,7 @@ int Socket_lua::close(lua_State *L)
 int Socket_lua::id(lua_State *L)
 {
 	Socket *pSocket = static_cast<Socket *>(lua_touserdata(L, 1));
-	lua_pushunsigned(L, pSocket->socket);
+	lua_pushinteger(L, pSocket->socket);
 	return 1;
 }
 
