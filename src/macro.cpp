@@ -172,7 +172,7 @@ void CMacro::pollForegroundWindow()
 		// Trigger window focus change event
 		Event e;
 		e.type = EVENT_FOCUSCHANGED;
-		e.idata1 = ((int)foregroundHwnd);
+		e.idata1 = ((size_t)foregroundHwnd);
 		pushEvent(e);
 	}
 }

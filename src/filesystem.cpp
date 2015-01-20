@@ -88,7 +88,7 @@ unsigned int filetimeDelta(FILETIME *t2, FILETIME *t1)
 
 std::string fixSlashes(std::string instr, int type)
 {
-	unsigned int i = SLASHES_TO_STANDARD;
+	size_t i = SLASHES_TO_STANDARD;
 
 	if( type == SLASHES_TO_STANDARD )
 		i = instr.find("\\");
@@ -122,7 +122,8 @@ std::string getFilePath(std::string fullpath, bool includeTrailingSlash)
 	//fullpath = fixFileRelatives(fullpath); // Not necessary... call it manually if needed
 	fullpath = fixSlashes(fullpath, SLASHES_TO_STANDARD);
 
-	unsigned int foundpos = fullpath.rfind("/");
+	size_t foundpos = fullpath.rfind("/");
+
 	if( foundpos != std::string::npos )
 		fullpath = fullpath.substr(0, fullpath.rfind("/"));
 	else
@@ -140,7 +141,7 @@ std::string fixFileRelatives(std::string instr)
 
 	/* Keep any leading ../ and ./ */
 	std::string prefix;
-	for(unsigned int i = 0; i < instr.length(); i++)
+	for(size_t i = 0; i < instr.length(); i++)
 	{
 		char c = instr.at(i);
 		if( c == '.' || c == '/' )
@@ -154,10 +155,10 @@ std::string fixFileRelatives(std::string instr)
 		instr.erase(0, prefix.length());
 
 	/* Strip out any "../", and their previous directory (if sane) */
-	unsigned int foundpos = instr.find("../");
+	size_t foundpos = instr.find("../");
 	while( foundpos != std::string::npos )
 	{
-		unsigned int prevslash = instr.substr(0, foundpos - 1).rfind("/");
+		size_t prevslash = instr.substr(0, foundpos - 1).rfind("/");
 
 		if( prevslash != std::string::npos )
 			instr.erase(prevslash+1, foundpos - prevslash + 2);

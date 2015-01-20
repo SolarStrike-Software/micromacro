@@ -697,7 +697,7 @@ int Process_lua::readBatch(lua_State *L)
 		readBuffer = new char[readLen+1];
 	} catch( std::bad_alloc &ba ) { badAllocation(); }
 
-	DWORD bytesRead = 0;
+	SIZE_T bytesRead = 0;
 	int success = ReadProcessMemory(*pHandle, (LPVOID)address, (void *)readBuffer, readLen, &bytesRead);
 
 	if( !success || bytesRead != readLen )
@@ -866,7 +866,7 @@ int Process_lua::readChunk(lua_State *L)
 	pChunk->address = address;
 	pChunk->size = size;
 
-	DWORD bytesRead;
+	SIZE_T bytesRead;
 	int success = ReadProcessMemory(*pHandle, (LPVOID)address, (void *)pChunk->data, size, &bytesRead);
 
 	if( !success || bytesRead != size )
@@ -1145,7 +1145,7 @@ int Process_lua::findPattern(lua_State *L)
 		if( (curAddr - bufferStart + szMaskLen) >= curBufferLen )
 		{
 			memset(buffer, 0, bufferLen);
-			DWORD bytesRead;
+			SIZE_T bytesRead;
 			bool success = ReadProcessMemory(*pHandle, (LPCVOID)curAddr, buffer, bufferLen, &bytesRead);
 
 			bufferStart = curAddr;
@@ -1327,7 +1327,7 @@ int Process_lua::getModuleAddress(lua_State *L)
 	}
 
 	bool found = false;
-	unsigned int addrFound = 0;
+	size_t addrFound = 0;
 	MODULEENTRY32 mod;
 	mod.dwSize = sizeof(MODULEENTRY32);
 	if( Module32First(snapshot, &mod) )
@@ -1338,7 +1338,7 @@ int Process_lua::getModuleAddress(lua_State *L)
 		if( strcmp(modname_snap, modname_lower) == 0 )
 		{
 			found = true;
-			addrFound = (unsigned int)mod.modBaseAddr;
+			addrFound = (size_t)mod.modBaseAddr;
 		}
 
 		while( !found && Module32Next(snapshot, &mod) )
@@ -1348,7 +1348,7 @@ int Process_lua::getModuleAddress(lua_State *L)
 			if( strcmp(modname_snap, modname_lower) == 0 )
 			{
 				found = true;
-				addrFound = (unsigned int)mod.modBaseAddr;
+				addrFound = (size_t)mod.modBaseAddr;
 				break;
 			}
 		}

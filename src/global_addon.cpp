@@ -17,6 +17,14 @@ extern "C"
 	#include <lualib.h>
 }
 
+/* Avoid the stupid macros from _mingw_print_pop.h that break the use of any variable names sprintf/printf */
+#ifdef sprintf
+	#undef sprintf
+#endif
+#ifdef printf
+	#undef printf
+#endif
+
 lua_CFunction Global_addon::sprintf = 0;
 std::vector<std::string> Global_addon::includedList;
 

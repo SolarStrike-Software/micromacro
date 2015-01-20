@@ -188,13 +188,13 @@ int Table_addon::print(lua_State *L)
 
 		if( lua_istable(L, -1) && depth < TABLE_PRINT_MAXDEPTH )
 		{
-			printf("%s%s:\ttable: 0x%X\n", depthStr.c_str(), key.c_str(), (unsigned int)lua_topointer(L, -1));
+			printf("%s%s:\ttable: 0x%X\n", depthStr.c_str(), key.c_str(), (lua_Integer)lua_topointer(L, -1));
 			// Recurse
 			lua_pushinteger(L, depth+1); // Push depth
 			print(L);
 		}
 		else
-			printf("%s%s:\t%s\n", depthStr.c_str(), key.c_str(), lua_tostring(L, -1));
+			printf("%s%s:\t%s\n", depthStr.c_str(), key.c_str(), (char *)lua_tostring(L, -1));
 
 		// Pop value, keep key
 		lua_pop(L, 1);

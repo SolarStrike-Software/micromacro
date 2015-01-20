@@ -13,6 +13,7 @@
 #include "wininclude.h"
 #include "event.h"
 #include "macro.h"
+#include "ncurses_lua.h"
 
 #include <math.h>
 #include <cmath>
@@ -94,8 +95,7 @@ int LuaType::ncursesWindow_gc(lua_State *L)
 	WINDOW **pw = (WINDOW **)lua_touserdata(L, 1);
 
 	/* We really don't want to delete stdscr! */
-	if( *pw != ::stdscr )
-		delwin(*pw);
+	Ncurses_lua::safeDestroy(*pw);
 
 	*pw = NULL;
 	return 0;

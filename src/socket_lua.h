@@ -9,8 +9,8 @@
 #define SOCKET_LUA_H
 	#ifdef NETWORKING_ENABLED
 
-	#include "wininclude.h"
 	#include <winsock2.h>
+	#include "wininclude.h"
 	#include <vector>
 
 	#define LISTEN_BUFFER		10

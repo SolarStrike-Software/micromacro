@@ -201,8 +201,14 @@ int main(int argc, char **argv)
 			continue;
 		} else if( script == "buildinfo" )
 		{
-			printf("Version %ld.%ld.%ld, built on %s-%s-%s\n%s\n\n",
+			#ifdef _WIN64
+				const char *bits = "x64";
+			#else
+				const char *bits = "x86";
+			#endif
+			printf("Version %ld.%ld.%ld %s, built on %s-%s-%s\n%s\n\n",
 				AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD,
+				bits,
 				AutoVersion::YEAR, AutoVersion::MONTH, AutoVersion::DATE,
 				LUA_VERSION);
 			continue;
@@ -565,15 +571,15 @@ std::string promptForScript()
 
 void splitArgs(std::string cmd, std::vector<std::string> &args)
 {
-	unsigned int startpos = 0;
-	unsigned int lastpos = 0;
+	size_t startpos = 0;
+	size_t lastpos = 0;
 
 	// Take quotes, replace sub-spaces
 	startpos = cmd.find("\"");
 	while( startpos != std::string::npos )
 	{
 		// Find the next quote
-		unsigned int nextpos = cmd.find("\"", startpos+1);
+		size_t nextpos = cmd.find("\"", startpos+1);
 		if( nextpos - startpos > 0 )
 		{
 			// Grab substring, remove quotes, substitute spaces
@@ -608,7 +614,7 @@ void splitArgs(std::string cmd, std::vector<std::string> &args)
 std::string strReplaceAll(std::string instr, std::string search, std::string replace)
 {
 	// First we need to handle subquotes
-	unsigned int i = instr.find(search);
+	size_t i = instr.find(search);
 	while( i != std::string::npos )
 	{
 		instr.replace(i, search.length(), replace);
@@ -921,7 +927,13 @@ void openLog()
 	splitLine80[79] = '\n';
 	splitLine80[80] = 0;
 
-	Logger::instance()->add("MicroMacro version %s (%s)\n", AutoVersion::FULLVERSION_STRING, AutoVersion::STATUS);
+	#ifdef _WIN64
+		const char *bits = "x64";
+	#else
+		const char *bits = "x86";
+	#endif
+
+	Logger::instance()->add("MicroMacro version %s (%s) %s\n", AutoVersion::FULLVERSION_STRING, AutoVersion::STATUS, bits);
 	Logger::instance()->add("%s %s, %s\n", szProcessorName, szProcessorSpeed, getOsName().c_str());
 	Logger::instance()->add("User privilege: %s\n", userGroupName.c_str());
 	Logger::instance()->add_raw((char *)&splitLine80);

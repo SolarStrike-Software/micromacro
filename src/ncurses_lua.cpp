@@ -810,3 +810,9 @@ int Ncurses_lua::getWindowSize(lua_State *L)
 
 	return 2;
 }
+
+void Ncurses_lua::safeDestroy(WINDOW *pWin)
+{
+	if( pWin != ::stdscr )
+		delwin(pWin);
+}

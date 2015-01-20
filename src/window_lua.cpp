@@ -238,7 +238,7 @@ int Window_lua::find(lua_State *L)
 		return 0;
 	}
 
-	lua_pushinteger(L, (unsigned int)searchpair.hwnd);
+	lua_pushinteger(L, (lua_Integer)searchpair.hwnd);
 	return 1;
 }
 
@@ -293,7 +293,7 @@ int Window_lua::findList(lua_State *L)
 	for(unsigned int i = 0; i < searchpair.hwndList.size(); i++)
 	{
 		lua_pushinteger(L, i+1); // Push key
-		lua_pushinteger(L, (unsigned int)searchpair.hwndList.at(i)); // Push value
+		lua_pushinteger(L, (lua_Integer)searchpair.hwndList.at(i)); // Push value
 		lua_settable(L, -3); // Set it
 	}
 
@@ -318,7 +318,7 @@ int Window_lua::getParent(lua_State *L)
 	if( parent == NULL ) // No parent or error occurred
 		return 0;
 
-	lua_pushinteger(L, (int)parent);
+	lua_pushinteger(L, (lua_Integer)parent);
 	return 1;
 }
 
@@ -1046,13 +1046,13 @@ int Window_lua::saveScreenshot(lua_State *L)
 // Return the main application's HWND
 int Window_lua::getAppHwnd(lua_State *L)
 {
-	lua_pushnumber(L, (int)Macro::instance()->getAppHwnd());
+	lua_pushinteger(L, (size_t)Macro::instance()->getAppHwnd());
 	return 1;
 }
 
 // Return the main focused HWND
 int Window_lua::getFocusHwnd(lua_State *L)
 {
-	lua_pushnumber(L, (int)Macro::instance()->getForegroundWindow());
+	lua_pushinteger(L, (size_t)Macro::instance()->getForegroundWindow());
 	return 1;
 }

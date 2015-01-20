@@ -51,5 +51,7 @@
 			static int regmod(lua_State *);
 			static int init(lua_State *);
 			static int cleanup(lua_State *);
+
+			static void safeDestroy(WINDOW *);
 	};
 #endif

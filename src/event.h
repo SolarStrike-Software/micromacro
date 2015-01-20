@@ -42,16 +42,16 @@
 			std::string msg;
 			//char *msg;
 			union {
-				int idata1;
+				size_t idata1;
 				double fdata1;
 				Socket socket;
 			};
 			union {
-				int idata2;
+				size_t idata2;
 				double fdata2;
 			};
 			union {
-				int idata3;
+				size_t idata3;
 				double fdata3;
 			};
 

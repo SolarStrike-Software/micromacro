@@ -41,7 +41,7 @@ DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
 		if( result > 0 )
 		{ // Data received
 			// Copy the received data into an event; push it.
-			readBuff[result] = NULL; // Enforce NULL-terminator
+			readBuff[result] = 0; // Enforce NULL-terminator
 			Event e;
 			e.idata1 = (int)socket;
 			e.type = EVENT_SOCKETRECEIVED;
