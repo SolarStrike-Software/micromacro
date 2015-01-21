@@ -31,12 +31,12 @@
 
 			// Helper functions
 			static std::string narrowString(std::wstring);
-			static std::string readString(HANDLE, unsigned long, int &, unsigned int);
-			static std::wstring readUString(HANDLE, unsigned long, int &, unsigned int);
-			static void writeString(HANDLE, unsigned long, char *, int &, unsigned int);
+			static std::string readString(HANDLE, size_t, int &, unsigned int);
+			static std::wstring readUString(HANDLE, size_t, int &, unsigned int);
+			static void writeString(HANDLE, size_t, char *, int &, unsigned int);
 
 			template <class T>
-			static T readMemory(HANDLE process, unsigned long address, int &err)
+			static T readMemory(HANDLE process, size_t address, int &err)
 			{
 				T buffer;
 				SIZE_T bytesread = 0;
@@ -53,7 +53,7 @@
 			}
 
 			template <class T>
-			static void writeMemory(HANDLE process, unsigned long address, T data, int &err)
+			static void writeMemory(HANDLE process, size_t address, T data, int &err)
 			{
 				SIZE_T byteswritten = 0;
 				err = 0;

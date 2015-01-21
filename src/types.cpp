@@ -16,7 +16,7 @@ BatchJob &BatchJob::operator=(const BatchJob &o)
 	return *this;
 }
 
-std::string getChunkString(MemoryChunk *pChunk, unsigned int offset, unsigned int length, int &err)
+std::string getChunkString(MemoryChunk *pChunk, size_t offset, size_t length, int &err)
 {
 	err = 0;
 	if( (offset+length) > pChunk->size )

@@ -116,7 +116,7 @@ int MemoryChunk_lua::getData(lua_State *L)
 
 	MemoryChunk *pChunk = static_cast<MemoryChunk *>(lua_touserdata(L, 1));
 	std::string type = lua_tostring(L, 2);
-	unsigned int offset = lua_tointeger(L, 3);
+	size_t offset = lua_tointeger(L, 3);
 	int err = 0;
 
 	if( type == "byte" ) {
@@ -136,6 +136,12 @@ int MemoryChunk_lua::getData(lua_State *L)
 		lua_pushinteger(L, data);
 	} else if( type == "uint" ) {
 		unsigned int data = getChunkVariable<unsigned int>(pChunk, offset, err);
+		lua_pushinteger(L, data);
+	} else if( type == "int64" ) {
+		long long data = getChunkVariable<long long>(pChunk, offset, err);
+		lua_pushinteger(L, data);
+	} else if( type == "uint64" ) {
+		unsigned long long data = getChunkVariable<unsigned long long>(pChunk, offset, err);
 		lua_pushinteger(L, data);
 	} else if( type == "float" ) {
 		float data = getChunkVariable<float>(pChunk, offset, err);

@@ -39,7 +39,7 @@ std::string Process_lua::narrowString(std::wstring instr)
   return holder;
 }
 
-std::string Process_lua::readString(HANDLE handle, unsigned long address, int &err, unsigned int len)
+std::string Process_lua::readString(HANDLE handle, size_t address, int &err, unsigned int len)
 {
 	std::string fullstr;
 	//unsigned char buffer = 0;
@@ -89,7 +89,7 @@ std::string Process_lua::readString(HANDLE handle, unsigned long address, int &e
 	return fullstr;
 }
 
-std::wstring Process_lua::readUString(HANDLE handle, unsigned long address, int &err,
+std::wstring Process_lua::readUString(HANDLE handle, size_t address, int &err,
 	unsigned int len)
 {
 	std::wstring fullstr;
@@ -108,7 +108,7 @@ std::wstring Process_lua::readUString(HANDLE handle, unsigned long address, int 
 
 	memset(readBuffer, 0, sizeof(wchar_t)*memoryReadBufferSize);
 
-	unsigned long stroffset = 0;
+	size_t stroffset = 0;
 	unsigned int count = 0;
 	bool done = false;
 	while( !done ) // read until we hit a NULL
@@ -141,7 +141,7 @@ std::wstring Process_lua::readUString(HANDLE handle, unsigned long address, int 
 	return fullstr;
 }
 
-void Process_lua::writeString(HANDLE process, unsigned long address, char *data, int &err, unsigned int len)
+void Process_lua::writeString(HANDLE process, size_t address, char *data, int &err, unsigned int len)
 {
 	SIZE_T byteswritten = 0;
 	err = 0;
@@ -378,7 +378,7 @@ int Process_lua::read(lua_State *L)
 	int err = 0;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
 	std::string type = (char *)lua_tostring(L, 2);
-	unsigned long address = (unsigned long)lua_tointeger(L, 3);
+	size_t address = (size_t)lua_tointeger(L, 3);
 	if( *pHandle == 0 )
 		luaL_error(L, szInvalidHandleError);
 
@@ -420,6 +420,20 @@ int Process_lua::read(lua_State *L)
 	} else if( type == "uint" )
 	{
 		unsigned int value = readMemory<unsigned int>(*pHandle, address, err);
+		if( !err )
+			lua_pushinteger(L, value);
+		else
+			lua_pushnil(L);
+	} else if( type == "int64" )
+	{
+		long long value = readMemory<long long>(*pHandle, address, err);
+		if( !err )
+			lua_pushinteger(L, value);
+		else
+			lua_pushnil(L);
+	} else if( type == "uint64" )
+	{
+		unsigned long long value = readMemory<unsigned long long>(*pHandle, address, err);
 		if( !err )
 			lua_pushinteger(L, value);
 		else
@@ -501,7 +515,7 @@ int Process_lua::readPtr(lua_State *L)
 	std::vector<int> offsets;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
 	std::string type = (char *)lua_tostring(L, 2);
-	unsigned long address = (unsigned long)lua_tointeger(L, 3);
+	size_t address = (size_t)lua_tointeger(L, 3);
 	if( *pHandle == 0 )
 		luaL_error(L, szInvalidHandleError);
 
@@ -541,7 +555,7 @@ int Process_lua::readPtr(lua_State *L)
 		}
 	}
 
-	unsigned int realAddress;
+	size_t realAddress;
 	if( offsets.size() == 1 )
 	{
 		realAddress = readMemory<unsigned int>(*pHandle, address, err) + offsets.at(0);
@@ -598,6 +612,20 @@ int Process_lua::readPtr(lua_State *L)
 		} else if( type == "uint" )
 		{
 			unsigned int value = readMemory<unsigned int>(*pHandle, realAddress, err);
+			if( !err )
+				lua_pushinteger(L, value);
+			else
+				lua_pushnil(L);
+		} else if( type == "int64" )
+		{
+			long long value = readMemory<long long>(*pHandle, realAddress, err);
+			if( !err )
+				lua_pushinteger(L, value);
+			else
+				lua_pushnil(L);
+		} else if( type == "uint" )
+		{
+			unsigned long long value = readMemory<unsigned long long>(*pHandle, realAddress, err);
 			if( !err )
 				lua_pushinteger(L, value);
 			else
@@ -686,7 +714,7 @@ int Process_lua::readBatch(lua_State *L)
 	checkType(L, LT_STRING, 3);
 
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
-	unsigned int address = lua_tointeger(L, 2);
+	size_t address = (size_t)lua_tointeger(L, 2);
 	const char *fmt = lua_tostring(L, 3);
 
 	std::vector<BatchJob> jobs;
@@ -789,6 +817,28 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
+			case MEM_INT64:
+				for(unsigned int j = 0; j < jobs.at(i).count; j++)
+				{
+					long long data = *(long long*)&readBuffer[cursorPos];
+					cursorPos += sizeof(long long);
+					lua_pushinteger(L, tableIndex); // Push key
+					lua_pushinteger(L, data); // Push value
+					lua_settable(L, -3); // Set it
+					++tableIndex;
+				}
+			break;
+			case MEM_UINT64:
+				for(unsigned int j = 0; j < jobs.at(i).count; j++)
+				{
+					unsigned long long data = *(unsigned long long*)&readBuffer[cursorPos];
+					cursorPos += sizeof(unsigned long long);
+					lua_pushinteger(L, tableIndex); // Push key
+					lua_pushinteger(L, data); // Push value
+					lua_settable(L, -3); // Set it
+					++tableIndex;
+				}
+			break;
 			case MEM_FLOAT:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
@@ -856,7 +906,7 @@ int Process_lua::readChunk(lua_State *L)
 	checkType(L, LT_NUMBER, 3);
 
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
-	unsigned int address = lua_tointeger(L, 2);
+	size_t address = (size_t)lua_tointeger(L, 2);
 	unsigned int size = lua_tointeger(L, 3);
 
 	MemoryChunk *pChunk = static_cast<MemoryChunk *>(lua_newuserdata(L, sizeof(MemoryChunk)));
@@ -906,7 +956,7 @@ int Process_lua::write(lua_State *L)
 	int err = 0;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
 	std::string type = (char *)lua_tostring(L, 2);
-	unsigned long address = (unsigned long)lua_tointeger(L, 3);
+	size_t address = (size_t)lua_tointeger(L, 3);
 
 	if( *pHandle == 0 )
 		luaL_error(L, szInvalidHandleError);
@@ -926,6 +976,11 @@ int Process_lua::write(lua_State *L)
 		checkType(L, LT_NUMBER, 4);
 		int data = (int)lua_tointeger(L, 4);
 		writeMemory<int>(*pHandle, address, data, err);
+	} else if( type == "int64" )
+	{
+		checkType(L, LT_NUMBER, 4);
+		long long data = (long long)lua_tointeger(L, 4);
+		writeMemory<long long>(*pHandle, address, data, err);
 	} else if( type == "float" )
 	{
 		checkType(L, LT_NUMBER, 4);
@@ -986,7 +1041,7 @@ int Process_lua::writePtr(lua_State *L)
 	std::vector<int> offsets;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
 	std::string type = (char *)lua_tostring(L, 2);
-	unsigned long address = (unsigned long)lua_tointeger(L, 3);
+	size_t address = (size_t)lua_tointeger(L, 3);
 	if( *pHandle == 0 )
 		luaL_error(L, szInvalidHandleError);
 
@@ -1026,7 +1081,7 @@ int Process_lua::writePtr(lua_State *L)
 		}
 	}
 
-	unsigned int realAddress;
+	size_t realAddress;
 	if( offsets.size() == 1 )
 		realAddress = readMemory<unsigned int>(*pHandle, address, err) + offsets.at(0);
 	else
@@ -1058,6 +1113,11 @@ int Process_lua::writePtr(lua_State *L)
 			checkType(L, LT_NUMBER, 5);
 			int data = (int)lua_tointeger(L, 5);
 			writeMemory<int>(*pHandle, realAddress, data, err);
+		} else if( type == "int64" )
+		{
+			checkType(L, LT_NUMBER, 5);
+			long long data = (long long)lua_tointeger(L, 5);
+			writeMemory<long long>(*pHandle, realAddress, data, err);
 		} else if( type == "float" )
 		{
 			checkType(L, LT_NUMBER, 5);
@@ -1117,31 +1177,31 @@ int Process_lua::findPattern(lua_State *L)
 	size_t bmaskLen;
 	size_t szMaskLen;
 	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
-	unsigned int address = lua_tointeger(L, 2);
-	unsigned int scanLen = lua_tointeger(L, 3);
+	size_t address = lua_tointeger(L, 2);
+	size_t scanLen = lua_tointeger(L, 3);
 	const char *bmask = lua_tolstring(L, 4, &bmaskLen);
 	const char *szMask = lua_tolstring(L, 5, &szMaskLen);
 
 	bool found = false;
-	unsigned long foundAddr = 0;
-	unsigned long bufferLen = szMaskLen * 50;
+	size_t foundAddr = 0;
+	size_t bufferLen = szMaskLen * 50;
 	if( bufferLen < 1024 ) // Minimum of 1kb
 		bufferLen = 1024;
-	unsigned long addLen = bufferLen % szMaskLen;
+	size_t addLen = bufferLen % szMaskLen;
 	if( addLen > 0 )
 		bufferLen = bufferLen + addLen;
-	unsigned long bufferStart = 0;
-	unsigned long curBufferLen = bufferLen;
+	size_t bufferStart = 0;
+	size_t curBufferLen = bufferLen;
 	unsigned char *buffer = 0;
 	try {
 		buffer = new unsigned char[bufferLen + 1];
 	} catch( std::bad_alloc &ba ) { badAllocation(); }
 
 	// Iterate through up until we reach the length of find something
-	for(unsigned long i = 0; i < scanLen; i++)
+	for(size_t i = 0; i < scanLen; i++)
 	{
 		// Read a chunk (if needed)
-		unsigned int curAddr = address + i;
+		size_t curAddr = address + i;
 		if( (curAddr - bufferStart + szMaskLen) >= curBufferLen )
 		{
 			memset(buffer, 0, bufferLen);

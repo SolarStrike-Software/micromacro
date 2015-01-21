@@ -13,11 +13,9 @@
 	#include "wininclude.h"
 
 	enum Multivar_type{VT_NUMBER, VT_STRING, VT_NIL};
-	enum BatchJob_type{MEM_BYTE, MEM_UBYTE, MEM_SHORT, MEM_USHORT,
-			MEM_INT, MEM_UINT, MEM_FLOAT, MEM_DOUBLE, MEM_STRING, MEM_SKIP};
+	enum BatchJob_type{MEM_BYTE, MEM_UBYTE, MEM_SHORT, MEM_USHORT, MEM_INT, MEM_UINT,
+		MEM_INT64, MEM_UINT64, MEM_FLOAT, MEM_DOUBLE, MEM_STRING, MEM_SKIP};
 
-	//class CMultivar;
-	//typedef CMultivar Multivar;
 	typedef unsigned int ALuint;
 
 	/* Used in window.find() */
@@ -62,8 +60,8 @@
 	/* Holds data read from a process */
 	struct MemoryChunk
 	{
-		unsigned int address;
-		unsigned int size;
+		size_t address;
+		size_t size;
 		char *data;
 	};
 
@@ -80,7 +78,7 @@
 		return *(T*)(pChunk->data+offset);
 	}
 
-	std::string getChunkString(MemoryChunk *pChunk, unsigned int offset, unsigned int length, int &err);
+	std::string getChunkString(MemoryChunk *pChunk, size_t offset, size_t length, int &err);
 
 	struct Vector3d
 	{
