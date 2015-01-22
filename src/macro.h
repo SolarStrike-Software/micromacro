@@ -53,7 +53,6 @@
 			Settings *getSettings();
 			Hid *getHid();
 
-			//void setAppHwnd(HWND);
 			DWORD getProcId();
 			HWND getAppHwnd();
 			HANDLE getAppHandle();
@@ -65,7 +64,6 @@
 			int getConsoleFontHeight();
 			DWORD getConsoleDefaultAttributes();
 
-			//std::queue<Event> *getEventQueue();
 			void pushEvent(Event &);
 			void flushEvents();
 

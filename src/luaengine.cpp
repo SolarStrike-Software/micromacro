@@ -40,7 +40,6 @@
 #include "math_addon.h"
 #include "table_addon.h"
 
-#include "int64_lua.h"
 #include "vector3d_lua.h"
 
 #include "strl.h"
@@ -116,6 +115,37 @@ int LuaEngine::err_msgh(lua_State *L)
 	return 1;
 }
 
+/*	macro.is64bit()
+	Returns:	boolean
+
+	Returns whether or not the application is 64-bit
+*/
+int LuaEngine::is64bit(lua_State *L)
+{
+	#ifdef _WIN64
+		lua_pushboolean(L, true);
+	#else
+		lua_pushboolean(L, false);
+	#endif
+	return 1;
+}
+
+
+/*	macro.is32bit()
+	Returns:	boolean
+
+	Returns whether or not the application is 32-bit
+*/
+int LuaEngine::is32bit(lua_State *L)
+{
+	#ifdef _WIN64
+		lua_pushboolean(L, false);
+	#else
+		lua_pushboolean(L, true);
+	#endif
+	return 1;
+}
+
 // Basic initialization stuff
 int LuaEngine::init()
 {
@@ -136,6 +166,8 @@ int LuaEngine::init()
 		{MACRO_MAIN_NAME, LuaEngine::_macrotab_main},
 		{MACRO_EVENT_NAME, LuaEngine::_macrotab_event},
 		{"getVersion", LuaEngine::_macrotab_getVersion},
+		{"is64bit", LuaEngine::is64bit},
+		{"is32bit", LuaEngine::is32bit},
 		{NULL, NULL}
 	};
 
@@ -175,7 +207,6 @@ int LuaEngine::init()
 		Table_addon::regmod,
 		/* Any other classes */
 		Vector3d_lua::regmod,
-		Int64_lua::regmod,
 		0 // NULL terminator
 	};
 

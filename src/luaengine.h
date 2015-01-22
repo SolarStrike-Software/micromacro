@@ -31,6 +31,9 @@
 			static int _macrotab_getVersion(lua_State *);
 			static int err_msgh(lua_State *);
 
+			static int is64bit(lua_State *);
+			static int is32bit(lua_State *);
+
 			void stdError();
 
 			std::string basePath;

@@ -225,6 +225,16 @@ unsigned int Process_lua::readBatch_parsefmt(const char *fmt, std::vector<BatchJ
 					length += sizeof(unsigned int) * job.count;
 					out.push_back(job);
 				break;
+				case 'h':
+					job.type = MEM_INT64;
+					length += sizeof(int) * job.count;
+					out.push_back(job);
+				break;
+				case 'H':
+					job.type = MEM_UINT64;
+					length += sizeof(unsigned int) * job.count;
+					out.push_back(job);
+				break;
 				case 'f':
 					job.type = MEM_FLOAT;
 					length += sizeof(float) * job.count;

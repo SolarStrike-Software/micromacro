@@ -8,7 +8,6 @@
 #include "time_lua.h"
 #include "timer.h"
 #include "luatypes.h"
-#include "int64_lua.h"
 #include "error.h"
 #include "macro.h"
 
@@ -36,9 +35,9 @@ int Time_lua::regmod(lua_State *L)
 }
 
 /*	time.getNow()
-	Returns:	table (int64)
+	Returns:	integer
 
-	Returns the current high-precision time as an int64 table.
+	Returns the current high-precision time as an int64.
 */
 int Time_lua::getNow(lua_State *L)
 {
@@ -46,7 +45,7 @@ int Time_lua::getNow(lua_State *L)
 		wrongArgs(L);
 
 	TimeType now = ::getNow();
-	lua_pushint64(L, now);
+	lua_pushinteger(L, now.QuadPart);
 
 	return 1;
 }
@@ -66,8 +65,8 @@ int Time_lua::deltaTime(lua_State *L)
 	return 1;
 }
 
-/*	time.diff(int64 t2, int64 t1)
-    time.diff(int64 t1)
+/*	time.diff(number t2, number t1)
+    time.diff(number t1)
 	Returns:	number delta
 
 	Compares two high-precision time values (from time.getNow())
@@ -83,24 +82,19 @@ int Time_lua::diff(lua_State *L)
 		wrongArgs(L);
 
 	TimeType t2, t1;
-
-	checkType(L, LT_TABLE, 1);
-	if( !lua_isint64(L, 1) )
-		luaL_typerror(L, 1, LuaType::metatable_int64);
+	checkType(L, LT_NUMBER, 1);
 
     if( top == 2 )
     {
-        checkType(L, LT_TABLE, 2);
-        if( !lua_isint64(L, 2) )
-            luaL_typerror(L, 2, LuaType::metatable_int64);
+		checkType(L, LT_NUMBER, 2);
 
-        t2 = lua_toint64(L, 1);
-        t1 = lua_toint64(L, 2);
+        t2.QuadPart = lua_tointeger(L, 1);
+        t1.QuadPart = lua_tointeger(L, 2);
     }
     else
     {
         t2 = ::getNow();
-        t1 = lua_toint64(L, 1);
+        t1.QuadPart = lua_tointeger(L, 1);
     }
 
 	double dt = ::deltaTime(t2, t1);
