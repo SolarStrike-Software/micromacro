@@ -33,4 +33,7 @@
 		#define WPF_ASYNCWINDOWPLACEMENT	0x0004
 	#endif
 
+	#ifdef KEY_EVENT
+		#undef KEY_EVENT
+	#endif
 #endif

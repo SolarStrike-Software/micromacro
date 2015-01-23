@@ -19,6 +19,9 @@
 
 	typedef struct lua_State lua_State;
 
+	int isWindows32();
+	int isWindows64();
+
 	class Process_lua
 	{
 		protected:
@@ -85,8 +88,11 @@
 			static int findByWindow(lua_State *);
 			static int findByExe(lua_State *);
 			static int getModuleAddress(lua_State *);
+			static int getModules(lua_State *);
 			static int attachInput(lua_State *);
 			static int detachInput(lua_State *);
+			static int is32bit(lua_State *);
+			static int is64bit(lua_State *);
 
 		public:
 			static int regmod(lua_State *);
