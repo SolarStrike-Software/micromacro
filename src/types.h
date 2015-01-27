@@ -34,6 +34,13 @@
 		char *classname;
 	};
 
+	/* Holds a handle to a process and any extra info about an open process */
+	struct ProcHandle
+	{
+		HANDLE handle;
+		bool is32bit;
+	};
+
 	/* Used in some window operations */
 	struct WindowDCPair
 	{
