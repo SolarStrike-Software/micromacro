@@ -30,6 +30,8 @@ const char *Process_lua::szInvalidDataType = "Invalid data type given. Cannot re
 
 std::vector<DWORD> Process_lua::attachedThreadIds;
 
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
 
 int isWindows32()
 {
@@ -41,8 +43,15 @@ int isWindows64()
 	#ifdef _WIN64
 		return true;
 	#else
+		// If not already assigned, read it, then check again
+		if( !fnIsWow64Process )
+			fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+
+		if( !fnIsWow64Process ) // Function not found; assume 32-bit
+			return false;
+
 		BOOL iswow64;
-		bool success = IsWow64Process(GetCurrentProcess(), &iswow64);
+		bool success = fnIsWow64Process(GetCurrentProcess(), &iswow64);
 
 		if( !success )
 			Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d\n",
@@ -329,6 +338,10 @@ int Process_lua::regmod(lua_State *L)
 	luaL_newlib(L, _funcs);
 	lua_setglobal(L, PROCESS_MODULE_NAME);
 
+	// Assign isWow64Process function for later use;
+	if( !fnIsWow64Process )
+		fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")),"IsWow64Process");
+
 	return MicroMacro::ERR_OK;
 }
 
@@ -374,14 +387,17 @@ int Process_lua::open(lua_State *L)
 	bool is32bit = true;
 	#ifdef _WIN64
 		// We only make use of this when MicroMacro is compiled as 64-bit
-		BOOL iswow64;
-		bool success = IsWow64Process(handle, &iswow64);
-		if( success )
+		if( fnIsWow64Process )
 		{
-			if( iswow64 || isWindows32() )
-				is32bit = true;
-			else
-				is32bit = false;
+			BOOL iswow64;
+			bool success = fnIsWow64Process(handle, &iswow64);
+			if( success )
+			{
+				if( iswow64 || isWindows32() )
+					is32bit = true;
+				else
+					is32bit = false;
+			}
 		}
 	#endif
 
@@ -691,7 +707,7 @@ int Process_lua::readPtr(lua_State *L)
 				lua_pushinteger(L, value);
 			else
 				lua_pushnil(L);
-		} else if( type == "uint" )
+		} else if( type == "uint64" )
 		{
 			unsigned long long value = readMemory<unsigned long long>(pHandle->handle, realAddress, err);
 			if( !err )
@@ -1644,10 +1660,18 @@ int Process_lua::is32bit(lua_State *L)
 		wrongArgs(L);
 
 	checkType(L, LT_USERDATA, 1);
-	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
 
 	BOOL iswow64 = false;
-	bool success = IsWow64Process(*pHandle, &iswow64);
+	bool success;
+
+	if( fnIsWow64Process )
+		success = IsWow64Process(pHandle->handle, &iswow64);
+	else
+	{	// Assume 32-bit
+		lua_pushboolean(L, true);
+		return 1;
+	}
 
 	if( !success )
 		Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d\n",
@@ -1675,10 +1699,19 @@ int Process_lua::is64bit(lua_State *L)
 		wrongArgs(L);
 
 	checkType(L, LT_USERDATA, 1);
-	HANDLE *pHandle = (HANDLE *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+
 
 	BOOL iswow64 = false;
-	bool success = IsWow64Process(*pHandle, &iswow64);
+	bool success;
+
+	if( fnIsWow64Process )
+		success = IsWow64Process(pHandle->handle, &iswow64);
+	else
+	{
+		lua_pushboolean(L, false);	// Assume 32-bit
+		return 1;
+	}
 
 	if( !success )
 		Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d\n",
