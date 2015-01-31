@@ -9,6 +9,7 @@
 #include "logger.h"
 #include "ncurses_lua.h"
 #include "strl.h"
+#include "debugmessages.h"
 
 extern "C"
 {
@@ -58,6 +59,12 @@ CMacro::~CMacro()
 		Ncurses_lua::cleanup(engine.getLuaState());
 
 	engine.cleanup();
+
+	if( eventQueueLock )
+	{
+		CloseHandle(eventQueueLock);
+		eventQueueLock = NULL;
+	}
 }
 
 int CMacro::init()
@@ -116,9 +123,6 @@ int CMacro::cleanup()
 	success = engine.cleanup();
 	if( success != MicroMacro::ERR_OK )
 		return success;
-
-	CloseHandle(eventQueueLock);
-	eventQueueLock = NULL;
 
 	return MicroMacro::ERR_OK;
 }
@@ -218,32 +222,30 @@ DWORD CMacro::getConsoleDefaultAttributes()
 {
 	return consoleDefaultAttributes;
 }
-/*
-std::queue<Event> *CMacro::getEventQueue()
-{
-	return &eventQueue;
-}*/
 
 void CMacro::pushEvent(Event &e)
 {
-	DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
-	switch(dwWaitResult)
+	if( eventQueueLock )
 	{
-		case WAIT_OBJECT_0:
-				eventQueue.push(e);
+		DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
+		switch(dwWaitResult)
+		{
+			case WAIT_OBJECT_0:
+					eventQueue.push(e);
 
-			if( !ReleaseMutex(eventQueueLock) )
-			{ // Uh oh... That's not good.
-				char errBuff[1024];
-				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-					"CMacro", __FUNCTION__);
-				fprintf(stderr, errBuff);
-				Logger::instance()->add(errBuff);
-			}
-		break;
+				if( !ReleaseMutex(eventQueueLock) )
+				{ // Uh oh... That's not good.
+					char errBuff[1024];
+					slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
+						"CMacro", __FUNCTION__);
+					fprintf(stderr, errBuff);
+					Logger::instance()->add(errBuff);
+				}
+			break;
 
-		case WAIT_ABANDONED: // TODO: What should we do here? Error?
-		break;
+			case WAIT_ABANDONED: // TODO: What should we do here? Error?
+			break;
+		}
 	}
 }
 
@@ -369,7 +371,6 @@ int CMacro::handleEvents()
 	int success = MicroMacro::ERR_OK;
 
 
-
 	DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
 	switch(dwWaitResult)
 	{
@@ -383,7 +384,7 @@ int CMacro::handleEvents()
 				if( success != MicroMacro::ERR_OK )
 				{
 					lua_pop(engine.getLuaState(), 1);
-					return success;
+					break;
 				}
 			}
 

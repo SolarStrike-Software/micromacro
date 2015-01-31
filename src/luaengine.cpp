@@ -282,6 +282,10 @@ int LuaEngine::cleanup()
 	if( Ncurses_lua::is_initialized() )
 		Ncurses_lua::cleanup(lstate);
 
+	#ifdef NETWORKING_ENABLED
+	Network_lua::cleanup();
+	#endif
+
 	Process_lua::cleanup(lstate);
 
 	lua_close(lstate);

@@ -13,6 +13,7 @@
 #include "types.h"
 #include "strl.h"
 #include "logger.h"
+#include "debugmessages.h"
 
 extern "C"
 {
@@ -73,7 +74,7 @@ DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
 
 				default:
 				#ifdef DISPLAY_DEBUG_MESSAGES
-					printf("Socket error occurred. Code: %d, socket: 0x%X\n", errCode, socket);
+					fprintf(stderr, "Socket error occurred. Code: %d, socket: 0x%X\n", errCode, socket);
 				#endif
 				{
 					Event e;
@@ -88,34 +89,37 @@ DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
 		}
 	}
 
-	// Remove it from socket list.
-	DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
-	switch(dwWaitResult)
+	if( socketListLock )
 	{
-		case WAIT_OBJECT_0:
-			for(unsigned int i = 0; i < socketList.size(); i++)
-			{
-				Socket *pSocket = socketList.at(i);
-				if( pSocket->socket == socket )
+		// Remove it from socket list.
+		DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
+		switch(dwWaitResult)
+		{
+			case WAIT_OBJECT_0:
+				for(unsigned int i = 0; i < socketList.size(); i++)
 				{
-					socketList.erase(socketList.begin()+i);
-					memset(pSocket, 0, sizeof(Socket));
-					break;
+					Socket *pSocket = socketList.at(i);
+					if( pSocket->socket == socket )
+					{
+						socketList.erase(socketList.begin()+i);
+						memset(pSocket, 0, sizeof(Socket));
+						break;
+					}
 				}
-			}
 
-			if( !ReleaseMutex(socketListLock) )
-			{ // Uh oh... That's not good.
-				char errBuff[1024];
-				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-					"Socket_lua", __FUNCTION__);
-				fprintf(stderr, errBuff);
-				Logger::instance()->add(errBuff);
-			}
-		break;
+				if( !ReleaseMutex(socketListLock) )
+				{ // Uh oh... That's not good.
+					char errBuff[1024];
+					slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
+						"Socket_lua", __FUNCTION__);
+					fprintf(stderr, errBuff);
+					Logger::instance()->add(errBuff);
+				}
+			break;
 
-		case WAIT_ABANDONED: // TODO: What should we do here? Error?
-		break;
+			case WAIT_ABANDONED: // TODO: What should we do here? Error?
+			break;
+		}
 	}
 
 	return 1;
@@ -152,7 +156,7 @@ DWORD WINAPI Socket_lua::listenThread(SOCKET socket)
 
 				default:
 				#ifdef DISPLAY_DEBUG_MESSAGES
-					printf("Socket error occurred. Code: %d, listen socket: 0x%X\n", errCode, socket);
+					fprintf(stderr, "Socket error occurred. Code: %d, listen socket: 0x%X\n", errCode, socket);
 				#endif
 				{
 					Event e;
@@ -237,7 +241,6 @@ int Socket_lua::regmod(lua_State *L)
 
 	lua_pop(L, 1); // Pop table
 
-
 	socketListLock = CreateMutex(NULL, FALSE, NULL);
 	if( !socketListLock )
 	{
@@ -250,37 +253,40 @@ int Socket_lua::regmod(lua_State *L)
 
 int Socket_lua::cleanup()
 {
-	// Close down all sockets & threads
-	DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
-	switch(dwWaitResult)
+	if( socketListLock )
 	{
-		case WAIT_OBJECT_0:
-			for(unsigned int i = 0; i < socketList.size(); i++)
-			{
-				Socket *pSocket = socketList.at(i);
+		// Close down all sockets & threads
+		DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
+		switch(dwWaitResult)
+		{
+			case WAIT_OBJECT_0:
+				for(unsigned int i = 0; i < socketList.size(); i++)
+				{
+					Socket *pSocket = socketList.at(i);
 
-				// Close socket, let the thread take care of cleanup
-				closesocket(pSocket->socket);
-			}
-			socketList.clear();
+					// Close socket, let the thread take care of cleanup
+					closesocket(pSocket->socket);
+				}
+				socketList.clear();
 
-			if( !ReleaseMutex(socketListLock) )
-			{ // Uh oh... That's not good.
-				char errBuff[1024];
-				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-					"Socket_lua", __FUNCTION__);
-				fprintf(stderr, errBuff);
-				Logger::instance()->add(errBuff);
-			}
-		break;
+				if( !ReleaseMutex(socketListLock) )
+				{ // Uh oh... That's not good.
+					char errBuff[1024];
+					slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
+						"Socket_lua", __FUNCTION__);
+					fprintf(stderr, errBuff);
+					Logger::instance()->add(errBuff);
+				}
+			break;
 
-		case WAIT_ABANDONED: // TODO: What should we do here? Error?
-		break;
+			case WAIT_ABANDONED: // TODO: What should we do here? Error?
+			break;
+		}
+
+		// Now we can close our mutex
+		CloseHandle(socketListLock);
+		socketListLock = NULL;
 	}
-
-	// Now we can close our mutex
-	CloseHandle(socketListLock);
-	socketListLock = NULL;
 
 	return MicroMacro::ERR_OK;
 }
