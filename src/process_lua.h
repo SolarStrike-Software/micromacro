@@ -93,6 +93,8 @@
 			static int detachInput(lua_State *);
 			static int is32bit(lua_State *);
 			static int is64bit(lua_State *);
+			static int terminate(lua_State *);
+			static int getWindows(lua_State *);
 
 		public:
 			static int regmod(lua_State *);

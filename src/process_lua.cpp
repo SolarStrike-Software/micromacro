@@ -33,6 +33,17 @@ std::vector<DWORD> Process_lua::attachedThreadIds;
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
 
+struct EnumFilterWindows
+{
+	DWORD dwPid;
+	std::vector<HWND> hwndList;
+};
+
+
+/* These are mostly just helper functions and are not actually registered
+	into the Lua state. They are, however, used by functions that are
+	accessible by Lua.
+*/
 int isWindows32()
 {
 	return !isWindows64();
@@ -61,11 +72,24 @@ int isWindows64()
 	#endif
 }
 
+static BOOL CALLBACK EnumFilterWindowsByProcIdProc(HWND hwnd,  LPARAM lParam)
+{
+	EnumFilterWindows *pEfw = (EnumFilterWindows *)lParam;
+	DWORD oPid;
 
-/* These are mostly just helper functions and are not actually registered
-	into the Lua state. They are, however, used by functions that are
-	accessible by Lua.
-*/
+	// Get the 'other' process ID
+	GetWindowThreadProcessId(hwnd, &oPid);
+
+
+	// Check if they match (this window belongs to our target process)
+	if( oPid == pEfw->dwPid )
+	{
+		pEfw->hwndList.push_back(hwnd); // Push it to our list.
+	}
+
+	return true;
+}
+
 std::string Process_lua::narrowString(std::wstring instr)
 {
   std::string holder(instr.begin(), instr.end());
@@ -332,6 +356,8 @@ int Process_lua::regmod(lua_State *L)
 		{"detachInput", Process_lua::detachInput},
 		{"is32bit", Process_lua::is32bit},
 		{"is64bit", Process_lua::is64bit},
+		{"terminate", Process_lua::terminate},
+		{"getWindows", Process_lua::getWindows},
 		{NULL, NULL}
 	};
 
@@ -374,7 +400,7 @@ int Process_lua::open(lua_State *L)
 
 	HANDLE handle;
 	DWORD procId = (DWORD)lua_tointeger(L, 1);
-	DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION;
+	DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE;
 
 	handle = OpenProcess(access, false, procId);
 
@@ -1725,5 +1751,85 @@ int Process_lua::is64bit(lua_State *L)
 	{
 		lua_pushboolean(L, isWindows64());
 	}
+	return 1;
+}
+
+/*	process.terminate(handle proc[, number exitCode])
+	Returns:	boolean
+
+	Terminates a process with the given exit code.
+	Returns whether or not the call was successful
+*/
+int Process_lua::terminate(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 && top != 2 )
+		wrongArgs(L);
+
+	checkType(L, LT_USERDATA, 1);
+	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	unsigned int exitCode = 0;
+
+	if( top >= 2 )
+	{
+		checkType(L, LT_NUMBER, 2);
+		exitCode = lua_tointeger(L, 2);
+	}
+
+	bool success = TerminateProcess(pHandle->handle, exitCode);
+
+	lua_pushboolean(L, success);
+	return 1;
+}
+
+/*	process.getWindows(number procId)
+	Returns:	table
+
+	Returns a table of all window handles belonging to the process.
+	If this function fails, it will return nil.
+*/
+int Process_lua::getWindows(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+
+	checkType(L, LT_NUMBER, 1);
+	DWORD dwPid = (DWORD)lua_tointeger(L, 1);
+
+	EnumFilterWindows efw;
+	efw.dwPid = dwPid;
+
+	EnumWindows(EnumFilterWindowsByProcIdProc, (LPARAM)&efw);
+
+	if( efw.hwndList.empty() )
+		return 0;
+
+	lua_newtable(L);
+	for(unsigned int i = 0; i < efw.hwndList.size(); i++)
+	{
+		lua_pushinteger(L, i+1); // Push key
+
+		char namestring[2048];
+		GetWindowText(efw.hwndList.at(i), (char *)&namestring, sizeof(namestring)-1);
+
+		char classstring[256];
+		GetClassName(efw.hwndList.at(i), (char*)&classstring, sizeof(classstring)-1);
+
+		lua_newtable(L); // Push value (table)
+			lua_pushstring(L, "hwnd");
+			lua_pushinteger(L, (lua_Integer)efw.hwndList.at(i));
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "name");
+			lua_pushstring(L, namestring);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "class");
+			lua_pushstring(L, classstring);
+			lua_settable(L, -3);
+		lua_settable(L, -3); // Set it
+	}
+
 	return 1;
 }

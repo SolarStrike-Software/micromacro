@@ -9,6 +9,7 @@
 #define SYSTEM_LUA_H
 
 	#define SYSTEM_MODULE_NAME		"system"
+	#define SEI_IDLE_TIMEOUT_SECS	10
 
 	typedef struct lua_State lua_State;
 
@@ -17,6 +18,7 @@
 		protected:
 			static int rest(lua_State *);
 			static int exec(lua_State *);
+			static int shellExec(lua_State *);
 			static int getClipboard(lua_State *);
 			static int setClipboard(lua_State *);
 			static int getActiveCodePage(lua_State *);

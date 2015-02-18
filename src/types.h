@@ -26,10 +26,17 @@
 		char *classname;
 	};
 
+	struct WinInfo
+	{
+		std::string name;
+		std::string classname;
+		HWND hwnd;
+	};
+
 	/* Used in window.findList() */
 	struct EnumWindowListPair
 	{
-		std::vector<HWND> hwndList;
+		std::vector<WinInfo> windows;
 		char *windowname;
 		char *classname;
 	};

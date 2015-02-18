@@ -28,6 +28,7 @@ BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 {
 	EnumWindowPair *winpair = (EnumWindowPair *)lparam;
 	char namestring[2048];
+	char classname[256];
 	GetWindowText(hwnd, (char *)&namestring, sizeof(namestring)-1);
 
 	sztolower(namestring, namestring, strlen(namestring));
@@ -39,10 +40,10 @@ BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 		if( strcmp(winpair->classname, "") == 0 )
 		{
 			// Ensure that this isn't a window preview/overlay
-			char tmpBuf[256];
-			GetClassName(hwnd, (char*)&tmpBuf, sizeof(tmpBuf)-1);
 
-			if( !strcmp((char*)&tmpBuf, windowThumbnailClassName))
+			GetClassName(hwnd, (char*)&classname, sizeof(classname)-1);
+
+			if( !strcmp((char*)&classname, windowThumbnailClassName))
 			return true;
 
 			winpair->hwnd = hwnd;
@@ -51,10 +52,9 @@ BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 		else
 		{
 			// Check if this window is valid itself
-			char tmpBuf[256];
-			GetClassName(hwnd, (char*)&tmpBuf, sizeof(tmpBuf)-1);
+			GetClassName(hwnd, (char*)&classname, sizeof(classname)-1);
 
-			if( strcmp(tmpBuf, winpair->classname) == 0 )
+			if( strcmp(classname, winpair->classname) == 0 )
 			{
 				// We have a match
 				winpair->hwnd = hwnd;
@@ -81,7 +81,12 @@ BOOL CALLBACK Window_lua::_findListProc(HWND hwnd, LPARAM lparam)
 {
 	EnumWindowListPair *winpair = (EnumWindowListPair *)lparam;
 	char namestring[2048];
+	char classname[256];
 	GetWindowText(hwnd, (char *)&namestring, sizeof(namestring)-1);
+
+	WinInfo wi;
+	wi.hwnd = hwnd;
+	wi.name = namestring;	// Copy it before we modify it
 
 	sztolower(namestring, namestring, strlen(namestring));
 	int match = wildfind(winpair->windowname, namestring);
@@ -92,31 +97,48 @@ BOOL CALLBACK Window_lua::_findListProc(HWND hwnd, LPARAM lparam)
 		if( strcmp(winpair->classname, "") == 0 )
 		{
 			// Ensure that this isn't a window preview/overlay
-			char tmpBuf[256];
-			GetClassName(hwnd, (char*)&tmpBuf, sizeof(tmpBuf)-1);
+			GetClassName(hwnd, (char*)&classname, sizeof(classname)-1);
 
-			if( !strcmp((char*)&tmpBuf, windowThumbnailClassName))
+			wi.classname = classname;	// Copy it before we modify it
+
+			if( !strcmp((char*)&classname, windowThumbnailClassName))
 			return true;
 
-			winpair->hwndList.push_back(hwnd);
+			winpair->windows.push_back(wi);
 		}
 		else
 		{
 			// Check if this window is valid itself
-			char tmpBuf[256];
-			GetClassName(hwnd, (char*)&tmpBuf, sizeof(tmpBuf)-1);
+			GetClassName(hwnd, (char*)&classname, sizeof(classname)-1);
 
-			if( strcmp(tmpBuf, winpair->classname) == 0 )
+			wi.classname = classname;	// Copy it before we modify it
+
+			if( strcmp(classname, winpair->classname) == 0 )
 			{
 				// We have a match
-				winpair->hwndList.push_back(hwnd);
+				WinInfo wi;
+				wi.hwnd = hwnd;
+				wi.name = namestring;
+				wi.classname = classname;
+
+				winpair->windows.push_back(wi);
 			}
 
 			// If not, scan it's children
 			HWND controlHwnd = FindWindowEx(hwnd, NULL, winpair->classname, NULL);
 
 			if( controlHwnd != NULL )
-				winpair->hwndList.push_back(controlHwnd);
+			{
+				GetWindowText(controlHwnd, (char *)&namestring, sizeof(namestring)-1);
+				GetClassName(controlHwnd, (char*)&classname, sizeof(classname)-1);
+
+				WinInfo wi;
+				wi.hwnd = controlHwnd;
+				wi.name = namestring;
+				wi.classname = classname;
+
+				winpair->windows.push_back(wi);
+			}
 		}
 	}
 
@@ -286,14 +308,27 @@ int Window_lua::findList(lua_State *L)
 	// Free allocated memory
 	delete []name_lower;
 
-	if( searchpair.hwndList.empty() )
+	if( searchpair.windows.empty() )
 		return 0;
 
+	printf("\nSize: %d\n\n", searchpair.windows.size());
+
 	lua_newtable(L);
-	for(unsigned int i = 0; i < searchpair.hwndList.size(); i++)
+	for(unsigned int i = 0; i < searchpair.windows.size(); i++)
 	{
 		lua_pushinteger(L, i+1); // Push key
-		lua_pushinteger(L, (lua_Integer)searchpair.hwndList.at(i)); // Push value
+		lua_newtable(L); // Push value (table)
+			lua_pushstring(L, "hwnd");
+			lua_pushinteger(L, (lua_Integer)searchpair.windows.at(i).hwnd);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "name");
+			lua_pushstring(L, searchpair.windows.at(i).name.c_str());
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "class");
+			lua_pushstring(L, searchpair.windows.at(i).classname.c_str());
+			lua_settable(L, -3);
 		lua_settable(L, -3); // Set it
 	}
 

@@ -11,6 +11,7 @@
 #include "macro.h"
 #include "strl.h"
 #include "event.h"
+#include "debugmessages.h"
 
 #include <stdio.h>
 #include <string>
@@ -27,6 +28,7 @@ int System_lua::regmod(lua_State *L)
 	static const luaL_Reg _funcs[] = {
 		{"rest", System_lua::rest},
 		{"exec", System_lua::exec},
+		{"shellExec", System_lua::shellExec},
 		{"getClipboard", System_lua::getClipboard},
 		{"setClipboard", System_lua::setClipboard},
 		{"getActiveCodePage", System_lua::getActiveCodePage},
@@ -82,6 +84,123 @@ int System_lua::exec(lua_State *L)
 	pclose(file);
 
 	lua_pushstring(L, szResult.c_str());
+	return 1;
+}
+
+/*	system.shellExec(table execinfo)
+	Returns:	boolean
+
+	A binding for ShellExecuteEx(); executes a command
+	based on the information passed into the table.
+*/
+int System_lua::shellExec(lua_State *L)
+{
+	if( lua_gettop(L) != 1 )
+		wrongArgs(L);
+	checkType(L, LT_TABLE, 1);
+
+	SHELLEXECUTEINFO sei;
+	memset(&sei, 0, sizeof(sei));
+
+	// Set required and default values.
+	sei.cbSize = sizeof(sei);
+	sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+	sei.nShow = SW_SHOWNORMAL;
+
+	lua_pushnil(L);
+	while( lua_next(L, 1) )
+	{
+		const char *key = lua_tostring(L, -2);
+		size_t len = strlen(key);
+
+		if( strncmp(key, "fMask", len) == 0 )
+		{
+			sei.fMask = lua_tointeger(L, -1);
+		}
+		else if( strncmp(key, "hwnd", len) == 0 )
+		{
+			sei.hwnd = (HWND)lua_tointeger(L, -1);
+		}
+		else if( strncmp(key, "lpVerb", len) == 0 )
+		{
+			sei.lpVerb = lua_tostring(L, -1);
+		}
+		else if( strncmp(key, "lpFile", len) == 0 )
+		{
+			sei.lpFile = lua_tostring(L, -1);
+		}
+		else if( strncmp(key, "lpParameters", len) == 0 )
+		{
+			sei.lpParameters = lua_tostring(L, -1);
+		}
+		else if( strncmp(key, "lpDirectory", len) == 0 )
+		{
+			sei.lpDirectory = lua_tostring(L, -1);
+		}
+		else if( strncmp(key, "nShow", len) == 0 )
+		{
+			sei.nShow = lua_tointeger(L, -1);
+		}
+		else if( strncmp(key, "hInstApp", len) == 0 )
+		{
+			sei.hInstApp = (HINSTANCE)lua_tointeger(L, -1);
+		}
+		else if( strncmp(key, "lpIDList", len) == 0 )
+		{
+			sei.lpIDList = (LPVOID)lua_tointeger(L, -1);
+		}
+		else if( strncmp(key, "lpClass", len) == 0 )
+		{
+			sei.lpClass = lua_tostring(L, -1);
+		}
+		else if( strncmp(key, "hkeyClass", len) == 0 )
+		{
+			sei.hkeyClass = (HKEY)lua_tointeger(L, -1);
+		}
+		else if( strncmp(key, "dwHotKey", len) == 0 )
+		{
+			sei.dwHotKey = lua_tointeger(L, -1);
+		}
+		else if( strncmp(key, "hIcon", len) == 0 )
+		{
+			sei.hIcon = (HANDLE)lua_tointeger(L, -1);
+		}
+		/*else if( strncmp(key, "hMonitor", len) == 0 )
+		{
+			sei.hMonitor = (HANDLE)lua_tointeger(L, -1);
+		}*/
+
+		lua_pop(L, 1);
+	}
+
+	bool success = ShellExecuteEx(&sei);
+
+	if( !success )
+	{
+		debugMessage("ShellExecuteEx() has returned in error. Code: %d\n", GetLastError());
+		return 0;
+	}
+
+	// Wait for process to idle
+	DWORD idle = WaitForInputIdle(sei.hProcess, SEI_IDLE_TIMEOUT_SECS*1000);
+	if( idle != 0 )
+	{
+		if( idle == WAIT_TIMEOUT )
+		{
+			debugMessage("Launching process has timed out during wait for idle event.");
+		}
+		else if( idle == WAIT_FAILED)
+		{	// Note, this is triggered if the target is a console app, even though no actual error has occurred.
+			debugMessage("Launching process has encountered an error during wait for idle event. Error code: %d", GetLastError());
+		}
+	}
+
+	// Extract PID
+	DWORD pid = GetProcessId(sei.hProcess);
+	if( sei.hProcess )
+		CloseHandle(sei.hProcess);
+
+	lua_pushinteger(L, pid);
 	return 1;
 }
 

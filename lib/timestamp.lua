@@ -1,5 +1,6 @@
 Timestamp = class.new();
 
+-- Create a timestamp from given date (by Y/M/D/...), UNIX timestamp, or just an "empty" timestamp
 function Timestamp:constructor(y, mo, d, h, m, s)
 	if( y and mo and d ) then
 		-- Looks like we have day/month/year, so create a time from it
@@ -20,11 +21,12 @@ function Timestamp:constructor(y, mo, d, h, m, s)
 	end
 end
 
-
+-- Returns 'now' as a Timestamp object
 function Timestamp:now()
 	return Timestamp(os.time());
 end
 
+-- Returns 'today' (at 00:00) as a Timestamp object
 function Timestamp:today()
 	local timeTab = {
 		day = os.date("%d"),
@@ -38,58 +40,39 @@ function Timestamp:today()
 	return Timestamp(os.time(timeTab));
 end
 
+
 function Timestamp:yesterday()
 	return Timestamp:today():subDays(1);
 end
+
 
 function Timestamp:tomorrow()
 	return Timestamp:today():addDays(1);
 end
 
-function Timestamp:toHuman()
+
+-- Returns a string details the time, in a human-readable format
+-- Adjusted based on the timezone offset (if requested), or defaults to local time
+-- tz_offset = 0 results in returning UTC time
+function Timestamp:toHuman(tz_offset)
+	if( tz_offset ) then
+		-- If given a timezone offset, return output for that timezone.
+		return os.date("!%Y-%m-%d  %H:%M:%S", self.timevalue + (tz_offset*3600));
+	end
+
+	-- Otherwise, return local time
 	return os.date("%Y-%m-%d  %H:%M:%S", self.timevalue);
 end
 
+
+-- Return a string of the time in any format requested
 function Timestamp:format(fmt)
 	return os.date(fmt, self.timevalue);
 end
 
-function Timestamp:diffForHumans()
-	local function pluralize(word, count)
-		if( count == 1 ) then
-			return word;
-		else
-			return word .. "s";
-		end
-	end
 
-	local now = os.time();
-	local suffix = "ago";
-	local diffSeconds = now - self.timevalue;
-
-	if( now < self.timevalue ) then
-		diffSeconds = self.timevalue - now;
-		suffix = "from now";
-	end
-
-	if( diffSeconds < 60 ) then
-		return math.floor(diffSeconds) .. " " .. pluralize("second", diffSeconds) .. " " .. suffix;
-	end
-
-	local diffMinutes = diffSeconds / 60;
-	if( diffMinutes < 60 ) then
-		return math.floor(diffMinutes) .. " " .. pluralize("minute", diffMinutes) .. " " .. suffix;
-	end
-
-	local diffHours = diffMinutes / 60;
-	if( diffHours < 60 ) then
-		return math.floor(diffHours) .. " " .. pluralize("hour", diffHours) .. " " .. suffix;
-	end
-
-	local diffDays = diffHours / 24;
-	return math.floor(diffDays) .. " " .. pluralize("day", diffDays) .. " " .. suffix;
-end
-
+-- These below functions return a new timestamp object with the requested
+-- time difference added/subtracted to it. It is pretty self explanatory.
 function Timestamp:addSeconds(sec)
 	return Timestamp(self.timevalue + sec);
 end
@@ -107,19 +90,19 @@ function Timestamp:subMinutes(min)
 end
 
 function Timestamp:addHours(hours)
-	return Timestamp(self.timevalue + hours*60*60);
+	return Timestamp(self.timevalue + hours*3600);
 end
 
 function Timestamp:subHours(hours)
-	return Timestamp(self.timevalue - hours*60*60);
+	return Timestamp(self.timevalue - hours*3600);
 end
 
 function Timestamp:addDays(days)
-	return Timestamp(self.timevalue + days*24*60*60);
+	return Timestamp(self.timevalue + days*86400);
 end
 
 function Timestamp:subDays(days)
-	return Timestamp(self.timevalue - days*24*60*60);
+	return Timestamp(self.timevalue - days*86400);
 end
 
 function Timestamp:addMonths(months)
@@ -154,10 +137,20 @@ function Timestamp:subYears(years)
 	return Timestamp(self.timevalue - years*365*24*60*60);
 end
 
-function Timestamp:isPast()
-	return self.timevalue <= os.time();
+
+-- Returns true if the timestamp is in the future, otherwise false (past or present)
+function Timestamp:isFuture()
+	return self.timevalue > os.time();
 end
 
+
+-- Returns true if the timestamp is in the past, otherwise false (future or present)
+function Timestamp:isPast()
+	return self.timevalue < os.time();
+end
+
+
+-- Returns the difference between two timestamps in whichever requested unit.
 function Timestamp:diffInSeconds(other)
 	if( type(other) ~= "table" or not other.timevalue ) then
 		error("Object does not appear to be a valid timestamp.", 2);
@@ -196,6 +189,7 @@ function meta:__tostring()
 	return self:toHuman();
 end
 
+-- If this timestamp is prior to the 'other'
 function meta:__lt(other)
 	if( type(other) ~= "table" or not other.timevalue ) then
 		error("Object does not appear to be a valid timestamp.", 2);
@@ -204,6 +198,8 @@ function meta:__lt(other)
 	return self.timevalue < other.timevalue;
 end
 
+
+-- If this timestamp is after the 'other'
 function meta:__gt(other)
 	if( type(other) ~= "table" or not other.timevalue ) then
 		error("Object does not appear to be a valid timestamp.", 2);
@@ -212,6 +208,8 @@ function meta:__gt(other)
 	return self.timevalue > other.timevalue;
 end
 
+
+-- If the timestamps are the same
 function meta:__eq(other)
 	if( type(other) ~= "table" or not other.timevalue ) then
 		error("Object does not appear to be a valid timestamp.", 2);
@@ -220,6 +218,7 @@ function meta:__eq(other)
 	return self.timevalue == other.timevalue;
 end
 
+-- Difference, in seconds, between two timestamps
 function meta:__sub(other)
 	if( type(other) ~= "table" or not other.timevalue ) then
 		error("Object does not appear to be a valid timestamp.", 2);
