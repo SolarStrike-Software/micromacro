@@ -14,7 +14,11 @@
 	typedef struct lua_State lua_State;
 
 	#define wrongArgs(state)			wrongArgsReal(state, __FUNCTION__)
-	#define badAllocation()				badAllocationReal(__FILE__, __FUNCTION__, __LINE__)
+	#ifdef DISPLAY_DEBUG_MESSAGES
+		#define badAllocation()			badAllocationReal(__FILE__, __FUNCTION__, __LINE__)
+	#else
+		#define badAllocation()			badAllocationReal("", __FUNCTION__, __LINE__)
+	#endif
 
 	namespace MicroMacro
 	{

@@ -27,6 +27,7 @@
 #include "rng.h"
 #include "version.h"
 
+#include "encstring.h"
 
 extern "C"
 {
@@ -35,7 +36,7 @@ extern "C"
 	#include <lualib.h>
 }
 
-const char *basicTitle = "MicroMacro v%ld.%02ld.%ld";
+
 char baseDirectory[MAX_PATH+1];
 
 std::string scriptGUIDialog(std::string);
@@ -168,6 +169,8 @@ int main(int argc, char **argv)
 
 		{ /* Reset window title */
 			char title[1024];
+			char basicTitle[64];
+			EncString::reveal(basicTitle, sizeof(basicTitle), EncString::basicTitle);
 			slprintf(title, sizeof(title)-1, basicTitle, AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD);
 			SendMessage(Macro::instance()->getAppHwnd(), WM_SETTEXT, (WPARAM)0, (LPARAM)title);
 		}
@@ -771,8 +774,14 @@ void printStdHead()
 
 	// Change settings, output
 	SetConsoleTextAttribute(handle, color);
+
+	char basicTitle[64];
+	char website[256];
+	EncString::reveal(basicTitle, sizeof(basicTitle), EncString::basicTitle);
+	EncString::reveal(website, sizeof(website), EncString::website);
+
 	printf(basicTitle, AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD);
-	printf("\nSolarStrike Software\thttp://www.solarstrike.net\n");
+	printf("\n%s\n", website);
 
 	// Revert to original text settings
 	color = csbi.wAttributes;
@@ -933,7 +942,10 @@ void openLog()
 		const char *bits = "x86";
 	#endif
 
-	Logger::instance()->add("MicroMacro version %s (%s) %s\n", AutoVersion::FULLVERSION_STRING, AutoVersion::STATUS, bits);
+	char logVersionFmt[64];
+	EncString::reveal(logVersionFmt, sizeof(logVersionFmt), EncString::logVersionFmt);
+
+	Logger::instance()->add(logVersionFmt, AutoVersion::FULLVERSION_STRING, AutoVersion::STATUS, bits);
 	Logger::instance()->add("%s %s, %s\n", szProcessorName, szProcessorSpeed, getOsName().c_str());
 	Logger::instance()->add("User privilege: %s\n", userGroupName.c_str());
 	Logger::instance()->add_raw((char *)&splitLine80);

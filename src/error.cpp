@@ -95,7 +95,11 @@ void badAllocationReal(const char *file, const char *func, int line)
 {
 	// Log the error
 	char buffer[1024];
-	sprintf(buffer, "Bad allocation, %s:%d in function %s\n", file, line, func);
+	#ifdef DISPLAY_DEBUG_MESSAGES
+		sprintf(buffer, "Bad allocation, %s:%d in function %s\n", file, line, func);
+	#else
+		sprintf(buffer, "Bad allocation in function %s, line %d\n", func, line);
+	#endif
 	fprintf(stderr, buffer);
 	Logger::instance()->add(buffer);
 
