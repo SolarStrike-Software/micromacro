@@ -954,7 +954,6 @@ int Process_lua::readBatch(lua_State *L)
 				{
 					float data = *(float*)&readBuffer[cursorPos];
 					cursorPos += sizeof(float);
-					printf("Do float... %f\n", data);
 					lua_pushinteger(L, tableIndex); // Push key
 					lua_pushnumber(L, data); // Push value
 					lua_settable(L, -3); // Set it
@@ -1692,7 +1691,7 @@ int Process_lua::is32bit(lua_State *L)
 	bool success;
 
 	if( fnIsWow64Process )
-		success = IsWow64Process(pHandle->handle, &iswow64);
+		success = fnIsWow64Process(pHandle->handle, &iswow64);
 	else
 	{	// Assume 32-bit
 		lua_pushboolean(L, true);
@@ -1732,7 +1731,7 @@ int Process_lua::is64bit(lua_State *L)
 	bool success;
 
 	if( fnIsWow64Process )
-		success = IsWow64Process(pHandle->handle, &iswow64);
+		success = fnIsWow64Process(pHandle->handle, &iswow64);
 	else
 	{
 		lua_pushboolean(L, false);	// Assume 32-bit

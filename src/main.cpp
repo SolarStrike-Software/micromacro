@@ -36,6 +36,7 @@ extern "C"
 	#include <lualib.h>
 }
 
+#include "debugmessages.h"
 
 char baseDirectory[MAX_PATH+1];
 
@@ -79,7 +80,6 @@ int main(int argc, char **argv)
 
 	/* Copy the base path into the Lua engine; Do this *before* initializing! */
 	Macro::instance()->getEngine()->setBasePath(baseDirectory);
-
 	{	/* Run configs */
 		std::string configFilename = baseDirectory;
 		configFilename += "/";
@@ -173,6 +173,10 @@ int main(int argc, char **argv)
 			EncString::reveal(basicTitle, sizeof(basicTitle), EncString::basicTitle);
 			slprintf(title, sizeof(title)-1, basicTitle, AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD);
 			SendMessage(Macro::instance()->getAppHwnd(), WM_SETTEXT, (WPARAM)0, (LPARAM)title);
+
+			// Once set, we forcefully flush it from the buffers
+			securezero(basicTitle, sizeof(basicTitle));
+			securezero(title, sizeof(title));
 		}
 
 		/* Prompt for script, if needed */
@@ -783,6 +787,10 @@ void printStdHead()
 	printf(basicTitle, AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD);
 	printf("\n%s\n", website);
 
+	// Now flush the buffers
+	securezero(basicTitle, sizeof(basicTitle));
+	securezero(website, sizeof(website));
+
 	// Revert to original text settings
 	color = csbi.wAttributes;
 	SetConsoleTextAttribute(handle, color);
@@ -950,6 +958,9 @@ void openLog()
 	Logger::instance()->add("User privilege: %s\n", userGroupName.c_str());
 	Logger::instance()->add_raw((char *)&splitLine80);
 	Logger::instance()->add_raw("\n\n");
+
+	// Flush it
+	securezero(logVersionFmt, sizeof(logVersionFmt));
 }
 
 // Helper to get the user's privilege level
@@ -1039,6 +1050,24 @@ std::string getOsName()
 			return std::string("Windows 7");
 		else
 			return std::string("Windows Server 2008 R2");
+	}
+	if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 2 ) // 6, 2
+	{
+		if( osvi.wProductType == VER_NT_WORKSTATION )
+			return std::string("Windows 8");
+		else
+			return std::string("Windows Server 2012");
+	}
+	if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 3 ) // 6, 3
+	{
+		if( osvi.wProductType == VER_NT_WORKSTATION )
+			return std::string("Windows 8.1");
+		else
+			return std::string("Windows Server 2012 R2");
+	}
+	if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 4 ) // 6, 4
+	{
+		return std::string("Windows 10");
 	}
 
 	// unknown OS
