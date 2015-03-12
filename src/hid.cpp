@@ -44,8 +44,8 @@ int Hid::init()
 
 	// Use securezero instead of memset to prevent compiler optimization from ignoring the call
 	securezero((void *)lastks, sizeof(lastks));
-	memset(joyinfo, 0, sizeof(joyinfo));
-	memset(lastjoyinfo, 0, sizeof(lastjoyinfo));
+	memset(joyinfo, 0, sizeof(JOYINFOEX) * GAMEPADS);
+	memset(lastjoyinfo, 0, sizeof(JOYINFOEX) * GAMEPADS);
 
 	// Initial polling
 	int unused = 0;
