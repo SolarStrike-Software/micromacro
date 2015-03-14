@@ -17,8 +17,8 @@ FILETYPE VFT_APP
 		 BLOCK "040904E4"
 		 {
 			 VALUE "CompanyName", "SolarStrike Software"
-			 VALUE "FileDescription", "MicroMacro Programmable Macro Software"
-			 VALUE "InternalName", "MicroMacro 2"
+			 VALUE "FileDescription", "MicroMacro"
+			 VALUE "InternalName", "MicroMacro"
 			 VALUE "LegalCopyright", "MicroMacro"
 			 VALUE "LegalTrademarks", "MicroMacro"
 			 VALUE "OriginalFilename", "micromacro.exe"

@@ -34,6 +34,9 @@ int Table_addon::regmod(lua_State *L)
 	lua_pushcfunction(L, Table_addon::print);
 	lua_setfield(L, -2, "print");
 
+	lua_pushcfunction(L, Table_addon::lists);
+	lua_setfield(L, -2, "lists");
+
 	lua_pop(L, 1); // Pop module off stack
 
 	return MicroMacro::ERR_OK;
@@ -202,4 +205,85 @@ int Table_addon::print(lua_State *L)
 
 
 	return 0;
+}
+
+/*	table.lists(table tab, string key[, string value])
+	Returns:	table
+
+	Return a new table (plain array or dictionary) based on the input
+	table and requested key/value. 'tab' must be a table of tables!
+
+	If only 'key' is given, the returned table will be an array of
+	just the contents of subvalues of keys.
+
+	If 'key' and 'value' are given, a new dictionary is returned, where
+	the new key is the value of 'key' and the new value is the value of 'value'.
+
+	That makes absolutely no sense, so just look at this example instead:
+	local tab = {
+		[1] = { name = "Bob", age = 30, id = 123456 },
+		[2] = { name = "Jane", age = 27, id = 654321 },
+		...
+	}
+
+
+	local newTab = table.lists(tab, 'name');
+	'newTab' would now contain:
+	{
+		[1] = "Bob",
+		[2] = "Jane",
+	}
+
+	local newTab = table.lists(tab, 'id', 'name');
+	'newTab' would now contain:
+	{
+		[123456] = "Bob",
+		[654321] = "Jane",
+	}
+*/
+int Table_addon::lists(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 2 && top != 3 )
+		wrongArgs(L);
+
+	checkType(L, LT_STRING, 2);
+	if( top > 2 )
+		checkType(L, LT_STRING, 3);
+
+	const char *keyName = lua_tostring(L, 2);
+
+	lua_newtable(L);
+	int newtab_index = lua_gettop(L);
+	int indexCount = 0;
+
+	// Iterate over original table
+	lua_pushnil(L);
+	while( lua_next(L, 1) )
+	{
+		if( lua_istable(L, -1) )
+		{
+			if( top == 2 )
+			{
+				lua_pushinteger(L, ++indexCount);		// Push new key
+
+				lua_pushstring(L, keyName);				// Look up the value inside this table.
+				int type = lua_gettable(L, -3);
+			}
+			else
+			{
+				lua_pushstring(L, keyName);				// Look up new key from table
+				lua_gettable(L, -2);					// Push it.
+
+				lua_pushstring(L, lua_tostring(L, 3));	// Look up the value inside this table.
+				int type = lua_gettable(L, -3);
+			}
+
+			lua_settable(L, newtab_index);				// Now set it to our new table
+		}
+
+		lua_pop(L, 1); // Pop old value; our index needs to be on top of the stack (so we can lua_next)
+	}
+
+	return 1;
 }
