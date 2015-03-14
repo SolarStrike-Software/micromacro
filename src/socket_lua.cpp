@@ -28,7 +28,7 @@ extern "C"
 
 const char *LuaType::metatable_socket = "socket";
 
-HANDLE Socket_lua::socketListLock = NULL;
+Mutex Socket_lua::socketListLock;
 std::vector<Socket *> Socket_lua::socketList;
 
 DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
@@ -89,37 +89,21 @@ DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
 		}
 	}
 
-	if( socketListLock )
+
+	// Remove it from socket list.
+	if( socketListLock.lock(10) )
 	{
-		// Remove it from socket list.
-		DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
-		switch(dwWaitResult)
+		for(unsigned int i = 0; i < socketList.size(); i++)
 		{
-			case WAIT_OBJECT_0:
-				for(unsigned int i = 0; i < socketList.size(); i++)
-				{
-					Socket *pSocket = socketList.at(i);
-					if( pSocket->socket == socket )
-					{
-						socketList.erase(socketList.begin()+i);
-						memset(pSocket, 0, sizeof(Socket));
-						break;
-					}
-				}
-
-				if( !ReleaseMutex(socketListLock) )
-				{ // Uh oh... That's not good.
-					char errBuff[1024];
-					slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-						"Socket_lua", __FUNCTION__);
-					fprintf(stderr, errBuff);
-					Logger::instance()->add(errBuff);
-				}
-			break;
-
-			case WAIT_ABANDONED: // TODO: What should we do here? Error?
-			break;
+			Socket *pSocket = socketList.at(i);
+			if( pSocket->socket == socket )
+			{
+				socketList.erase(socketList.begin()+i);
+				memset(pSocket, 0, sizeof(Socket));
+				break;
+			}
 		}
+		socketListLock.unlock();
 	}
 
 	return 1;
@@ -185,33 +169,19 @@ DWORD WINAPI Socket_lua::listenThread(SOCKET socket)
 	}
 
 	// Remove it from socket list.
-	DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
-	switch(dwWaitResult)
+	if( socketListLock.lock(10) )
 	{
-		case WAIT_OBJECT_0:
-			for(unsigned int i = 0; i < socketList.size(); i++)
+		for(unsigned int i = 0; i < socketList.size(); i++)
+		{
+			Socket *pSocket = socketList.at(i);
+			if( pSocket->socket == socket )
 			{
-				Socket *pSocket = socketList.at(i);
-				if( pSocket->socket == socket )
-				{
-					socketList.erase(socketList.begin()+i);
-					memset(pSocket, 0, sizeof(Socket));
-					break;
-				}
+				socketList.erase(socketList.begin()+i);
+				memset(pSocket, 0, sizeof(Socket));
+				break;
 			}
-
-			if( !ReleaseMutex(socketListLock) )
-			{ // Uh oh... That's not good.
-				char errBuff[1024];
-				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-					"Socket_lua", __FUNCTION__);
-				fprintf(stderr, errBuff);
-				Logger::instance()->add(errBuff);
-			}
-		break;
-
-		case WAIT_ABANDONED: // TODO: What should we do here? Error?
-		break;
+		}
+		socketListLock.unlock();
 	}
 
 	return 1;
@@ -241,51 +211,22 @@ int Socket_lua::regmod(lua_State *L)
 
 	lua_pop(L, 1); // Pop table
 
-	socketListLock = CreateMutex(NULL, FALSE, NULL);
-	if( !socketListLock )
-	{
-		Logger::instance()->add("CreateMutex() failed in Socket_lua::regmod(); err code: %d", GetLastError());
-		return MicroMacro::ERR_ERR;
-	}
-
 	return MicroMacro::ERR_OK;
 }
 
 int Socket_lua::cleanup()
 {
-	if( socketListLock )
+	if( socketListLock.lock(10) )
 	{
-		// Close down all sockets & threads
-		DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
-		switch(dwWaitResult)
+		for(unsigned int i = 0; i < socketList.size(); i++)
 		{
-			case WAIT_OBJECT_0:
-				for(unsigned int i = 0; i < socketList.size(); i++)
-				{
-					Socket *pSocket = socketList.at(i);
+			Socket *pSocket = socketList.at(i);
 
-					// Close socket, let the thread take care of cleanup
-					closesocket(pSocket->socket);
-				}
-				socketList.clear();
-
-				if( !ReleaseMutex(socketListLock) )
-				{ // Uh oh... That's not good.
-					char errBuff[1024];
-					slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-						"Socket_lua", __FUNCTION__);
-					fprintf(stderr, errBuff);
-					Logger::instance()->add(errBuff);
-				}
-			break;
-
-			case WAIT_ABANDONED: // TODO: What should we do here? Error?
-			break;
+			// Close socket, let the thread take care of cleanup
+			closesocket(pSocket->socket);
 		}
-
-		// Now we can close our mutex
-		CloseHandle(socketListLock);
-		socketListLock = NULL;
+		socketList.clear();
+		socketListLock.unlock();
 	}
 
 	return MicroMacro::ERR_OK;
@@ -296,8 +237,6 @@ bool Socket_lua::isIP(const char *ip)
 {
 	struct addrinfo *result;
 	int success = getaddrinfo(ip, NULL, NULL, &result);
-
-	//printf("getaddrinfo success: %d\n", success);
 
 	return (success != 0);
 }
@@ -349,24 +288,10 @@ int Socket_lua::connect(lua_State *L)
 	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)socketThread, (PVOID)pSocket->socket, 0, NULL);
 
 	// Lets make a record of it in our list
-	DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
-	switch(dwWaitResult)
+	if( socketListLock.lock(10) )
 	{
-		case WAIT_OBJECT_0:
-			socketList.push_back(pSocket);
-
-			if( !ReleaseMutex(socketListLock) )
-			{ // Uh oh... That's not good.
-				char errBuff[1024];
-				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-					"Socket_lua", __FUNCTION__);
-				fprintf(stderr, errBuff);
-				Logger::instance()->add(errBuff);
-			}
-		break;
-
-		case WAIT_ABANDONED: // TODO: What should we do here? Error?
-		break;
+		socketList.push_back(pSocket);
+		socketListLock.unlock();
 	}
 
 	lua_pushboolean(L, true);
@@ -426,24 +351,10 @@ int Socket_lua::listen(lua_State *L)
 	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)listenThread, (PVOID)pSocket->socket, 0, NULL);
 
 	// Lets make a record of it in our list
-	DWORD dwWaitResult = WaitForSingleObject(socketListLock, INFINITE);
-	switch(dwWaitResult)
+	if( socketListLock.lock(10) )
 	{
-		case WAIT_OBJECT_0:
-			socketList.push_back(pSocket);
-
-			if( !ReleaseMutex(socketListLock) )
-			{ // Uh oh... That's not good.
-				char errBuff[1024];
-				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-					"Socket_lua", __FUNCTION__);
-				fprintf(stderr, errBuff);
-				Logger::instance()->add(errBuff);
-			}
-		break;
-
-		case WAIT_ABANDONED: // TODO: What should we do here? Error?
-		break;
+		socketList.push_back(pSocket);
+		socketListLock.unlock();
 	}
 
 	lua_pushboolean(L, true);

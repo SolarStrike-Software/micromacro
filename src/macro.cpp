@@ -49,7 +49,6 @@ CMacro::CMacro()
 	consoleDefaultAttributes = 0;
 	lastConsoleSizeX = 0;
 	lastConsoleSizeY = 0;
-	eventQueueLock = NULL;
 }
 
 CMacro::~CMacro()
@@ -59,12 +58,6 @@ CMacro::~CMacro()
 		Ncurses_lua::cleanup(engine.getLuaState());
 
 	engine.cleanup();
-
-	if( eventQueueLock )
-	{
-		CloseHandle(eventQueueLock);
-		eventQueueLock = NULL;
-	}
 }
 
 int CMacro::init()
@@ -105,14 +98,6 @@ int CMacro::init()
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(getAppHandle(), &csbi);
 	consoleDefaultAttributes = csbi.wAttributes;
-
-	// Create lock for event queue
-	eventQueueLock = CreateMutex(NULL, FALSE, NULL);
-	if( !eventQueueLock )
-	{
-		Logger::instance()->add("CreateMutex() failed in CMacro::init(); err code: %d", GetLastError());
-		return MicroMacro::ERR_ERR;
-	}
 
 	return MicroMacro::ERR_OK;
 }
@@ -225,54 +210,21 @@ DWORD CMacro::getConsoleDefaultAttributes()
 
 void CMacro::pushEvent(Event &e)
 {
-	if( eventQueueLock )
+	if( eventQueueLock.lock(5) )
 	{
-		DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
-		switch(dwWaitResult)
-		{
-			case WAIT_OBJECT_0:
-					eventQueue.push(e);
-
-				if( !ReleaseMutex(eventQueueLock) )
-				{ // Uh oh... That's not good.
-					char errBuff[1024];
-					slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-						"CMacro", __FUNCTION__);
-					fprintf(stderr, errBuff);
-					Logger::instance()->add(errBuff);
-				}
-			break;
-
-			case WAIT_ABANDONED: // TODO: What should we do here? Error?
-			break;
-		}
+		eventQueue.push(e);
+		eventQueueLock.unlock();
 	}
 }
 
 void CMacro::flushEvents()
 {
-	DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
-	switch(dwWaitResult)
+	if( eventQueueLock.lock() )
 	{
-		case WAIT_OBJECT_0:
-		{
-			// Quickest and easiest way is to just make a new queue, then swap.
-			std::queue<Event> emptyQueue;
-			swap(eventQueue, emptyQueue);
-
-			if( !ReleaseMutex(eventQueueLock) )
-			{ // Uh oh... That's not good.
-				char errBuff[1024];
-				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-					"CMacro", __FUNCTION__);
-				fprintf(stderr, errBuff);
-				Logger::instance()->add(errBuff);
-			}
-		}
-		break;
-
-		case WAIT_ABANDONED: // TODO: What should we do here? Error?
-		break;
+		// Quickest and easiest way is to just make a new queue, then swap.
+		std::queue<Event> emptyQueue;
+		swap(eventQueue, emptyQueue);
+		eventQueueLock.unlock();
 	}
 }
 
@@ -370,36 +322,21 @@ int CMacro::handleEvents()
 {
 	int success = MicroMacro::ERR_OK;
 
-
-	DWORD dwWaitResult = WaitForSingleObject(eventQueueLock, INFINITE);
-	switch(dwWaitResult)
+	if( eventQueueLock.lock() )
 	{
-		case WAIT_OBJECT_0:
-			while( !eventQueue.empty() )
+		while( !eventQueue.empty() )
+		{
+			Event e = eventQueue.front();
+			success = engine.runEvent(e);
+			eventQueue.pop();
+
+			if( success != MicroMacro::ERR_OK )
 			{
-				Event e = eventQueue.front();
-				success = engine.runEvent(e);
-				eventQueue.pop();
-
-				if( success != MicroMacro::ERR_OK )
-				{
-					lua_pop(engine.getLuaState(), 1);
-					break;
-				}
+				lua_pop(engine.getLuaState(), 1);
+				break;
 			}
-
-			if( !ReleaseMutex(eventQueueLock) )
-			{ // Uh oh... That's not good.
-				char errBuff[1024];
-				slprintf(errBuff, sizeof(errBuff)-1, "Unable to ReleaseMutex() in %s:%s()\n",
-					"CMacro", __FUNCTION__);
-				fprintf(stderr, errBuff);
-				Logger::instance()->add(errBuff);
-			}
-		break;
-
-		case WAIT_ABANDONED: // TODO: What should we do here? Error?
-		break;
+		}
+		eventQueueLock.unlock();
 	}
 
 	return success;

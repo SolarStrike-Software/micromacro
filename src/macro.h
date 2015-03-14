@@ -14,6 +14,7 @@
 	#include "settings.h"
 	#include "hid.h"
 	#include "event.h"
+	#include "mutex.h"
 
 	class CMacro;
 	typedef CMacro Macro;
@@ -70,7 +71,7 @@
 			int handleHidInput();
 			int handleEvents();
 
-			HANDLE eventQueueLock;
+			Mutex eventQueueLock;
 	};
 
 #endif

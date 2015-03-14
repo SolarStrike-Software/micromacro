@@ -11,6 +11,7 @@
 
 	#include <winsock2.h>
 	#include "wininclude.h"
+	#include "mutex.h"
 	#include <vector>
 
 	#define LISTEN_BUFFER		10
@@ -36,7 +37,7 @@
 
 			static int id(lua_State *);
 
-			static HANDLE socketListLock;
+			static Mutex socketListLock;
 			static std::vector<Socket *> socketList;
 			static DWORD WINAPI socketThread(SOCKET);
 			static DWORD WINAPI listenThread(SOCKET);
