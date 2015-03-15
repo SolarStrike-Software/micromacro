@@ -17,7 +17,7 @@ size_t EncString::reveal(char *outBuffer, size_t maxlen, const int *orig)
 		len = maxlen - 2;
 
 	for(size_t i = 0; i < len; i++)
-		outBuffer[i] = orig[i] ^ EncString::key;
+		outBuffer[i] = orig[i] ^ EncString::enckey;
 
 	outBuffer[len] = '\0';
 

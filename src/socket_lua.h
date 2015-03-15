@@ -33,20 +33,23 @@
 			static int connect(lua_State *);
 			static int listen(lua_State *);
 			static int send(lua_State *);
+			static int recv(lua_State *);
 			static int close(lua_State *);
 
 			static int id(lua_State *);
 
-			static Mutex socketListLock;
-			static std::vector<Socket *> socketList;
-			static DWORD WINAPI socketThread(SOCKET);
-			static DWORD WINAPI listenThread(SOCKET);
+
+			static DWORD WINAPI socketThread(Socket *);
+			static DWORD WINAPI listenThread(Socket *);
 
 			static bool isIP(const char *);
 
 		public:
 			static int regmod(lua_State *);
 			static int cleanup();
+
+			static Mutex socketListLock;
+			static std::vector<Socket *> socketList;
 	};
 	#endif
 #endif

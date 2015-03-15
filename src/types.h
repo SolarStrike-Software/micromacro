@@ -10,13 +10,16 @@
 
 	#include <string>
 	#include <vector>
+	#include <queue>
 	#include "wininclude.h"
+	#include "mutex.h"
 
 	enum Multivar_type{VT_NUMBER, VT_STRING, VT_NIL};
 	enum BatchJob_type{MEM_BYTE, MEM_UBYTE, MEM_SHORT, MEM_USHORT, MEM_INT, MEM_UINT,
 		MEM_INT64, MEM_UINT64, MEM_FLOAT, MEM_DOUBLE, MEM_STRING, MEM_SKIP};
 
 	typedef unsigned int ALuint;
+	class Event;
 
 	/* Used in window.find() */
 	struct EnumWindowPair
@@ -134,6 +137,11 @@
 		HANDLE hThread;
 		int protocol;
 		int port;
+
+		std::queue<Event> eventQueue;
+		Mutex eventQueueLock;
+		std::vector<std::string> recvQueue;
+		Mutex recvQueueLock;
 	};
 	#endif
 #endif

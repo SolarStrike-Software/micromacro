@@ -57,7 +57,7 @@ std::vector<std::string> getDirectory(std::string path, std::string extension)
 				continue;
 			}
 
-			if( foundpos )
+			if( foundpos != NULL )
 				strlcpy((char*)&ext, foundpos+1, sizeof(ext) - 1);
 			else
 				strlcpy((char*)&ext, "", sizeof(ext) - 1);

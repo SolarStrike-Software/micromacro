@@ -31,30 +31,47 @@ const char *LuaType::metatable_socket = "socket";
 Mutex Socket_lua::socketListLock;
 std::vector<Socket *> Socket_lua::socketList;
 
-DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
+DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 {
 	char readBuff[Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_BUFFER_SIZE) + 1];
 
 	while(true)
 	{
-		int result = recv(socket, readBuff, sizeof(readBuff)-1, 0);
+		int result = ::recv(pSocket->socket, readBuff, sizeof(readBuff)-1, 0);
 
 		if( result > 0 )
 		{ // Data received
 			// Copy the received data into an event; push it.
+			std::string msg = std::string(readBuff, result);
 			readBuff[result] = 0; // Enforce NULL-terminator
 			Event e;
-			e.idata1 = (int)socket;
+			e.idata1 = (int)pSocket->socket;
 			e.type = EVENT_SOCKETRECEIVED;
-			e.msg = std::string(readBuff, result);
-			Macro::instance()->pushEvent(e);
+			e.msg = msg;
+
+			if( pSocket->eventQueueLock.lock() )
+			{
+				pSocket->eventQueue.push(e);
+				pSocket->eventQueueLock.unlock();
+			}
+
+			if( pSocket->recvQueueLock.lock() )
+			{
+				pSocket->recvQueue.push_back(msg);
+				pSocket->recvQueueLock.unlock();
+			}
 		}
 		else if( result == 0 )
 		{ // Connection closed (probably by remote)
 			Event e;
-			e.idata1 = (int)socket;
+			e.idata1 = (int)pSocket->socket;
 			e.type = EVENT_SOCKETDISCONNECTED;
-			Macro::instance()->pushEvent(e);
+			//Macro::instance()->pushEvent(e);
+			if( pSocket->eventQueueLock.lock() )
+			{
+				pSocket->eventQueue.push(e);
+				pSocket->eventQueueLock.unlock();
+			}
 			break;
 		}
 		else
@@ -66,22 +83,32 @@ DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
 				case 10054: // CONNRESET; remote side closed the connection forcibly
 				{
 					Event e;
-					e.idata1 = (int)socket;
+					e.idata1 = (int)pSocket->socket;
 					e.type = EVENT_SOCKETDISCONNECTED;
-					Macro::instance()->pushEvent(e);
+					//Macro::instance()->pushEvent(e);
+					if( pSocket->eventQueueLock.lock() )
+					{
+						pSocket->eventQueue.push(e);
+						pSocket->eventQueueLock.unlock();
+					}
 				}
 				break;
 
 				default:
 				#ifdef DISPLAY_DEBUG_MESSAGES
-					fprintf(stderr, "Socket error occurred. Code: %d, socket: 0x%X\n", errCode, socket);
+					fprintf(stderr, "Socket error occurred. Code: %d, socket: 0x%X\n", errCode, pSocket->socket);
 				#endif
 				{
 					Event e;
-					e.idata1 = (int)socket;
+					e.idata1 = (int)pSocket->socket;
 					e.idata2 = errCode;
 					e.type = EVENT_SOCKETERROR;
-					Macro::instance()->pushEvent(e);
+					//Macro::instance()->pushEvent(e);
+					if( pSocket->eventQueueLock.lock() )
+					{
+						pSocket->eventQueue.push(e);
+						pSocket->eventQueueLock.unlock();
+					}
 				}
 				break;
 			}
@@ -95,11 +122,12 @@ DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
 	{
 		for(unsigned int i = 0; i < socketList.size(); i++)
 		{
-			Socket *pSocket = socketList.at(i);
-			if( pSocket->socket == socket )
+			Socket *npSocket = socketList.at(i);
+			if( npSocket->socket == pSocket->socket )
 			{
+				npSocket->socket = 0;
 				socketList.erase(socketList.begin()+i);
-				memset(pSocket, 0, sizeof(Socket));
+				//memset(npSocket, 0, sizeof(struct Socket));
 				break;
 			}
 		}
@@ -109,7 +137,7 @@ DWORD WINAPI Socket_lua::socketThread(SOCKET socket)
 	return 1;
 }
 
-DWORD WINAPI Socket_lua::listenThread(SOCKET socket)
+DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 {
 	SOCKET new_socket;
 	struct sockaddr_in client;
@@ -117,7 +145,7 @@ DWORD WINAPI Socket_lua::listenThread(SOCKET socket)
 	while(true)
 	{
 		int addrlen = sizeof(struct sockaddr_in);
-		new_socket = accept(socket, (struct sockaddr *)&client, &addrlen);
+		new_socket = accept(pSocket->socket, (struct sockaddr *)&client, &addrlen);
 
 		if( new_socket == INVALID_SOCKET )
 		{
@@ -129,9 +157,14 @@ DWORD WINAPI Socket_lua::listenThread(SOCKET socket)
 				case 10054: // CONNRESET; remote side closed the connection forcibly
 				{
 					Event e;
-					e.idata1 = (int)socket;
+					e.idata1 = (int)pSocket->socket;
 					e.type = EVENT_SOCKETDISCONNECTED;
-					Macro::instance()->pushEvent(e);
+					//Macro::instance()->pushEvent(e);
+					if( pSocket->eventQueueLock.lock() )
+					{
+						pSocket->eventQueue.push(e);
+						pSocket->eventQueueLock.unlock();
+					}
 				}
 				break;
 
@@ -140,14 +173,19 @@ DWORD WINAPI Socket_lua::listenThread(SOCKET socket)
 
 				default:
 				#ifdef DISPLAY_DEBUG_MESSAGES
-					fprintf(stderr, "Socket error occurred. Code: %d, listen socket: 0x%X\n", errCode, socket);
+					fprintf(stderr, "Socket error occurred. Code: %d, listen socket: 0x%X\n", errCode, pSocket->socket);
 				#endif
 				{
 					Event e;
-					e.idata1 = (int)socket;
+					e.idata1 = (int)pSocket->socket;
 					e.idata2 = errCode;
 					e.type = EVENT_SOCKETERROR;
-					Macro::instance()->pushEvent(e);
+					//Macro::instance()->pushEvent(e);
+					if( pSocket->eventQueueLock.lock() )
+					{
+						pSocket->eventQueue.push(e);
+						pSocket->eventQueueLock.unlock();
+					}
 				}
 				break;
 			}
@@ -156,15 +194,22 @@ DWORD WINAPI Socket_lua::listenThread(SOCKET socket)
 		else
 		{ // Successfully accepted new client
 			Event e;
+			/* // TODO: Update this to work with a Socket* instead of SOCKET.
+
 			e.socket.socket = new_socket;
 			e.socket.port = 0;				// TODO: We need to get this somehow
 			e.socket.protocol = AF_INET;
 
 			// Start a thread for this socket
 			e.socket.hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)socketThread, (PVOID)new_socket, 0, NULL);
-
+			*/
 			e.type = EVENT_SOCKETCONNECTED;
-			Macro::instance()->pushEvent(e);
+			//Macro::instance()->pushEvent(e);
+			if( pSocket->eventQueueLock.lock() )
+			{
+				pSocket->eventQueue.push(e);
+				pSocket->eventQueueLock.unlock();
+			}
 		}
 	}
 
@@ -173,11 +218,12 @@ DWORD WINAPI Socket_lua::listenThread(SOCKET socket)
 	{
 		for(unsigned int i = 0; i < socketList.size(); i++)
 		{
-			Socket *pSocket = socketList.at(i);
-			if( pSocket->socket == socket )
+			Socket *npSocket = socketList.at(i);
+			if( npSocket->socket == pSocket->socket )
 			{
+				npSocket->socket = 0;
 				socketList.erase(socketList.begin()+i);
-				memset(pSocket, 0, sizeof(Socket));
+				//memset(npSocket, 0, sizeof(struct Socket));
 				break;
 			}
 		}
@@ -199,6 +245,7 @@ int Socket_lua::regmod(lua_State *L)
 		{"connect", connect},
 		{"listen", listen},
 		{"send", send},
+		{"recv", recv},
 		{"close", close},
 		{"id", id},
 		{NULL, NULL}
@@ -249,7 +296,7 @@ int Socket_lua::connect(lua_State *L)
 	checkType(L, LT_STRING, 2);
 	checkType(L, LT_NUMBER, 3);
 
-	Socket *pSocket = static_cast<Socket *>(lua_touserdata(L, 1));
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
 	const char *host = lua_tostring(L, 2);
 	int port = lua_tointeger(L, 3);
 
@@ -285,7 +332,7 @@ int Socket_lua::connect(lua_State *L)
 	pSocket->port = port;
 
 	// Start a thread for this socket
-	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)socketThread, (PVOID)pSocket->socket, 0, NULL);
+	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)socketThread, (PVOID)pSocket, 0, NULL);
 
 	// Lets make a record of it in our list
 	if( socketListLock.lock(10) )
@@ -306,7 +353,7 @@ int Socket_lua::listen(lua_State *L)
 	checkType(L, LT_STRING, 2);
 	checkType(L, LT_NUMBER, 3);
 
-	Socket *pSocket = static_cast<Socket *>(lua_touserdata(L, 1));
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
 	const char *host = lua_tostring(L, 2);
 	int port = lua_tointeger(L, 3);
 
@@ -348,7 +395,7 @@ int Socket_lua::listen(lua_State *L)
 	pSocket->port = port;
 
 	// Start a thread for this socket
-	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)listenThread, (PVOID)pSocket->socket, 0, NULL);
+	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)listenThread, (PVOID)pSocket, 0, NULL);
 
 	// Lets make a record of it in our list
 	if( socketListLock.lock(10) )
@@ -368,7 +415,7 @@ int Socket_lua::send(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER | LT_STRING, 2);
 
-	Socket *pSocket = static_cast<Socket *>(lua_touserdata(L, 1));
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
 	size_t len;
 	const char *msg = lua_tolstring(L, 2, &len);
 
@@ -383,11 +430,37 @@ int Socket_lua::send(lua_State *L)
 	return 1;
 }
 
+int Socket_lua::recv(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
+	int retVal = 0;
+	if( pSocket->recvQueueLock.lock() )
+	{
+		if( !pSocket->recvQueue.empty() )
+		{
+			lua_pushlstring(L, pSocket->recvQueue.front().c_str(), pSocket->recvQueue.front().size());
+			pSocket->recvQueue.erase(pSocket->recvQueue.begin());
+			retVal = 1;
+		}
+
+		pSocket->recvQueueLock.unlock();
+	}
+
+	return retVal;
+}
+
 int Socket_lua::close(lua_State *L)
 {
 	int top = lua_gettop(L);
+	if( top < 1 )
+		wrongArgs(L);
 
-	Socket *pSocket = static_cast<Socket *>(lua_touserdata(L, 1));
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
 	if( pSocket->socket == 0 )
 	{ // Nothing to do here. Move alone.
 		return 0;
@@ -400,7 +473,7 @@ int Socket_lua::close(lua_State *L)
 
 int Socket_lua::id(lua_State *L)
 {
-	Socket *pSocket = static_cast<Socket *>(lua_touserdata(L, 1));
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
 	lua_pushinteger(L, pSocket->socket);
 	return 1;
 }
@@ -413,7 +486,7 @@ int Socket_lua::gc(lua_State *L)
 
 int Socket_lua::tostring(lua_State *L)
 {
-	Socket *pSocket = static_cast<Socket *>(lua_touserdata(L, 1));
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
 	char buffer[64];
 	slprintf(buffer, sizeof(buffer), "Socket (0x%X)", pSocket->socket);
 

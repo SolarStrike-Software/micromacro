@@ -18,5 +18,6 @@ Event &Event::operator=(const Event &o)
 	idata2 = o.idata2;
 	idata3 = o.idata3;
 	msg = o.msg;
+	pSocket = o.pSocket;
 	return *this;
 }

@@ -11,6 +11,8 @@
 #include "strl.h"
 #include "debugmessages.h"
 
+#include "socket_lua.h"
+
 extern "C"
 {
 	#include <lua.h>
@@ -338,6 +340,33 @@ int CMacro::handleEvents()
 		}
 		eventQueueLock.unlock();
 	}
+
+	#ifdef NETWORKING_ENABLED
+	if( Socket_lua::socketListLock.lock() )
+	{
+		for(unsigned int i = 0; i < Socket_lua::socketList.size(); i++)
+		{
+			Socket *pSocket = Socket_lua::socketList.at(i);
+			if( pSocket->eventQueueLock.lock() )
+			{
+				while( !pSocket->eventQueue.empty() )
+				{
+					Event e = pSocket->eventQueue.front();
+					success = engine.runEvent(e);
+					pSocket->eventQueue.pop();
+
+					if( success != MicroMacro::ERR_OK )
+					{
+						lua_pop(engine.getLuaState(), 1);
+						break;
+					}
+				}
+				pSocket->eventQueueLock.unlock();
+			}
+			Socket_lua::socketListLock.unlock();
+		}
+	}
+	#endif
 
 	return success;
 }

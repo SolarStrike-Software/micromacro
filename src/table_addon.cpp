@@ -268,7 +268,7 @@ int Table_addon::lists(lua_State *L)
 				lua_pushinteger(L, ++indexCount);		// Push new key
 
 				lua_pushstring(L, keyName);				// Look up the value inside this table.
-				int type = lua_gettable(L, -3);
+				lua_gettable(L, -3);
 			}
 			else
 			{
@@ -276,7 +276,7 @@ int Table_addon::lists(lua_State *L)
 				lua_gettable(L, -2);					// Push it.
 
 				lua_pushstring(L, lua_tostring(L, 3));	// Look up the value inside this table.
-				int type = lua_gettable(L, -3);
+				lua_gettable(L, -3);
 			}
 
 			lua_settable(L, newtab_index);				// Now set it to our new table

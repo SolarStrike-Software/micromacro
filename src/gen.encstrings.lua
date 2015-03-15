@@ -65,7 +65,7 @@ local header = [[
 	namespace EncString
 	{
 		size_t reveal(char *, size_t, const int *);
-		const unsigned long key = _$KEY$_;
+		const unsigned long enckey = _$KEY$_;
 
 ]]
 
@@ -79,12 +79,12 @@ local footer = [[
 
 math.randomseed(os.time())
 math.random(1);						-- Ensure better randomness
-local key = math.random(2,999999999);
+local enckey = math.random(2,999999999);
 
 
 -- Change any template values.
 header = string.gsub(header, "_$GENTIME$_", os.time());
-header = string.gsub(header, "_$KEY$_", tostring(key));
+header = string.gsub(header, "_$KEY$_", tostring(enckey));
 
 print("Auto-generating file", out_filename);
 print("Lua version", _VERSION);
@@ -92,7 +92,7 @@ local outfile = io.open(out_filename, "w");
 assert(outfile);
 
 outfile:write(header);
-print("Enc Key:", key);
+print("Enc enckey:", enckey);
 
 
 local function bxor(a,b)
@@ -117,10 +117,19 @@ for i,v in pairs(stringList) do
 		local origC = string.byte(v:sub(j,j));
 		local encC;
 
-		-- Comment one of these... depending on Lua version
-		encC = bxor(origC, key);				-- Lua 5.1
-		--encC = bit32.bxor(origC, key);		-- Lua 5.2
-		--encC = origC ~ key;					-- Lua 5.3
+		if( _VERSION == "Lua 5.1" ) then
+			encC = bxor(origC, enckey);
+		elseif( _VERSION == "Lua 5.2" ) then
+			encC = bit32.bxor(origC, enckey);
+		elseif( _VERSION == "Lua 5.3" ) then
+			--encC = origC ~ enckey;
+			print("origC:", origC, "enckey:", enckey);
+			local cmd = "return " .. origC .. " ~ " ..enckey;	-- Store it as a string so < 5.3 don't gag on syntax
+			local chunk = load(cmd);
+			if( chunk ) then
+				encC = chunk();
+			end
+		end
 
 
 		valStr = valStr ..string.format("0x%x", encC);

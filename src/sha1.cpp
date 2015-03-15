@@ -52,7 +52,7 @@ void SHA1::update(std::istream &is)
 
     while (is)
     {
-        uint32 block[BLOCK_INTS];
+        uint32 block[BLOCK_INTS+1];
         buffer_to_block(buffer, block);
         transform(block);
         read(is, buffer, BLOCK_BYTES);
@@ -77,7 +77,7 @@ std::string SHA1::final()
         buffer += (char)0x00;
     }
 
-    uint32 block[BLOCK_INTS];
+    uint32 block[BLOCK_INTS+1];
     buffer_to_block(buffer, block);
 
     if (orig_size > BLOCK_BYTES - 8)
@@ -241,7 +241,7 @@ void SHA1::transform(uint32 block[BLOCK_BYTES])
 }
 
 
-void SHA1::buffer_to_block(const std::string &buffer, uint32 block[BLOCK_BYTES])
+void SHA1::buffer_to_block(const std::string &buffer, uint32 block[BLOCK_INTS])
 {
     /* Convert the std::string (byte buffer) to a uint32 array (MSB) */
     for (unsigned int i = 0; i < BLOCK_INTS; i++)

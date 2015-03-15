@@ -11,7 +11,17 @@
 #include "debugmessages.h"
 #include "logger.h"
 
+#include <exception>
+#include <stdexcept>
 #include <stdio.h>
+
+class bad_mutex_exception : public std::exception
+{
+	virtual const char *what() const throw()
+	{
+		return "Bad MUTEX (NULL)";
+	}
+} bad_mutex;
 
 Mutex::Mutex()
 {
@@ -26,8 +36,13 @@ Mutex::Mutex()
 			err, errString);
 		fprintf(stderr, errMsg);
 		Logger::instance()->add(errMsg);
-		system("pause");
-		exit(1);
+		try {
+			throw bad_mutex;
+		} catch(std::exception &e) {
+			printf("%s\n", e.what());
+			system("pause");
+			exit(1);
+		}
 	}
 }
 
@@ -46,6 +61,13 @@ int Mutex::lock(int timeoutSecs)
 		slprintf(errBuff, sizeof(errBuff), "Cannot lock NULL Mutex\n");
 		fprintf(stderr, errBuff);
 		Logger::instance()->add(errBuff);
+		try {
+			throw bad_mutex;
+		} catch(std::exception &e) {
+			printf("%s\n", e.what());
+			system("pause");
+			exit(1);
+		}
 		return false;
 	}
 

@@ -42,7 +42,7 @@
 			float fDeltaTime;				// Holds the time elapsed between last cycle and current logic cycle
 
 		public:
-			LuaEngine() : lstate(NULL), lastErrorMsg("") { };
+			LuaEngine() : lstate(NULL), lastErrorMsg(""), fDeltaTime(0) { };
 			~LuaEngine();
 
 			int init();

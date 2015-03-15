@@ -44,7 +44,7 @@
 			union {
 				size_t idata1;
 				double fdata1;
-				Socket socket;
+				Socket *pSocket;
 			};
 			union {
 				size_t idata2;
