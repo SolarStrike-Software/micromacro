@@ -104,7 +104,7 @@ int LuaType::ncursesWindow_gc(lua_State *L)
 int LuaType::handle_gc(lua_State *L)
 {
 	checkType(L, LT_USERDATA, 1);
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 
 	CloseHandle(pHandle->handle);
 	pHandle->handle = NULL;
@@ -114,7 +114,7 @@ int LuaType::handle_gc(lua_State *L)
 int LuaType::handle_tostring(lua_State *L)
 {
 	checkType(L, LT_USERDATA, 1);
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 
 	char buffer[128];
 	slprintf(buffer, sizeof(buffer)-1, "Process handle: 0x%X", pHandle->handle);

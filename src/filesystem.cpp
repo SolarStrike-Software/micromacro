@@ -52,7 +52,7 @@ std::vector<std::string> getDirectory(std::string path, std::string extension)
 		if( checkExt ) // Only check the extension if one is given
 		{
 			char *foundpos = strrchr(dirp->d_name, '.');
-			if( strlen(foundpos) > (sizeof(ext) - 1) )
+			if( foundpos && strlen(foundpos) > (sizeof(ext) - 1) )
 			{ // Make sure the "extension" isn't ridiculous and overflows our buffer
 				continue;
 			}

@@ -585,12 +585,17 @@ int LuaEngine::runEvent(Event &e)
 		case EVENT_SOCKETCONNECTED:
 		{
 			lua_pushstring(lstate, "socketconnected");
-			Socket *pSocket = static_cast<Socket *>(lua_newuserdata(lstate, sizeof(struct Socket)));
-			//memset(pSocket, 0, sizeof(Socket));
-			//pSocket->socket		= e.socket.socket;
-			//pSocket->port		= e.socket.port;
-			//pSocket->protocol	= e.socket.protocol;
-			//pSocket->hThread	= e.socket.hThread;
+			/*Socket *pSocket;
+			Socket **ppSocket = static_cast<Socket **>(lua_newuserdata(lstate, sizeof(struct Socket)));
+			*ppSocket = pSocket;*/
+			Socket **ppSocket = static_cast<Socket **>(lua_newuserdata(lstate, sizeof(struct Socket)));
+			*ppSocket = e.pSocket;
+			printf("socketconnected event.\n");
+/*			pSocket->socket		= e.pSocket->socket;
+			pSocket->port		= e.pSocket->port;
+			pSocket->protocol	= e.pSocket->protocol;
+			pSocket->hThread	= e.pSocket->hThread;
+*/
 
 			// Give it a metatable
 			luaL_getmetatable(lstate, LuaType::metatable_socket);

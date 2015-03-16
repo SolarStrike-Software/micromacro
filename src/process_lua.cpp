@@ -427,7 +427,7 @@ int Process_lua::open(lua_State *L)
 		}
 	#endif
 
-	ProcHandle *pHandle = (ProcHandle *)lua_newuserdata(L, sizeof(ProcHandle));
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_newuserdata(L, sizeof(ProcHandle)));
 	luaL_getmetatable(L, LuaType::metatable_handle);
 	lua_setmetatable(L, -2);
 	pHandle->handle = handle;
@@ -447,7 +447,7 @@ int Process_lua::close(lua_State *L)
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
 	checkType(L, LT_USERDATA, 1);
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 
 	CloseHandle(pHandle->handle);
 	return 0;
@@ -471,7 +471,7 @@ int Process_lua::read(lua_State *L)
 	checkType(L, LT_NUMBER, 3);
 
 	int err = 0;
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 	std::string type = (char *)lua_tostring(L, 2);
 	size_t address = (size_t)lua_tointeger(L, 3);
 	if( pHandle->handle == 0 )
@@ -608,7 +608,7 @@ int Process_lua::readPtr(lua_State *L)
 
 	int err = 0;
 	std::vector<size_t> offsets;
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 	std::string type = (char *)lua_tostring(L, 2);
 	size_t address = (size_t)lua_tointeger(L, 3);
 	if( pHandle->handle == 0 )
@@ -823,7 +823,7 @@ int Process_lua::readBatch(lua_State *L)
 	checkType(L, LT_NUMBER, 2);
 	checkType(L, LT_STRING, 3);
 
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 	size_t address = (size_t)lua_tointeger(L, 2);
 	const char *fmt = lua_tostring(L, 3);
 
@@ -1014,7 +1014,7 @@ int Process_lua::readChunk(lua_State *L)
 	checkType(L, LT_NUMBER, 2);
 	checkType(L, LT_NUMBER, 3);
 
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 	size_t address = (size_t)lua_tointeger(L, 2);
 	size_t size = lua_tointeger(L, 3);
 
@@ -1063,7 +1063,7 @@ int Process_lua::write(lua_State *L)
 	checkType(L, LT_NUMBER, 3);
 
 	int err = 0;
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 	std::string type = (char *)lua_tostring(L, 2);
 	size_t address = (size_t)lua_tointeger(L, 3);
 
@@ -1148,7 +1148,7 @@ int Process_lua::writePtr(lua_State *L)
 
 	int err = 0;
 	std::vector<size_t> offsets;
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 	std::string type = (char *)lua_tostring(L, 2);
 	size_t address = (size_t)lua_tointeger(L, 3);
 	if( pHandle->handle == 0 )
@@ -1300,7 +1300,7 @@ int Process_lua::findPattern(lua_State *L)
 	// Get data, create buffers, etc.
 	size_t bmaskLen;
 	size_t szMaskLen;
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 	size_t address = lua_tointeger(L, 2);
 	size_t scanLen = lua_tointeger(L, 3);
 	const char *bmask = lua_tolstring(L, 4, &bmaskLen);
@@ -1685,7 +1685,7 @@ int Process_lua::is32bit(lua_State *L)
 		wrongArgs(L);
 
 	checkType(L, LT_USERDATA, 1);
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 
 	BOOL iswow64 = false;
 	bool success;
@@ -1724,7 +1724,7 @@ int Process_lua::is64bit(lua_State *L)
 		wrongArgs(L);
 
 	checkType(L, LT_USERDATA, 1);
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 
 
 	BOOL iswow64 = false;
@@ -1766,7 +1766,7 @@ int Process_lua::terminate(lua_State *L)
 		wrongArgs(L);
 
 	checkType(L, LT_USERDATA, 1);
-	ProcHandle *pHandle = (ProcHandle *)lua_touserdata(L, 1);
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 	unsigned int exitCode = 0;
 
 	if( top >= 2 )

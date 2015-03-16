@@ -413,22 +413,22 @@ int main(int argc, char **argv)
 			}
 			else if( runState != MicroMacro::ERR_OK )
 			{ // An actual error occurred
-				LuaEngine *E = Macro::instance()->getEngine();
+				LuaEngine *pEngine = Macro::instance()->getEngine();
 
 				// Reset text color (just in case)
 				SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
 
 				char buffer[1024];
 				slprintf(buffer, sizeof(buffer)-1, "Error in main loop. Error code %d (%s)\n%s\n",
-					runState, getErrorString(runState), E->getLastErrorMessage().c_str());
+					runState, getErrorString(runState), pEngine->getLastErrorMessage().c_str());
 				fprintf(stderr, "%s\n", buffer);
 				Logger::instance()->add(buffer);
 
 				// Pass to event function
 				Event e;
 				e.type = EVENT_ERROR;
-				e.msg = E->getLastErrorMessage();
-				E->runEvent(e);
+				e.msg = "test";//pEngine->getLastErrorMessage();
+				pEngine->runEvent(e);
 
 				break;
 			}

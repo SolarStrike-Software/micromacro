@@ -53,7 +53,7 @@ Mutex::~Mutex()
 	handle = NULL;
 }
 
-int Mutex::lock(int timeoutSecs)
+int Mutex::lock(int timeoutMsecs)
 {
 	char errBuff[1024];
 	if( !handle )
@@ -71,7 +71,7 @@ int Mutex::lock(int timeoutSecs)
 		return false;
 	}
 
-	DWORD dwWaitResult = WaitForSingleObject(handle, timeoutSecs);
+	DWORD dwWaitResult = WaitForSingleObject(handle, timeoutMsecs);
 	switch(dwWaitResult)
 	{
 		case WAIT_OBJECT_0:

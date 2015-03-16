@@ -11,7 +11,9 @@
 #include "strl.h"
 #include "debugmessages.h"
 
-#include "socket_lua.h"
+#ifdef NETWORKING_ENABLED
+	#include "socket_lua.h"
+#endif
 
 extern "C"
 {
@@ -355,6 +357,11 @@ int CMacro::handleEvents()
 					success = engine.runEvent(e);
 					pSocket->eventQueue.pop();
 
+					/*if( e.type == EVENT_SOCKETDISCONNECTED )
+					{ // We want to pop this off the list.
+						Socket_lua::socketList.erase(Socket_lua::socketList.begin()+i);
+					}*/
+
 					if( success != MicroMacro::ERR_OK )
 					{
 						lua_pop(engine.getLuaState(), 1);
@@ -363,8 +370,8 @@ int CMacro::handleEvents()
 				}
 				pSocket->eventQueueLock.unlock();
 			}
-			Socket_lua::socketListLock.unlock();
 		}
+		Socket_lua::socketListLock.unlock();
 	}
 	#endif
 

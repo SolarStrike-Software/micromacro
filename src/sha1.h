@@ -46,7 +46,7 @@ private:
     void reset();
     void transform(uint32 block[BLOCK_BYTES]);
 
-    static void buffer_to_block(const std::string &buffer, uint32 block[BLOCK_BYTES]);
+    static void buffer_to_block(const std::string &buffer, uint32 block[BLOCK_INTS]);
     static void read(std::istream &is, std::string &s, int max);
 };
 
