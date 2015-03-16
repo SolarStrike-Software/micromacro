@@ -351,16 +351,19 @@ int CMacro::handleEvents()
 			Socket *pSocket = Socket_lua::socketList.at(i);
 			if( pSocket->eventQueueLock.lock() )
 			{
-				while( !pSocket->eventQueue.empty() )
+				while( pSocket && !pSocket->eventQueue.empty() )
 				{
 					Event e = pSocket->eventQueue.front();
 					success = engine.runEvent(e);
 					pSocket->eventQueue.pop();
 
-					/*if( e.type == EVENT_SOCKETDISCONNECTED )
+					if( e.type == EVENT_SOCKETDISCONNECTED )
 					{ // We want to pop this off the list.
 						Socket_lua::socketList.erase(Socket_lua::socketList.begin()+i);
-					}*/
+						pSocket->eventQueueLock.unlock();
+						delete pSocket;
+						pSocket = NULL;
+					}
 
 					if( success != MicroMacro::ERR_OK )
 					{
@@ -368,7 +371,9 @@ int CMacro::handleEvents()
 						break;
 					}
 				}
-				pSocket->eventQueueLock.unlock();
+
+				if( pSocket ) // We might've deleted it already, so check that it exists still
+					pSocket->eventQueueLock.unlock();
 			}
 		}
 		Socket_lua::socketListLock.unlock();

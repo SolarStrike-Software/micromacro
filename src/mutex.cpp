@@ -108,12 +108,29 @@ int Mutex::unlock()
 		slprintf(errBuff, sizeof(errBuff), "Cannot unlock NULL Mutex\n");
 		fprintf(stderr, errBuff);
 		Logger::instance()->add(errBuff);
+
+		try {
+			throw bad_mutex;
+		} catch(std::exception &e) {
+			printf("%s\n", e.what());
+			system("pause");
+			exit(1);
+		}
 		return false;
 	}
 
 	if( !ReleaseMutex(handle) )
 	{ // Uh oh... That's not good.
 		slprintf(errBuff, sizeof(errBuff), "Unable to ReleaseMutex()\n");
+
+		try {
+			throw bad_mutex;
+		} catch(std::exception &e) {
+			printf("%s\n", e.what());
+			system("pause");
+			exit(1);
+		}
+
 		fprintf(stderr, errBuff);
 		Logger::instance()->add(errBuff);
 		return false;

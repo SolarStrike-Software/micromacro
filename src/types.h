@@ -140,7 +140,7 @@
 
 		std::queue<Event> eventQueue;
 		Mutex eventQueueLock;
-		std::vector<std::string> recvQueue;
+		std::queue<std::string> recvQueue;
 		Mutex recvQueueLock;
 	};
 	#endif

@@ -51,8 +51,6 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 			e.type = EVENT_SOCKETRECEIVED;
 			e.msg = msg;
 
-			printf("RECV: (%s)\n", e.msg.c_str());
-
 			if( pSocket->eventQueueLock.lock(DEFAULT_LOCK_TIMEOUT) )
 			{
 				pSocket->eventQueue.push(e);
@@ -61,13 +59,12 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 
 			if( pSocket->recvQueueLock.lock(DEFAULT_LOCK_TIMEOUT) )
 			{
-				pSocket->recvQueue.push_back(msg);
+				pSocket->recvQueue.push(msg);
 				pSocket->recvQueueLock.unlock();
 			}
 		}
 		else if( result == 0 )
 		{ // Connection closed (probably by remote)
-			printf("Disconnected (socketThread)\n");
 			Event e;
 			e.idata1 = (int)pSocket->socket;
 			e.type = EVENT_SOCKETDISCONNECTED;
@@ -87,7 +84,6 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 				case 10038: // "Not a socket"; we closed the socket in the main thread, so this signals we should shut down this thread
 				case 10054: // CONNRESET; remote side closed the connection forcibly
 				{
-					printf("Disconnected2 (socketThread)\n");
 					Event e;
 					e.idata1 = (int)pSocket->socket;
 					e.type = EVENT_SOCKETDISCONNECTED;
@@ -141,8 +137,6 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 		socketListLock.unlock();
 	}
 */
-
-	printf("Socket threading returning.\n");
 	return 1;
 }
 
@@ -469,7 +463,7 @@ int Socket_lua::recv(lua_State *L)
 		if( !pSocket->recvQueue.empty() )
 		{
 			lua_pushlstring(L, pSocket->recvQueue.front().c_str(), pSocket->recvQueue.front().size());
-			pSocket->recvQueue.erase(pSocket->recvQueue.begin());
+			pSocket->recvQueue.pop();//erase(pSocket->recvQueue.begin());
 			retVal = 1;
 		}
 

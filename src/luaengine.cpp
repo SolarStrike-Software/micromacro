@@ -590,12 +590,6 @@ int LuaEngine::runEvent(Event &e)
 			*ppSocket = pSocket;*/
 			Socket **ppSocket = static_cast<Socket **>(lua_newuserdata(lstate, sizeof(struct Socket)));
 			*ppSocket = e.pSocket;
-			printf("socketconnected event.\n");
-/*			pSocket->socket		= e.pSocket->socket;
-			pSocket->port		= e.pSocket->port;
-			pSocket->protocol	= e.pSocket->protocol;
-			pSocket->hThread	= e.pSocket->hThread;
-*/
 
 			// Give it a metatable
 			luaL_getmetatable(lstate, LuaType::metatable_socket);
