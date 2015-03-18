@@ -35,11 +35,12 @@ std::vector<Socket *> Socket_lua::socketList;
 
 DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 {
-	char readBuff[Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_BUFFER_SIZE) + 1];
+	int buffSize = Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_BUFFER_SIZE);
+	char *readBuff = new char[buffSize+1];
 
 	while(true)
 	{
-		int result = ::recv(pSocket->socket, readBuff, sizeof(readBuff)-1, 0);
+		int result = ::recv(pSocket->socket, readBuff, buffSize, 0);
 
 		if( result > 0 )
 		{ // Data received
@@ -96,6 +97,22 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 				}
 				break;
 
+				case 10053:	//	10053	Software caused connection abort. (your machine); we should close the socket
+				{
+					Event e;
+					e.idata1 = (int)pSocket->socket;
+					e.idata2 = errCode;
+					e.type = EVENT_SOCKETERROR;
+					//Macro::instance()->pushEvent(e);
+					if( pSocket->eventQueueLock.lock(DEFAULT_LOCK_TIMEOUT) )
+					{
+						pSocket->eventQueue.push(e);
+						pSocket->eventQueueLock.unlock();
+					}
+					closesocket(pSocket->socket);
+				}
+				break;
+
 				default:
 				#ifdef DISPLAY_DEBUG_MESSAGES
 					fprintf(stderr, "Socket error occurred. Code: %d, socket: 0x%X\n", errCode, pSocket->socket);
@@ -117,6 +134,8 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 			break;
 		}
 	}
+
+	delete []readBuff;
 
 
 	// Remove it from socket list.
@@ -486,7 +505,6 @@ int Socket_lua::close(lua_State *L)
 	}
 	// Close the socket; let the thread take care of cleanup
 	closesocket(pSocket->socket);
-
 	return 0;
 }
 
