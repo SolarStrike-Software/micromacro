@@ -99,9 +99,10 @@ int Table_addon::find(lua_State *L)
 	lua_pushnil(L);
 	while( lua_next(L, 1) )
 	{
-		bool found = false;
+
 		if( lua_type(L, -1) == valtype )
 		{ // Types match, compare value
+			bool found = false;
 			switch( valtype )
 			{
 				case LUA_TNUMBER:

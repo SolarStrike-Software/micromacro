@@ -605,11 +605,10 @@ unsigned int Hid::getGamepadMaxIndex()
 void Hid::handleKeyHeldQueue()
 {
 	TimeType now = getNow();
-	KeyTimePair *pktp;
 	while(!keyHeldQueue.empty()) // While there's still things in queue
 	{
 		// Check if enough time has elapsed
-		pktp = &keyHeldQueue.front();
+		KeyTimePair *pktp = &keyHeldQueue.front();
 		if( deltaTime(now, pktp->timestamp)*1000 >= keyHoldDelayMs )
 		{ // Release this key, pop it
 			if( pktp->hwnd == 0 )

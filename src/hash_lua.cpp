@@ -46,7 +46,7 @@ int Hash_lua::sha1(lua_State *L)
     const char *str = lua_tolstring(L, 1, &strlen);
     std::string szStr = std::string(str, strlen);
 
-    lua_pushstring(L, ::sha1(str).c_str());
+    lua_pushstring(L, ::sha1(szStr).c_str());
     return 1;
 }
 

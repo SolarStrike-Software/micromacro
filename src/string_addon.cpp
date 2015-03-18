@@ -60,12 +60,11 @@ int String_addon::explode(lua_State *L)
 	size_t delimLen;
 	const char *delim = lua_tolstring(L, 2, &delimLen);
 
-	std::size_t found;
 	lua_newtable(L);
 	unsigned int key = 1;
 	while(true)
 	{
-		found = str.find(delim);
+		std::size_t found = str.find(delim);
 
 		// Push the string.
 		lua_pushinteger(L, key); // Key

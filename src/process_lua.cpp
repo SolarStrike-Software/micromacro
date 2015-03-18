@@ -102,7 +102,6 @@ std::string Process_lua::readString(HANDLE handle, size_t address, int &err, uns
 	//unsigned char buffer = 0;
 	SIZE_T bytesread;
 	err = 0;
-	int success;
 	unsigned int memoryReadBufferSize =
 		(unsigned int)Macro::instance()->getSettings()->getInt(CONFVAR_MEMORY_STRING_BUFFER_SIZE,
 		CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE);
@@ -118,7 +117,7 @@ std::string Process_lua::readString(HANDLE handle, size_t address, int &err, uns
 	bool done = false;
 	while( !done ) // read until we hit a NULL
 	{
-		success = ReadProcessMemory(handle, (LPVOID)(address + stroffset),
+		int success = ReadProcessMemory(handle, (LPVOID)(address + stroffset),
 			(void*)readBuffer, memoryReadBufferSize, &bytesread);
 
 		if( success == 0 || bytesread == 0 ) {
@@ -153,7 +152,6 @@ std::wstring Process_lua::readUString(HANDLE handle, size_t address, int &err,
 	//wchar_t buffer = 0;
 	SIZE_T bytesread;
 	err = 0;
-	int success;
 	unsigned int memoryReadBufferSize =
 		(unsigned int)Macro::instance()->getSettings()->getInt(CONFVAR_MEMORY_STRING_BUFFER_SIZE,
 		CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE);
@@ -170,7 +168,7 @@ std::wstring Process_lua::readUString(HANDLE handle, size_t address, int &err,
 	bool done = false;
 	while( !done ) // read until we hit a NULL
 	{
-		success = ReadProcessMemory(handle, (LPVOID)(address + stroffset),
+		int success = ReadProcessMemory(handle, (LPVOID)(address + stroffset),
 			(void*)readBuffer, sizeof(wchar_t)*memoryReadBufferSize, &bytesread);
 
 		if( success == 0 || bytesread == 0 ) {
@@ -220,11 +218,10 @@ unsigned int Process_lua::readBatch_parsefmt(const char *fmt, std::vector<BatchJ
 	out.clear();
 
 	BatchJob job;
-	char c;
 
 	for(unsigned int i = 0; i < strlen(fmt); i++)
 	{
-		c = fmt[i];
+		char c = fmt[i];
 
 		// See if we are setting the varcount
 		if( c >= '0' && c <= '9' )

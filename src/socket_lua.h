@@ -51,5 +51,7 @@
 			static Mutex socketListLock;
 			static std::vector<Socket *> socketList;
 	};
+
+	typedef std::vector<Socket *>::iterator SocketListIterator;
 	#endif
 #endif

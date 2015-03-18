@@ -311,8 +311,6 @@ int Window_lua::findList(lua_State *L)
 	if( searchpair.windows.empty() )
 		return 0;
 
-	printf("\nSize: %d\n\n", searchpair.windows.size());
-
 	lua_newtable(L);
 	for(unsigned int i = 0; i < searchpair.windows.size(); i++)
 	{

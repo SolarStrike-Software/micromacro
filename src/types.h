@@ -136,12 +136,12 @@
 		SOCKET socket;
 		HANDLE hThread;
 		int protocol;
-		int port;
+		bool connected;
+		bool open;
 
 		std::queue<Event> eventQueue;
-		Mutex eventQueueLock;
 		std::queue<std::string> recvQueue;
-		Mutex recvQueueLock;
+		Mutex mutex;
 	};
 	#endif
 #endif

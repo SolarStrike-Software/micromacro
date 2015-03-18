@@ -22,6 +22,7 @@
 	extern const char *CONFVAR_AUDIO_ENABLED;
 	extern const char *CONFVAR_YIELD_TIME_SLICE;
 	extern const char *CONFVAR_NETWORK_BUFFER_SIZE;
+	extern const char *CONFVAR_RECV_QUEUE_SIZE;
 
 	extern const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE;
 	extern const int CONFDEFAULT_LOG_REMOVAL_DAYS;
@@ -30,6 +31,7 @@
 	extern const int CONFDEFAULT_AUDIO_ENABLED;
 	extern const int CONFDEFAULT_YIELD_TIME_SLICE;
 	extern const int CONFDEFAULT_NETWORK_BUFFER_SIZE;
+	extern const int CONFDEFAULT_RECV_QUEUE_SIZE;
 
 	class CSettings;
 	class CSettingValue;

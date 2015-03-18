@@ -85,6 +85,7 @@ int Network_lua::socket(lua_State *L)
 	pSocket->socket = ::socket(AF_INET, streamtype, protocol);
 	pSocket->protocol = protocol;
 
+
 	if( pSocket->socket == INVALID_SOCKET )
 	{
 		lua_pop(L, 1); // Pop the garbage socket off since it failed.
@@ -94,6 +95,9 @@ int Network_lua::socket(lua_State *L)
 		lua_pushstring(L, errbuff);
 		return 2;
 	}
+
+	pSocket->connected = false;
+	pSocket->open = false;
 
 	// It was created, so give it a metatable
 	luaL_getmetatable(L, LuaType::metatable_socket);

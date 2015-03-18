@@ -346,24 +346,16 @@ int CMacro::handleEvents()
 	#ifdef NETWORKING_ENABLED
 	if( Socket_lua::socketListLock.lock() )
 	{
-		for(unsigned int i = 0; i < Socket_lua::socketList.size(); i++)
+		for(SocketListIterator i = Socket_lua::socketList.begin(); i != Socket_lua::socketList.end(); ++i)
 		{
-			Socket *pSocket = Socket_lua::socketList.at(i);
-			if( pSocket->eventQueueLock.lock() )
+			Socket *pSocket = *i;
+			if( pSocket->mutex.lock() )
 			{
-				while( pSocket && !pSocket->eventQueue.empty() )
+				while( !pSocket->eventQueue.empty() )
 				{
 					Event e = pSocket->eventQueue.front();
 					success = engine.runEvent(e);
 					pSocket->eventQueue.pop();
-
-					if( e.type == EVENT_SOCKETDISCONNECTED )
-					{ // We want to pop this off the list.
-						Socket_lua::socketList.erase(Socket_lua::socketList.begin()+i);
-						pSocket->eventQueueLock.unlock();
-						delete pSocket;
-						pSocket = NULL;
-					}
 
 					if( success != MicroMacro::ERR_OK )
 					{
@@ -372,8 +364,7 @@ int CMacro::handleEvents()
 					}
 				}
 
-				if( pSocket ) // We might've deleted it already, so check that it exists still
-					pSocket->eventQueueLock.unlock();
+				pSocket->mutex.unlock();
 			}
 		}
 		Socket_lua::socketListLock.unlock();

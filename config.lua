@@ -19,8 +19,10 @@ memoryStringBufferSize = 128;
 
 --[[ Network settings ---------------------------------------------------------
 	networkBufferSize			Size of the buffer (in bytes) used when reading socket data.
+	recvQueueSize				Maximum number of packets we will hold in each socket's receive queue
 ]]
 networkBufferSize = 10240;
+recvQueueSize = 100;
 
 --[[ Other things
 	audioEnabled				Whether or not to enable OpenAl sound output

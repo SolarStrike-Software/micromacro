@@ -64,7 +64,7 @@ int Global_addon::printf(lua_State *L)
 	sprintf(L); // Format it
 
 	if( lua_isstring(L, -1) ) // If we can, print it!
-		::printf(lua_tostring(L, -1));
+		::printf("%s", lua_tostring(L, -1));
 	return 0;
 }
 

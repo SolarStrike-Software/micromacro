@@ -16,6 +16,7 @@ const char *CONFVAR_SCRIPT_DIRECTORY =					"scriptDirectory";
 const char *CONFVAR_AUDIO_ENABLED =						"audioEnabled";
 const char *CONFVAR_YIELD_TIME_SLICE =					"yieldTimeSlice";
 const char *CONFVAR_NETWORK_BUFFER_SIZE =				"networkBufferSize";
+const char *CONFVAR_RECV_QUEUE_SIZE = 					"recvQueueSize";
 
 const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE =		128;
 const int CONFDEFAULT_LOG_REMOVAL_DAYS =				7;
@@ -24,6 +25,7 @@ const char *CONFDEFAULT_SCRIPT_DIRECTORY =				"scripts";
 const int CONFDEFAULT_AUDIO_ENABLED =					1;
 const int CONFDEFAULT_YIELD_TIME_SLICE =				1;
 const int CONFDEFAULT_NETWORK_BUFFER_SIZE =				10240;
+const int CONFDEFAULT_RECV_QUEUE_SIZE = 				100;
 
 /* Setting value stuff */
 CSettingValue::CSettingValue()
