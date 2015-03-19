@@ -171,3 +171,16 @@ void securezero(void *addr, size_t len)
 	for(unsigned int i = 0; i < len; i++)
 		*((char*)addr + i) = 0;
 }
+
+std::string strReplaceAll(std::string instr, std::string search, std::string replace)
+{
+	// First we need to handle subquotes
+	size_t i = instr.find(search);
+	while( i != std::string::npos )
+	{
+		instr.replace(i, search.length(), replace);
+		i = instr.find(search, i+replace.length());
+	}
+
+	return instr;
+}

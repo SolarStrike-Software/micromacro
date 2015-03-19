@@ -18,6 +18,7 @@
 
 	bool directoryExists(const char *);
 	bool fileExists(const char *);
+	bool copyFile(const char *, const char *);
 	std::vector<std::string> getDirectory(std::string, std::string = "");
 	unsigned int filetimeDelta(FILETIME *, FILETIME *);
 	std::string fixSlashes(std::string, int);

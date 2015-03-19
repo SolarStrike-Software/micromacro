@@ -26,6 +26,7 @@
 #include "strl.h"
 #include "rng.h"
 #include "version.h"
+#include "os.h"
 
 #include "encstring.h"
 
@@ -43,7 +44,6 @@ char baseDirectory[MAX_PATH+1];
 std::string scriptGUIDialog(std::string);
 std::string promptForScript();
 void splitArgs(std::string cmd, std::vector<std::string> &);
-std::string strReplaceAll(std::string, std::string, std::string);
 std::string autoExtension(std::string);
 double getConfigFloat(lua_State *, const char *, double);
 int getConfigInt(lua_State *, const char *, int);
@@ -52,12 +52,8 @@ int loadConfig(const char *);
 void printStdHead();
 void openLog();
 void deleteOldLogs(const char *, unsigned int);
-DWORD getUserPriv();
-std::string getPrivName(DWORD);
-std::string getOsName();
 void clearCliScreen();
 static BOOL WINAPI consoleControlCallback(DWORD);
-int modifyPermission(HANDLE, const char *, bool);
 
 #ifdef NETWORKING_ENABLED
 WSADATA wsadata;
@@ -84,6 +80,21 @@ int main(int argc, char **argv)
 		std::string configFilename = baseDirectory;
 		configFilename += "/";
 		configFilename += CONFIG_FILENAME;
+
+		if( !fileExists(configFilename.c_str()) )
+		{ // Lets try to copy it from default.config.lua, if it exists.
+			std::string defaultConfigFilename = baseDirectory;
+			defaultConfigFilename += "/config.default.lua";
+
+			if( fileExists(defaultConfigFilename.c_str()) )
+                copyFile(defaultConfigFilename.c_str(), configFilename.c_str());
+			/* NOTE: If we want to do regex and replace some config stuff here,
+				we should replace copyFile() with a line-by-line read/replace/write function.
+				copyFile() is a straight binary copy.
+			*/
+		}
+
+
 		int success = loadConfig(configFilename.c_str());
 		if( success != MicroMacro::ERR_OK )
 		{
@@ -106,7 +117,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Set debug privileges on self */
-	if( !modifyPermission(GetCurrentProcess(), "SeDebugPrivilege", true) )
+	if( !OS::modifyPermission(GetCurrentProcess(), "SeDebugPrivilege", true) )
 		Logger::instance()->add("Warning: Failed to enable SeDebugPrivilege.");
 
 	// Ensure we seed the RNG
@@ -618,19 +629,6 @@ void splitArgs(std::string cmd, std::vector<std::string> &args)
 	}
 }
 
-std::string strReplaceAll(std::string instr, std::string search, std::string replace)
-{
-	// First we need to handle subquotes
-	size_t i = instr.find(search);
-	while( i != std::string::npos )
-	{
-		instr.replace(i, search.length(), replace);
-		i = instr.find(search, i+replace.length());
-	}
-
-	return instr;
-}
-
 /* If filename is not found and does not have an extension, try adding one.
 	If it works, return it. If still not found, return original filename.
 */
@@ -940,8 +938,8 @@ void openLog()
 	}
 
 	// Get Windows & user info
-	DWORD userGroup = getUserPriv();
-	std::string userGroupName = getPrivName(userGroup);
+	DWORD userGroup = OS::getUserPriv();
+	std::string userGroupName = OS::getPrivName(userGroup);
 
 	// Now print out basic info to it
 	char splitLine80[81];
@@ -959,127 +957,13 @@ void openLog()
 	EncString::reveal(logVersionFmt, sizeof(logVersionFmt), EncString::logVersionFmt);
 
 	Logger::instance()->add(logVersionFmt, AutoVersion::FULLVERSION_STRING, AutoVersion::STATUS, bits);
-	Logger::instance()->add("%s %s, %s\n", szProcessorName, szProcessorSpeed, getOsName().c_str());
+	Logger::instance()->add("%s %s, %s\n", szProcessorName, szProcessorSpeed, OS::getOsName().c_str());
 	Logger::instance()->add("User privilege: %s\n", userGroupName.c_str());
 	Logger::instance()->add_raw((char *)&splitLine80);
 	Logger::instance()->add_raw("\n\n");
 
 	// Flush it
 	securezero(logVersionFmt, sizeof(logVersionFmt));
-}
-
-// Helper to get the user's privilege level
-DWORD getUserPriv()
-{
-	LPUSER_INFO_1 ui1 = NULL;
-	wchar_t username[UNLEN+1];
-	DWORD usernameSize = UNLEN + 1;
-	NET_API_STATUS status;
-
-	GetUserNameW((WCHAR *)&username, &usernameSize);
-	status = NetUserGetInfo(NULL, (WCHAR *)&username, (DWORD)1, (LPBYTE *)&ui1);
-
-	if( ui1 == NULL || status != NERR_Success )
-	{ /* If some error occurs, assume guest */
-		return USER_PRIV_GUEST;
-	}
-
-	return ui1->usri1_priv;
-}
-
-// Helper to get a group name of a privilege level
-std::string getPrivName(DWORD priv)
-{
-	switch(priv)
-	{
-		case USER_PRIV_GUEST:
-			return "Guest";
-		break;
-		case USER_PRIV_USER:
-			return "User";
-		break;
-		case USER_PRIV_ADMIN:
-			return "Administrator";
-		break;
-		default:
-			return "Unknown";
-		break;
-	}
-}
-
-// Returns the name of the OS as a string
-std::string getOsName()
-{
-	//std::string servicepacksz = "";
-	OSVERSIONINFOEX osvi;
-
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	GetVersionEx( (OSVERSIONINFO*)&osvi);
-
-	// version info from:
-	// http://msdn2.microsoft.com/en-us/library/ms724834.aspx
-	if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0) // 4, 0
-		return std::string("Windows 95");
-	if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 10) // 4, 10
-		return std::string("Windows 98");
-	if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 90) // 4, 90
-		return std::string("Windows ME");
-	if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0 ) // 5, 0
-		return std::string("Windows 2000");
-	if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1 ) // 5, 1
-		return std::string("Windows XP");
-	if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2 ) // 5, 2
-	{
-		if( (osvi.wProductType == VER_NT_WORKSTATION) )
-			return std::string("Windows XP 64-bit");
-
-		if( osvi.wSuiteMask == 0x00008000 )
-			return std::string("Windows Home Server");
-
-		if( GetSystemMetrics(SM_SERVERR2) == 0 )
-			return std::string("Windows Server 2003");
-		else
-			return std::string("Windows Server 2003 R2");
-	}
-	if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0 ) // 6, 0
-	{
-		if( osvi.wProductType == VER_NT_WORKSTATION )
-			return std::string("Windows Vista");
-		else
-			return std::string("Windows Server 2008");
-	}
-	if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1 ) // 6, 1
-	{
-		if( osvi.wProductType == VER_NT_WORKSTATION )
-			return std::string("Windows 7");
-		else
-			return std::string("Windows Server 2008 R2");
-	}
-	if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 2 ) // 6, 2
-	{
-		if( osvi.wProductType == VER_NT_WORKSTATION )
-			return std::string("Windows 8");
-		else
-			return std::string("Windows Server 2012");
-	}
-	if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 3 ) // 6, 3
-	{
-		if( osvi.wProductType == VER_NT_WORKSTATION )
-			return std::string("Windows 8.1");
-		else
-			return std::string("Windows Server 2012 R2");
-	}
-	if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 4 ) // 6, 4
-	{
-		return std::string("Windows 10");
-	}
-
-	// unknown OS
-	char buffer[256];
-	slprintf((char*)&buffer, sizeof(buffer)-1, "Unknown Windows OS v%i.%i",
-		(unsigned int)osvi.dwMajorVersion, (unsigned int)osvi.dwMinorVersion);
-	return std::string(buffer);
 }
 
 // Capture important events, such as force shutdown
@@ -1103,45 +987,4 @@ static BOOL WINAPI consoleControlCallback(DWORD dwCtrlType)
 		break;
 	}
 	return false;
-}
-
-/*	Obviously, it changes our permission level for a process.
-	This is called to grant SeDebugPrivilege.
-*/
-int modifyPermission(HANDLE hProcess, const char *PrivName, bool allow)
-{
-	HANDLE hToken;
-	LUID sedebugnameValue;
-	TOKEN_PRIVILEGES tkp;
-
-	if ( !OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES
-						   | TOKEN_QUERY,&hToken ) )
-	{
-		CloseHandle(hToken);
-		return false;
-	}
-
-	//Don't bother looking up and adjusting privilege if removing rights
-	if(allow)
-	{
-		if ( !LookupPrivilegeValue( NULL, PrivName, &sedebugnameValue ) )
-		{
-			CloseHandle( hToken );
-			return false;
-		}
-
-		tkp.PrivilegeCount = 1;
-		tkp.Privileges[0].Luid = sedebugnameValue;
-		tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	}
-
-	if (AdjustTokenPrivileges( hToken, false, &tkp, sizeof tkp,
-							   NULL, NULL ) == 0)
-	{
-		CloseHandle(hToken);
-		return false;
-	}
-
-	CloseHandle(hToken);
-	return true;
 }

@@ -19,4 +19,6 @@
 	int wildfind(const std::string &format, const std::string &checkstring);
 
 	void securezero(void *, size_t);
+
+	std::string strReplaceAll(std::string instr, std::string search, std::string replace);
 #endif

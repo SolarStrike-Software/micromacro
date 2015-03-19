@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
+#include <fstream>
 
 
 bool directoryExists(const char *path)
@@ -34,6 +35,39 @@ bool fileExists(const char *filename)
 	}
 	else
 		return false;
+}
+
+bool copyFile(const char *source, const char *dest)
+{
+	std::ifstream inFile(source, std::ios::binary);
+	std::ofstream outFile(dest, std::ios::binary);
+
+	bool copied = false;
+	if( inFile.is_open() && outFile.is_open() )
+	{
+		/*std::string line;
+		while( std::getline(inFile, line, '\n') )
+		{
+			outFile << line << '\n';
+		}*/
+		inFile.seekg(0, std::ios::end);
+		std::streampos fileSize = inFile.tellg();
+		char *contents = new char[fileSize];
+
+		inFile.seekg(0, std::ios::beg);
+		inFile.read(contents, fileSize);
+
+		outFile.write(contents, fileSize);
+		delete []contents;
+		copied = true;
+	}
+
+	if( inFile.is_open() )
+		inFile.close();
+	if( outFile.is_open() )
+		outFile.close();
+
+	return copied;
 }
 
 std::vector<std::string> getDirectory(std::string path, std::string extension)
