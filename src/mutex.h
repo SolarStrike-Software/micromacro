@@ -21,6 +21,7 @@
 			~Mutex();
 			int lock(int = INFINITE);
 			int unlock();
+
 	};
 
 #endif

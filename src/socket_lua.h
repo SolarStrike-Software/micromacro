@@ -34,6 +34,8 @@
 			static int listen(lua_State *);
 			static int send(lua_State *);
 			static int recv(lua_State *);
+			static int flushRecvQueue(lua_State *);
+			static int getRecvQueueSize(lua_State *);
 			static int close(lua_State *);
 
 			static int id(lua_State *);

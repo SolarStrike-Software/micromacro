@@ -748,11 +748,15 @@ int loadConfig(const char *filename)
 	ival = getConfigInt(lstate, CONFVAR_NETWORK_BUFFER_SIZE, CONFDEFAULT_NETWORK_BUFFER_SIZE);
 	if( ival < 16 ) // Make sure it is reasonable...
 		ival = CONFDEFAULT_NETWORK_BUFFER_SIZE;
+	if( ival > 65535 ) // Maximum packet size
+		ival = 65535;
 	psettings->setInt(CONFVAR_NETWORK_BUFFER_SIZE, ival);
 
 	ival = getConfigInt(lstate, CONFVAR_RECV_QUEUE_SIZE, CONFDEFAULT_RECV_QUEUE_SIZE);
 	if( ival < 4 ) // Make sure it is reasonable...
 		ival = CONFDEFAULT_RECV_QUEUE_SIZE;
+	if( ival > 10240 )
+		ival = 10240;
 	psettings->setInt(CONFVAR_RECV_QUEUE_SIZE, ival);
 	#endif
 

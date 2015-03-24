@@ -35,10 +35,10 @@ std::vector<Socket *> Socket_lua::socketList;
 
 DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 {
-	int buffSize = Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_BUFFER_SIZE);
+	size_t buffSize = Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_BUFFER_SIZE);
 	char *readBuff = new char[buffSize+1];
 
-	int maxRecvQueueSize = Macro::instance()->getSettings()->getInt(CONFVAR_RECV_QUEUE_SIZE);
+	size_t maxRecvQueueSize = Macro::instance()->getSettings()->getInt(CONFVAR_RECV_QUEUE_SIZE);
 	while(true)
 	{
 		int result = ::recv(pSocket->socket, readBuff, buffSize, 0);
@@ -78,68 +78,77 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 		}
 		else
 		{ // Error occurred
-			int errCode = WSAGetLastError();
-			pSocket->connected = false;
-
-			switch(errCode)
+			if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
 			{
-				case 10038: // "Not a socket"; we closed the socket in the main thread, so this signals we should shut down this thread
-				case 10054: // CONNRESET; remote side closed the connection forcibly
+				int errCode = WSAGetLastError();
+
+				pSocket->connected = false;
+				switch(errCode)
 				{
-					Event e;
-					e.idata1 = (int)pSocket->socket;
-					e.type = EVENT_SOCKETDISCONNECTED;
-
-					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
+					case WSAENOTSOCK: // "Not a socket"; we closed the socket in the main thread, so this signals we should shut down this thread
+					case WSAECONNRESET:
 					{
-						pSocket->eventQueue.push(e);
-						pSocket->mutex.unlock();
+						Event e;
+						e.idata1 = (int)pSocket->socket;
+						e.type = EVENT_SOCKETDISCONNECTED;
+
+						if( pSocket->open && pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
+						{
+							pSocket->eventQueue.push(e);
+							pSocket->mutex.unlock();
+						}
 					}
-				}
-				break;
+					break;
 
-				case 10053:	// Software caused connection abort. (your machine); we should close the socket
-				{
-					Event e;
-					e.idata1 = (int)pSocket->socket;
-					e.idata2 = errCode;
-					e.type = EVENT_SOCKETERROR;
-
-					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
+					case WSAECONNABORTED:	// Software caused connection abort. (your machine); we should close the socket
 					{
-						pSocket->eventQueue.push(e);
-						closesocket(pSocket->socket);
-						pSocket->connected = true;
-						pSocket->mutex.unlock();
-					}
-				}
-				break;
+						Event e;
+						e.idata1 = (int)pSocket->socket;
+						e.idata2 = errCode;
+						e.type = EVENT_SOCKETERROR;
 
-				default:
-				#ifdef DISPLAY_DEBUG_MESSAGES
-					fprintf(stderr, "Socket error occurred. Code: %d, socket: 0x%X\n", errCode, pSocket->socket);
-				#endif
-				{
-					Event e;
-					e.idata1 = (int)pSocket->socket;
-					e.idata2 = errCode;
-					e.type = EVENT_SOCKETERROR;
-					//Macro::instance()->pushEvent(e);
-					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
-					{
-						pSocket->eventQueue.push(e);
-						pSocket->mutex.unlock();
+						if( pSocket->open && pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
+						{
+							pSocket->eventQueue.push(e);
+							closesocket(pSocket->socket);
+							pSocket->connected = true;
+							pSocket->mutex.unlock();
+						}
 					}
+					break;
+
+					default:
+					#ifdef DISPLAY_DEBUG_MESSAGES
+						fprintf(stderr, "Socket error occurred. Code: %d, socket: 0x%X\n", errCode, pSocket->socket);
+					#endif
+					{
+						Event e;
+						e.idata1 = (int)pSocket->socket;
+						e.idata2 = errCode;
+						e.type = EVENT_SOCKETERROR;
+						//Macro::instance()->pushEvent(e);
+						if( pSocket->open && pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
+						{
+							pSocket->eventQueue.push(e);
+							pSocket->mutex.unlock();
+						}
+					}
+					break;
 				}
-				break;
-			}
-			break;
-		}
-	}
+
+				pSocket->socket = 0;
+				pSocket->open = false;
+				pSocket->hThread = NULL;
+				pSocket->connected = false;
+
+				pSocket->mutex.unlock();
+				break; // Break from while
+			} // End of: ( pSocket->mutex.lock() )
+		} // End of: else
+	} // End of while(true)
 
 	delete []readBuff;
-
-	return 1;
+	return 0;
 }
 
 DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
@@ -161,8 +170,8 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 			pSocket->connected = false;
 			switch(errCode)
 			{
-				case 10038: // "Not a socket"; we closed the socket in the main thread, so this signals we should shut down this thread
-				case 10054: // CONNRESET; remote side closed the connection forcibly
+				case WSAENOTSOCK: // "Not a socket"; we closed the socket in the main thread, so this signals we should shut down this thread
+				case WSAECONNRESET: // CONNRESET; remote side closed the connection forcibly
 				{
 					Event e;
 					e.idata1 = (int)pSocket->socket;
@@ -176,7 +185,7 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 				}
 				break;
 
-				case 10053:	// Software caused connection abort. (your machine); we should close the socket
+				case WSAECONNABORTED:	// Software caused connection abort. (your machine); we should close the socket
 				{
 					Event e;
 					e.idata1 = (int)pSocket->socket;
@@ -193,7 +202,7 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 				}
 				break;
 
-				case 10004: // Interrupted blocking function call (probably terminated a listen thread on script end)
+				case WSAEINTR: // Interrupted blocking function call (probably terminated a listen thread on script end)
 				break;
 
 				default:
@@ -214,38 +223,44 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 				}
 				break;
 			}
-			break;
+
+			pSocket->socket = 0;
+			pSocket->open = false;
+			pSocket->hThread = NULL;
+			pSocket->connected = false;
+
+			break; // Break while(true)
 		}
 		else
 		{ // Successfully accepted new client
-			Socket *pSocket = new Socket;
+			Socket *npSocket = new Socket;
 
 			// Push the event
 			Event e;
 			e.type = EVENT_SOCKETCONNECTED;
-			e.pSocket = pSocket;
-			pSocket->eventQueue.push(e);
+			e.pSocket = npSocket;
+			npSocket->eventQueue.push(e);
 
 			/* Now we can record some more info and start the new thread
 				Note: We don't need to mutex this because it cannot be accessed
 				until after we create the thread.
 			*/
-			pSocket->socket = new_socket;
-			pSocket->protocol = AF_INET;
-			pSocket->connected = true;
-			pSocket->open = true;
+			npSocket->socket = new_socket;
+			npSocket->protocol = AF_INET;
+			npSocket->connected = true;
+			npSocket->open = true;
 
-			pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)socketThread, (PVOID)pSocket, 0, NULL);
+			npSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)socketThread, (PVOID)npSocket, 0, NULL);
 
 			if( socketListLock.lock() )
 			{
-				socketList.push_back(pSocket);
+				socketList.push_back(npSocket);
 				socketListLock.unlock();
 			}
 		}
-	}
+	} // End of: while(true)
 
-	return 1;
+	return 0;
 }
 
 int Socket_lua::regmod(lua_State *L)
@@ -261,6 +276,8 @@ int Socket_lua::regmod(lua_State *L)
 		{"listen", listen},
 		{"send", send},
 		{"recv", recv},
+		{"flushRecvQueue", flushRecvQueue},
+		{"getRecvQueueSize", getRecvQueueSize},
 		{"close", close},
 		{"id", id},
 		{NULL, NULL}
@@ -280,6 +297,7 @@ int Socket_lua::cleanup()
 {
 	if( socketListLock.lock() )
 	{
+		// Step 1: Close the sockets; give the threads time to terminate; Do *not* delete yet!
 		for(SocketListIterator i = socketList.begin(); i != socketList.end(); ++i)
 		{
 			Socket *pSocket = *i;
@@ -289,12 +307,28 @@ int Socket_lua::cleanup()
 				if( pSocket->open )
 					closesocket(pSocket->socket);
 
+				// Just in case anything still tries to access it (waiting for Lua GC to kick in?)
 				pSocket->open = false;
 				pSocket->connected = false;
-				pSocket->mutex.unlock();
+
+				pSocket->mutex.unlock(); // Let the thread do its part
 			}
 		}
-		socketList.clear();
+
+		// Step 2: Now we can actually delete the data.
+		while( !socketList.empty() )
+		{
+			Socket *pSocket = socketList.front();
+			if( pSocket->hThread )
+			{
+				Sleep(1);
+				continue;
+			}
+
+			socketList.erase(socketList.begin());	// Erase from the list
+			delete pSocket;							// Free memory
+		}
+
 		socketListLock.unlock();
 	}
 
@@ -333,7 +367,6 @@ int Socket_lua::connect(lua_State *L)
 	}
 	else*/
 	{
-		//printf("Look up hostname\n");
 		HOSTENT *pHostent;
 		pHostent = gethostbyname(host);
 		server.sin_addr = *((LPIN_ADDR)*pHostent->h_addr_list);
@@ -412,7 +445,6 @@ int Socket_lua::listen(lua_State *L)
 	}
 	else
 	{
-		//printf("Look up hostname\n");
 		HOSTENT *pHostent;
 		pHostent = gethostbyname(host);
 		server.sin_addr = *((LPIN_ADDR)*pHostent->h_addr_list);
@@ -446,9 +478,9 @@ int Socket_lua::listen(lua_State *L)
 	}
 
 	// Start a thread for this socket
-	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)listenThread, (PVOID)pSocket, 0, NULL);
 	pSocket->connected = true;
 	pSocket->open = true;
+	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)listenThread, (PVOID)pSocket, 0, NULL);
 
 	pSocket->mutex.unlock();
 
@@ -523,6 +555,42 @@ int Socket_lua::recv(lua_State *L)
 	return retVal;
 }
 
+int Socket_lua::flushRecvQueue(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
+	if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
+	{ // We use 'swap' instead of just popping elements for performance reasons
+		std::queue<std::string> emptyQueue;
+		swap(pSocket->recvQueue, emptyQueue);
+		pSocket->mutex.unlock();
+	}
+	return 0;
+}
+
+int Socket_lua::getRecvQueueSize(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+
+	size_t size = 0;
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
+	if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
+	{
+		size = pSocket->recvQueue.size();
+		pSocket->mutex.unlock();
+	}
+
+	lua_pushinteger(L, size);
+	return 1;
+}
+
 int Socket_lua::id(lua_State *L)
 {
 	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
@@ -537,11 +605,9 @@ int Socket_lua::close(lua_State *L)
 		wrongArgs(L);
 
 	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
-	if( pSocket->mutex.lock() )
+	if( pSocket->hThread && pSocket->open && pSocket->mutex.lock() )
 	{
-		if( pSocket->open )
-			closesocket(pSocket->socket);
-
+		closesocket(pSocket->socket);
 		pSocket->connected = false;
 		pSocket->open = false;
 		pSocket->mutex.unlock();
@@ -554,21 +620,29 @@ int Socket_lua::close(lua_State *L)
 int Socket_lua::gc(lua_State *L)
 {
 	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
-	close(L);
 
-	/* Iterate through the list and erase the socket */
 	if( socketListLock.lock() )
 	{
+		/* Iterate through the list and erase the socket */
 		for(SocketListIterator i = socketList.begin(); i != socketList.end(); ++i)
 		{
 			if( *i == pSocket )
 			{
+				if( pSocket->hThread )
+					close(L); // We only need to close() it if our thread is alive
+
+				socketList.erase(i);
 				if( pSocket->mutex.lock() )
 				{
 					pSocket->connected = false;
 					pSocket->open = false;
-					socketList.erase(i);
-					pSocket->mutex.unlock();
+
+					if( pSocket->hThread )
+						pSocket->mutex.unlock(); // The thread will delete it for us.
+					else
+						delete pSocket; // Release it here, before it is born.
+
+					pSocket = NULL;
 				}
 
 				break;
@@ -576,6 +650,7 @@ int Socket_lua::gc(lua_State *L)
 		}
 		socketListLock.unlock();
 	}
+
 	return 0;
 }
 

@@ -49,7 +49,10 @@ Mutex::Mutex()
 Mutex::~Mutex()
 {
 	if( handle )
+	{
+		ReleaseMutex(handle);
 		CloseHandle(handle);
+	}
 	handle = NULL;
 }
 
@@ -83,9 +86,34 @@ int Mutex::lock(int timeoutMsecs)
 			slprintf(errBuff, sizeof(errBuff), "Waiting for mutex has timed out.\n");
 			fprintf(stderr, errBuff);
 			Logger::instance()->add(errBuff);
+
+			try {
+				throw bad_mutex;
+			} catch(std::exception &e) {
+				printf("%s\n", e.what());
+				exit(1);
+			}
+
 			return false;
 		}
 		break;
+
+		case WAIT_FAILED:
+		{
+			int errCode = GetLastError();
+			slprintf(errBuff, sizeof(errBuff), "Waiting for mutex has failed. Err code: %d\n", errCode);
+			fprintf(stderr, errBuff);
+			Logger::instance()->add(errBuff);
+
+			try {
+				throw bad_mutex;
+			} catch(std::exception &e) {
+				printf("%s\n", e.what());
+				exit(1);
+			}
+
+			return false;
+		}
 
 		default:
 		{
