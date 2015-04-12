@@ -145,6 +145,18 @@ bool Hid::getToggleState(int vk)
 	return (ks[vk]&1);
 }
 
+void Hid::setToggleState(int vk, bool status)
+{
+	bool currentStatus = ks[vk]&1;
+	if( status == currentStatus )
+		return; // Nothing to do here.
+
+	hold(vk);
+	release(vk);
+
+	ks[vk] = status & 1;
+}
+
 void Hid::press(int vk, bool async)
 {
 	// Hold it

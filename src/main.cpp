@@ -309,6 +309,9 @@ int main(int argc, char **argv)
 		/* Flush any events we might have before running the new script */
 		Macro::instance()->flushEvents();
 
+		/* Force re-poll human interface devices */
+		Macro::instance()->getHid()->poll();
+
 		/* Run script */
 		printf("Running \'%s\'\n\n", script.c_str());
 		int success = Macro::instance()->getEngine()->loadFile(getFileName(args[0]).c_str());

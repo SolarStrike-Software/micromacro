@@ -56,6 +56,7 @@
 			bool released(int);
 			bool isDown(int);
 			bool getToggleState(int);
+			void setToggleState(int, bool);
 
 			void press(int, bool = true);
 			void hold(int);

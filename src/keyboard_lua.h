@@ -18,6 +18,7 @@
 			static int released(lua_State *);
 			static int isDown(lua_State *);
 			static int getToggleState(lua_State *);
+			static int setToggleState(lua_State *);
 
 			static int press(lua_State *);
 			static int hold(lua_State *);

@@ -24,6 +24,7 @@ int Keyboard_lua::regmod(lua_State *L)
 		{"released", Keyboard_lua::released},
 		{"isDown", Keyboard_lua::isDown},
 		{"getToggleState", Keyboard_lua::getToggleState},
+		{"setToggleState", Keyboard_lua::setToggleState},
 		{"press", Keyboard_lua::press},
 		{"hold", Keyboard_lua::hold},
 		{"release", Keyboard_lua::release},
@@ -119,6 +120,26 @@ int Keyboard_lua::getToggleState(lua_State *L)
 	else
 		lua_pushboolean(L, false);
 	return 1;
+}
+
+/*	keyboard.settToggleState(number vk, boolean status)
+	Returns:	nil
+
+	Sets the given keys toggle status.
+*/
+int Keyboard_lua::setToggleState(lua_State *L)
+{
+	if( lua_gettop(L) != 2 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1);
+	checkType(L, LT_BOOLEAN, 2);
+
+	int vk = lua_tointeger(L, 1);
+	bool status = lua_toboolean(L, 2);
+	if( vk > VK_XBUTTON2 && vk != 0 )
+		Macro::instance()->getHid()->setToggleState(vk, status);
+
+	return 0;
 }
 
 /*	keyboard.press(number vk [, boolean async])
