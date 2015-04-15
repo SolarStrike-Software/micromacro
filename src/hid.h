@@ -39,6 +39,7 @@
 			int keyHoldDelayMs;
 			KeyHeldQueue keyHeldQueue;
 			int vMouseX, vMouseY;
+			bool gamepadAvailable[GAMEPADS];
 			unsigned int gamepadCount;
 			unsigned int gamepadMaxIndex;
 
@@ -83,6 +84,9 @@
 
 			unsigned int getGamepadCount();
 			unsigned int getGamepadMaxIndex();
+			bool gamepadIsAvailable(int);
+			void repollGamepadMaxIndex();
+
 			/* Lack of documentation on HW input simulation from Microsoft...
 			void joyPress(int, int, bool = true);
 			void joyHold(int, int);

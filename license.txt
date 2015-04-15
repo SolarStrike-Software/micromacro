@@ -4,6 +4,14 @@
     that this code may have on you, your computer, your sanity, your dog, 
     and anything else that you can think of. Use it at your own risk."
 
+MicroMacro is released under a modified BSD license (see below).
+Some sections of this code or used libraries may retain their own separate licenses.
+	sha1.cpp/h	-	Public Domain
+	Lua			-	MIT license
+	OpenAL		-	Proprietary
+	ALUT		-	LGPL
+	Ncurses		-	X11 License
+
 
 
 Software License Agreement (Modified BSD License)

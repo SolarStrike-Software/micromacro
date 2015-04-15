@@ -119,7 +119,7 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 
 					default:
 					#ifdef DISPLAY_DEBUG_MESSAGES
-						fprintf(stderr, "Socket error occurred. Code: %d, socket: 0x%X\n", errCode, pSocket->socket);
+						fprintf(stderr, "Socket error occurred. Code: %d, socket: 0x%p\n", errCode, pSocket->socket);
 					#endif
 					{
 						Event e;
@@ -207,7 +207,7 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 
 				default:
 				#ifdef DISPLAY_DEBUG_MESSAGES
-					fprintf(stderr, "Socket error occurred. Code: %d, listen socket: 0x%X\n", errCode, pSocket->socket);
+					fprintf(stderr, "Socket error occurred. Code: %d, listen socket: 0x%p\n", errCode, pSocket->socket);
 				#endif
 				{
 					Event e;
@@ -658,7 +658,7 @@ int Socket_lua::tostring(lua_State *L)
 {
 	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
 	char buffer[64];
-	slprintf(buffer, sizeof(buffer), "Socket (0x%X)", pSocket->socket);
+	slprintf(buffer, sizeof(buffer), "Socket (0x%p)", pSocket->socket);
 
 	lua_pushstring(L, buffer);
 	return 1;

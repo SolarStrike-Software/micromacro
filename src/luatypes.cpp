@@ -84,7 +84,7 @@ int LuaType::ncursesWindow_tostring(lua_State *L)
 	WINDOW **pw = (WINDOW **)lua_touserdata(L, 1);
 
 	char buffer[128];
-	slprintf(buffer, sizeof(buffer)-1, "Ncurses Window: 0x%X", *pw);
+	slprintf(buffer, sizeof(buffer)-1, "Ncurses Window: 0x%p", *pw);
 	lua_pushstring(L, buffer);
 	return 1;
 }
@@ -117,7 +117,7 @@ int LuaType::handle_tostring(lua_State *L)
 	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
 
 	char buffer[128];
-	slprintf(buffer, sizeof(buffer)-1, "Process handle: 0x%X", pHandle->handle);
+	slprintf(buffer, sizeof(buffer)-1, "Process handle: 0x%p", pHandle->handle);
 	lua_pushstring(L, buffer);
 	return 1;
 }
@@ -138,7 +138,7 @@ int LuaType::windowDC_tostring(lua_State *L)
 	WindowDCPair *pWinDC = static_cast<WindowDCPair *>(lua_touserdata(L, 1));
 
 	char buffer[128];
-	slprintf(buffer, sizeof(buffer)-1, "Window device context 0x%X", *pWinDC);
+	slprintf(buffer, sizeof(buffer)-1, "Window device context 0x%p", *pWinDC);
 	lua_pushstring(L, buffer);
 	return 1;
 }
@@ -166,7 +166,7 @@ int LuaType::audioResource_tostring(lua_State *L)
 	AudioResource *pResource = static_cast<AudioResource *>(lua_touserdata(L, 1));
 
 	char buffer[128];
-	slprintf(buffer, sizeof(buffer)-1, "Audio resource 0x%X", pResource);
+	slprintf(buffer, sizeof(buffer)-1, "Audio resource 0x%p", pResource);
 	lua_pushstring(L, buffer);
 	return 1;
 }

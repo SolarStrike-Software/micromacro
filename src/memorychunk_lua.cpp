@@ -56,7 +56,7 @@ int MemoryChunk_lua::tostring(lua_State *L)
 {
 	MemoryChunk *pChunk = static_cast<MemoryChunk *>(lua_touserdata(L, 1));
 	char buffer[64];
-	slprintf(buffer, sizeof(buffer), "Memory chunk (0x%X - 0x%X)",
+	slprintf(buffer, sizeof(buffer), "Memory chunk (0x%p - 0x%p)",
 		pChunk->address, pChunk->address + pChunk->size);
 
 	lua_pushstring(L, buffer);

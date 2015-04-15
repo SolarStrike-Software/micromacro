@@ -39,7 +39,9 @@ extern "C"
 
 #include "debugmessages.h"
 
+const int GAMEPAD_REPOLL_SECONDS = 10;
 char baseDirectory[MAX_PATH+1];
+std::string previousScript;
 
 std::string scriptGUIDialog(std::string);
 std::string promptForScript();
@@ -303,6 +305,9 @@ int main(int argc, char **argv)
 		/* Correct filename if needed */
 		args[0] = autoExtension(args[0]);
 
+		/* Record the script as 'previous' so we can reference it next iteration */
+		previousScript = fixSlashes(args[0], SLASHES_TO_WINDOWS);
+
 		/* Change CWD to script's directory */
 		SetCurrentDirectory(getFilePath(args[0], false).c_str());
 
@@ -310,6 +315,7 @@ int main(int argc, char **argv)
 		Macro::instance()->flushEvents();
 
 		/* Force re-poll human interface devices */
+		Macro::instance()->getHid()->repollGamepadMaxIndex();
 		Macro::instance()->getHid()->poll();
 
 		/* Run script */
@@ -355,6 +361,7 @@ int main(int argc, char **argv)
 		Macro::instance()->getHid()->poll();
 		Macro::instance()->pollForegroundWindow();
 
+		TimeType lastRepollGamepadMaxIndex = getNow();
 		int runState = success;
 		while( runState == MicroMacro::ERR_OK )
 		{
@@ -366,6 +373,16 @@ int main(int argc, char **argv)
 
 			// Update window focus
 			Macro::instance()->pollForegroundWindow();
+
+			// Repoll gamepads if needed
+			if( deltaTime(getNow(), lastRepollGamepadMaxIndex) > GAMEPAD_REPOLL_SECONDS )
+			{
+				//int prevCount = Macro::instance()->getHid()->getGamepadMaxIndex();
+				Macro::instance()->getHid()->repollGamepadMaxIndex();
+				//int newCount = Macro::instance()->getHid()->getGamepadMaxIndex();
+
+				lastRepollGamepadMaxIndex = getNow();
+			}
 
 			// Handle keyboard held queue
 			Macro::instance()->getHid()->handleKeyHeldQueue();
@@ -509,12 +526,16 @@ std::string scriptGUIDialog(std::string defaultFilename)
 	if( ::getFilePath(defaultFilename, false) == "" )
 	{ // Assume scripts directory
 		std::string buff = cwdBuffer;
-		buff += "/";
-		buff += Macro::instance()->getSettings()->getString(CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY);
+		buff += "\\";
+		buff += fixSlashes(
+			Macro::instance()->getSettings()->getString(CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY),
+			SLASHES_TO_WINDOWS);
 		strlcpy(pathBuffer, buff.c_str(), MAX_PATH);
 	}
 	else
+	{
 		strlcpy(pathBuffer, fixSlashes(::getFilePath(defaultFilename, true), SLASHES_TO_WINDOWS).c_str(), MAX_PATH);
+	}
 
     OPENFILENAME ofn;
     ofn.lStructSize = sizeof(OPENFILENAME);
@@ -568,8 +589,6 @@ std::string scriptGUIDialog(std::string defaultFilename)
 
 std::string promptForScript()
 {
-	static std::string previousScript = "";
-
 	// Clear keyboard buffer
 	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
 	FlushConsoleInputBuffer(hStdin);
@@ -586,7 +605,7 @@ std::string promptForScript()
 	if( fullcmd == "" )
 		fullcmd = scriptGUIDialog(previousScript);
 
-	previousScript = fullcmd; // Remember this.
+	//previousScript = fullcmd; // Remember this.
 	return fullcmd;
 }
 

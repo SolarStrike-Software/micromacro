@@ -47,6 +47,8 @@ int Hid::init()
 	memset(joyinfo, 0, sizeof(JOYINFOEX) * GAMEPADS);
 	memset(lastjoyinfo, 0, sizeof(JOYINFOEX) * GAMEPADS);
 
+	securezero((void*)gamepadAvailable, sizeof(bool) * GAMEPADS);
+
 	// Initial polling
 	int unused = 0;
 	GetKeyState(unused); // To get around a Windows bug
@@ -64,7 +66,10 @@ int Hid::init()
 		if( success != JOYERR_NOERROR )
 			memset(&joyinfo[gamepad], 0, sizeof(JOYINFOEX)); // zero out
 		else
+		{
+			gamepadAvailable[gamepad] = true;
 			++gamepadsPolled;
+		}
 	}
 	gamepadCount = gamepadsPolled;
 	gamepadMaxIndex = gamepadsPolled;
@@ -97,8 +102,11 @@ void Hid::poll()
 
 	// Poll gamepad
 	unsigned int gamepadsPolled =  0;
-	for(unsigned int gamepad = 0; gamepad < gamepadMaxIndex; gamepad++)
+	for(unsigned int gamepad = 0; gamepad < GAMEPADS; gamepad++)
 	{
+		if( !gamepadAvailable[gamepad] )
+			continue;
+
 		joyinfo[gamepad].dwSize = sizeof(JOYINFOEX);
 		lastjoyinfo[gamepad].dwSize = sizeof(JOYINFOEX);
 		joyinfo[gamepad].dwFlags = JOY_RETURNALL;
@@ -106,7 +114,10 @@ void Hid::poll()
 		int success = joyGetPosEx(gamepad, &joyinfo[gamepad]);
 
 		if( success != JOYERR_NOERROR )
+		{	// Must have disconnected, so treat it as such.
 			memset(&joyinfo[gamepad], 0, sizeof(JOYINFOEX)); // zero out
+			gamepadAvailable[gamepad] = false;
+		}
 		else
 			++gamepadsPolled;
 	}
@@ -612,6 +623,40 @@ unsigned int Hid::getGamepadCount()
 unsigned int Hid::getGamepadMaxIndex()
 {
 	return gamepadMaxIndex;
+}
+
+bool Hid::gamepadIsAvailable(int gamepadId)
+{
+	if( gamepadId < 0 || gamepadId > GAMEPADS )
+		return false;
+
+	return gamepadAvailable[gamepadId];
+}
+
+void Hid::repollGamepadMaxIndex()
+{
+	unsigned int gamepadsPolled =  0;
+	for(unsigned int gamepad = 0; gamepad < GAMEPADS; gamepad++)
+	{
+		joyinfo[gamepad].dwSize = sizeof(JOYINFOEX);
+		lastjoyinfo[gamepad].dwSize = sizeof(JOYINFOEX);
+		joyinfo[gamepad].dwFlags = JOY_RETURNALL;
+
+		int success = joyGetPosEx(gamepad, &joyinfo[gamepad]);
+
+		if( success != JOYERR_NOERROR )
+		{
+			memset(&joyinfo[gamepad], 0, sizeof(JOYINFOEX)); // zero out
+			gamepadAvailable[gamepad] = false;
+		}
+		else
+		{
+			++gamepadsPolled;
+			gamepadAvailable[gamepad] = true;
+		}
+	}
+	gamepadCount = gamepadsPolled;
+	gamepadMaxIndex = gamepadsPolled;
 }
 
 void Hid::handleKeyHeldQueue()

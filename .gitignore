@@ -10,10 +10,10 @@ CppCheckResults.xml
 config.lua
 gen.release.lua
 gen.proxydll.lua
+proxydll.lua
 *.bat
 *.def
-proxydll.lua
 micromacro.cbp
 micromacro.depend
 micromacro.layout
-remote.code.txt
+notes.txt

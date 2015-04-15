@@ -573,7 +573,7 @@ int Process_lua::read(lua_State *L)
 	if( err )
 	{ // Throw an error
 		int errCode = GetLastError();
-		pushLuaErrorEvent(L, "Failure reading memory from 0x%X at 0x%X. "\
+		pushLuaErrorEvent(L, "Failure reading memory from 0x%p at 0x%p. "\
 			"Error code %i (%s).",
 			pHandle->handle, address, errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
@@ -781,7 +781,7 @@ int Process_lua::readPtr(lua_State *L)
 	if( err )
 	{ // Throw an error
 		int errCode = GetLastError();
-		pushLuaErrorEvent(L, "Failure reading memory from 0x%X at 0x%X. "\
+		pushLuaErrorEvent(L, "Failure reading memory from 0x%p at 0x%p. "\
 			"Error code %i (%s)",
 			pHandle->handle, address, errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
@@ -839,7 +839,7 @@ int Process_lua::readBatch(lua_State *L)
 	{ // Throw error
 		delete []readBuffer;
 		int errCode = GetLastError();
-		pushLuaErrorEvent(L, "Failure reading memory from 0x%X at 0x%X. "\
+		pushLuaErrorEvent(L, "Failure reading memory from 0x%p at 0x%p. "\
 			"Error code %i (%s)",
 			pHandle->handle, address, errCode, getWindowsErrorString(errCode).c_str());
 	}
@@ -1029,7 +1029,7 @@ int Process_lua::readChunk(lua_State *L)
 	{ // Error
 		lua_pop(L, 1); // Pop that memory chunk... looks like we don't need it!
 		int errCode = GetLastError();
-		pushLuaErrorEvent(L, "Failure read memory from 0x%X at 0x%X. "\
+		pushLuaErrorEvent(L, "Failure read memory from 0x%p at 0x%p. "\
 			"Error code %i (%s)",
 			pHandle->handle, address, errCode, getWindowsErrorString(errCode).c_str());
 		return 0;
@@ -1112,7 +1112,7 @@ int Process_lua::write(lua_State *L)
 	if( err )
 	{ // Throw an error
 		int errCode = GetLastError();
-		pushLuaErrorEvent(L, "Failure writing memory to 0x%X at 0x%X. "\
+		pushLuaErrorEvent(L, "Failure writing memory to 0x%p at 0x%p. "\
 			"Error code %i (%s)",
 			pHandle->handle, address, errCode, getWindowsErrorString(errCode).c_str());
 	}
@@ -1266,7 +1266,7 @@ int Process_lua::writePtr(lua_State *L)
 	if( err )
 	{ // Throw an error
 		int errCode = GetLastError();
-		pushLuaErrorEvent(L, "Failure writing memory to 0x%X at 0x%X. "\
+		pushLuaErrorEvent(L, "Failure writing memory to 0x%p at 0x%p. "\
 			"Error code %i (%s)",
 			pHandle->handle, address, errCode, getWindowsErrorString(errCode).c_str());
 	}

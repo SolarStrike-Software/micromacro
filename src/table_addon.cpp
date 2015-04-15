@@ -192,7 +192,7 @@ int Table_addon::print(lua_State *L)
 
 		if( lua_istable(L, -1) && depth < TABLE_PRINT_MAXDEPTH )
 		{
-			printf("%s%s:\ttable: 0x%X\n", depthStr.c_str(), key.c_str(), lua_topointer(L, -1));
+			printf("%s%s:\ttable: 0x%p\n", depthStr.c_str(), key.c_str(), lua_topointer(L, -1));
 			// Recurse
 			lua_pushinteger(L, depth+1); // Push depth
 			print(L);

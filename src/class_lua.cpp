@@ -162,7 +162,7 @@ int Class_lua::__call(lua_State *L)
 
 
 /*	class __tostring() metamethod
-	Returns:	string (Class: 0x%X)
+	Returns:	string (Class: 0x%p)
 
 	This is the default "tostring" metamethod for classes
 	that do not overload it in their metatables.
@@ -173,7 +173,7 @@ int Class_lua::__tostring(lua_State *L)
 	checkType(L, LT_TABLE, 1);
 	char buffer[32];
 
-	slprintf(buffer, sizeof(buffer)-1, "Class: 0x%X", lua_topointer(L, 1));
+	slprintf(buffer, sizeof(buffer)-1, "Class: 0x%p", lua_topointer(L, 1));
 	lua_pushstring(L, buffer);
 	return 1;
 }
