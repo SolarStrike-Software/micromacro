@@ -135,7 +135,6 @@ int main(int argc, char **argv)
 		if( PathIsRelative(scriptsDir) )
 		{
 			scriptsFullPath = baseDirectory;
-			scriptsFullPath += scriptsFullPath;
 			scriptsFullPath += "\\";
 			scriptsFullPath += scriptsDir;
 			scriptsFullPath = fixSlashes(fixFileRelatives(scriptsFullPath), SLASHES_TO_WINDOWS);
@@ -458,7 +457,7 @@ int main(int argc, char **argv)
 				// Pass to event function
 				Event e;
 				e.type = EVENT_ERROR;
-				e.msg = "test";//pEngine->getLastErrorMessage();
+				e.msg = pEngine->getLastErrorMessage();
 				pEngine->runEvent(e);
 
 				break;
@@ -1005,8 +1004,13 @@ static BOOL WINAPI consoleControlCallback(DWORD dwCtrlType)
 				Would be nice to be able to just set mainRunning = false
 				and let it exit graciously, but, that's WIN32 for you.
 			*/
+
 			// Close. Down. EVERYTHING.
-			Macro::instance()->cleanup();
+			/*	NOTE: We don't want to do this while a script could be running...
+				That may cause a SEGFAULT
+				TODO: Gracefully terminate the Lua thread, somehow.
+				Macro::instance()->cleanup();
+			*/
 			Logger::instance()->add("Process forcefully terminated (Win32 callback)\n");
 			exit(EXIT_SUCCESS);
 			return true;
