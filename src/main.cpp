@@ -46,7 +46,7 @@ std::string previousScript;
 std::string scriptGUIDialog(std::string);
 std::string promptForScript();
 void splitArgs(std::string cmd, std::vector<std::string> &);
-std::string autoExtension(std::string);
+std::string autoAdjustScriptFilename(std::string);
 double getConfigFloat(lua_State *, const char *, double);
 int getConfigInt(lua_State *, const char *, int);
 std::string getConfigString(lua_State *, const char *, std::string);
@@ -68,13 +68,10 @@ int main(int argc, char **argv)
 	SetConsoleCtrlHandler(consoleControlCallback, true);
 	printStdHead(); // Intro text output
 
-	/* We reset our working directory after every script run
-		so we need to make sure we hang onto this */
-	char origCWD[MAX_PATH+1];
-	GetCurrentDirectory(MAX_PATH,(LPTSTR)&origCWD);
-
-	/* CopyMicroMacro's path to load configs */
-	strlcpy(baseDirectory, getFilePath(argv[0], false).c_str(), sizeof(baseDirectory)-1);
+	// Extract MicroMacro's base path from argv[0]
+	GetFullPathName(argv[0], MAX_PATH, baseDirectory, NULL);
+	strlcpy(baseDirectory,
+		fixSlashes(getFilePath(baseDirectory, true), SLASHES_TO_WINDOWS).c_str(), MAX_PATH);
 
 	/* Copy the base path into the Lua engine; Do this *before* initializing! */
 	Macro::instance()->getEngine()->setBasePath(baseDirectory);
@@ -171,7 +168,7 @@ int main(int argc, char **argv)
 	while(running)
 	{
 		// Reset CWD
-		SetCurrentDirectory((LPCTSTR)&origCWD);
+		SetCurrentDirectory((LPCTSTR)&baseDirectory);
 
 		#ifdef DEBUG_LSTATE_STACK
 		// Warn to make sure we're not screwing up the stack
@@ -294,15 +291,8 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		/* If a relative path, pre-pend the scripts directory */
-		if( PathIsRelative(script.c_str()) )
-		{
-			args[0] = Macro::instance()->getSettings()->getString(
-				CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY) + "/" + args[0];
-		}
-
 		/* Correct filename if needed */
-		args[0] = autoExtension(args[0]);
+		args[0] = autoAdjustScriptFilename(args[0]);
 
 		/* Record the script as 'previous' so we can reference it next iteration */
 		previousScript = fixSlashes(args[0], SLASHES_TO_WINDOWS);
@@ -318,7 +308,7 @@ int main(int argc, char **argv)
 		Macro::instance()->getHid()->poll();
 
 		/* Run script */
-		printf("Running \'%s\'\n\n", script.c_str());
+		printf("Running \'%s\'\n\n", args[0].c_str()/*script.c_str()*/);
 		int success = Macro::instance()->getEngine()->loadFile(getFileName(args[0]).c_str());
 		if( success != MicroMacro::ERR_OK )
 		{
@@ -650,16 +640,70 @@ void splitArgs(std::string cmd, std::vector<std::string> &args)
 	}
 }
 
-/* If filename is not found and does not have an extension, try adding one.
-	If it works, return it. If still not found, return original filename.
+/* If filename is not found, attempt to locate the intended target.
+	If it cannot be found, it returns the original filename
 */
-std::string autoExtension(std::string filename)
+std::string autoAdjustScriptFilename(std::string filename)
 {
+	std::string path;
+	std::string scriptsDir = Macro::instance()->getSettings()->getString(
+		CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY);
+
+	// Append '/' if needed
+	char lastChar = *scriptsDir.rbegin();
+	if( lastChar != '/' && lastChar != '\\' )
+		scriptsDir += "/";
+
+	// Test for the given full path
 	if( fileExists(filename.c_str()) )
 		return filename;
 
-	if( fileExists((filename + ".lua").c_str()) )
-		return filename + ".lua";
+	// If it is a directory, try appending main.lua
+	if( directoryExists(filename.c_str()) )
+	{
+		path = filename;
+
+		// Append '/' if needed
+		char lastChar = *filename.rbegin();
+		if( lastChar != '/' && lastChar != '\\' )
+			path += "/";
+
+		path += "main.lua";
+		if( fileExists(path.c_str()) )
+			return path;
+	}
+
+	// If scriptsDir + filename is a directory, try appending main.lua
+	path = scriptsDir + filename;
+	if( directoryExists(path.c_str()) )
+	{
+		// Append '/' if needed
+		char lastChar = *filename.rbegin();
+		if( lastChar != '/' && lastChar != '\\' )
+			path += "/";
+
+		path += "main.lua";
+		if( fileExists(path.c_str()) )
+			return path;
+	}
+
+	// Try appending the .lua extension
+	path = filename + ".lua";
+	if( fileExists(path.c_str()) )
+		return path;
+
+	if( PathIsRelative(filename.c_str()) )
+	{
+		// Try prepending scripts dir
+		path = scriptsDir + filename;
+		if( fileExists(path.c_str()) )
+			return path;
+
+		// Try prepending scripts dir and appending .lua extension
+		path = scriptsDir + filename + ".lua";
+		if( fileExists(path.c_str()) )
+			return path;
+	}
 
 	return filename;
 }
