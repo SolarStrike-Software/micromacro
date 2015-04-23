@@ -158,9 +158,9 @@ int main(int argc, char **argv)
 	#endif
 
 	/* If the script was passed in as a command-line argument... autoload it */
-	std::string autoloadScript;
+	bool autoloadScript = false;
 	if( argc > 1 )
-		autoloadScript = argv[1];
+		autoloadScript = true;
 
 	/* Begin main loop */
 	running = true;
@@ -189,33 +189,43 @@ int main(int argc, char **argv)
 		}
 
 		/* Prompt for script, if needed */
+		std::string command;
 		std::vector<std::string> args;
-		std::string script;
-		if( autoloadScript.length() )
+		if( autoloadScript )
 		{
-			script = autoloadScript;
-			autoloadScript.clear();
+			command = argv[1];
+
+			/* Fetch argv[] passed-in arguments, push into args array */
+			args.push_back(argv[1]);
+			for(int i = 2; i < argc; i++)
+				args.push_back(argv[i]);
+
+			/* Now clear out autoloadScript so we don't reuse it next iteration */
+			autoloadScript = false;
 		}
 		else
-			script = promptForScript();
+		{
+			command = promptForScript();
+			splitArgs(command, args);
+		}
 
-		if( script == "" )
+		if( args[0] == "" )
 		{ // We need something to run, duh!
 			fprintf(stderr, "Error: You didn\'t even give me a script to run, silly!\n\n");
 			continue;
 		}
-		splitArgs(script, args);
+
 
 		/* Check for commands */
-		if( script == "exit" )
+		if( command == "exit" )
 		{ // Days over, let's go home.
 			running = false;
 			break;
-		} else if( script == "clear" )
+		} else if( command == "clear" )
 		{
 			clearCliScreen();
 			continue;
-		} else if( script == "buildinfo" )
+		} else if( command == "buildinfo" )
 		{
 			#ifdef _WIN64
 				const char *bits = "x64";
@@ -266,11 +276,11 @@ int main(int argc, char **argv)
 			else
 			{
 				// Prep the string, then run it
-				size_t fpos = script.find_first_of(' ');
+				size_t fpos = command.find_first_of(' ');
 				if( fpos == std::string::npos )
 					continue;
 
-				std::string cmd = script.substr(fpos+1);
+				std::string cmd = command.substr(fpos+1);
 				printf("Execute string: %s\n\n", cmd.c_str());
 
 				// Run the string
@@ -935,7 +945,12 @@ void openLog()
 	if(	PathIsRelative(logDir) )
 	{
 		logFullPath = baseDirectory;
-		logFullPath += "\\";
+
+		// Append '\\' if needed
+		char lastChar = *logFullPath.rbegin();
+		if( lastChar != '/' && lastChar != '\\' )
+			logFullPath += "\\";
+
 		logFullPath += logDir;
 		logFullPath = fixSlashes(fixFileRelatives(logFullPath), SLASHES_TO_WINDOWS);
 	}
