@@ -276,7 +276,7 @@ int main(int argc, char **argv)
 			else
 			{
 				// Prep the string, then run it
-				size_t fpos = command.find_first_of(' ');
+				size_t fpos = command.find_first_of(' \t');
 				if( fpos == std::string::npos )
 					continue;
 
@@ -610,6 +610,8 @@ std::string promptForScript()
 
 void splitArgs(std::string cmd, std::vector<std::string> &args)
 {
+	const char *spaceReplace = "$_SPACE_$";
+	const char *tabReplace = "$_TAB_$";
 	size_t startpos = 0;
 	size_t lastpos = 0;
 
@@ -623,7 +625,9 @@ void splitArgs(std::string cmd, std::vector<std::string> &args)
 		{
 			// Grab substring, remove quotes, substitute spaces
 			std::string substr = cmd.substr(startpos+1, nextpos - startpos - 1);
-			substr = strReplaceAll(substr, " ", "$_SPACE_$");
+			substr = strReplaceAll(substr, " ", spaceReplace);
+			substr = strReplaceAll(substr, "\t", tabReplace);
+
 			// Now pop it back into place.
 			cmd.replace(startpos, nextpos - startpos + 1, substr);
 			lastpos = nextpos+1;
@@ -633,18 +637,23 @@ void splitArgs(std::string cmd, std::vector<std::string> &args)
 			break;
 	}
 
-	// Now split by spaces
-	startpos = cmd.find(' ');
-	args.push_back( strReplaceAll(cmd.substr(0, startpos), "$_SPACE_$", " ") );
+	// Push script as first arg, replace whitespace back to original
+	startpos = cmd.find_first_of(" \t");
+	std::string piece = strReplaceAll(cmd.substr(0, startpos), spaceReplace, " ");
+	piece = strReplaceAll(piece, tabReplace, "\t");
+	args.push_back( piece );
 
+	// Now iterate over other pieces, do the same
 	lastpos = startpos;
 	while(startpos != std::string::npos)
 	{
-		startpos = cmd.substr(lastpos+1).find(' ');
+		startpos = cmd.substr(lastpos+1).find_first_of(" \t");
 		std::string tmp = cmd.substr(lastpos+1, startpos);
 		if( tmp != "" )
 		{
-			args.push_back( strReplaceAll(tmp, "$_SPACE_$", " ") );
+			piece = strReplaceAll(tmp, spaceReplace, " ");
+			piece = strReplaceAll(piece, tabReplace, "\t");
+			args.push_back( piece );
 		}
 		lastpos += startpos +1;
 	}
