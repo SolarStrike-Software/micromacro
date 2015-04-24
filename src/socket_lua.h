@@ -23,7 +23,11 @@
 		extern const char *metatable_socket;
 	}
 
-	class Socket;
+	namespace MicroMacro
+	{
+		struct Socket;
+	}
+
 	class Socket_lua
 	{
 		protected:
@@ -41,8 +45,8 @@
 			static int id(lua_State *);
 
 
-			static DWORD WINAPI socketThread(Socket *);
-			static DWORD WINAPI listenThread(Socket *);
+			static DWORD WINAPI socketThread(MicroMacro::Socket *);
+			static DWORD WINAPI listenThread(MicroMacro::Socket *);
 
 			static bool isIP(const char *);
 
@@ -51,9 +55,9 @@
 			static int cleanup();
 
 			static Mutex socketListLock;
-			static std::vector<Socket *> socketList;
+			static std::vector<MicroMacro::Socket *> socketList;
 	};
 
-	typedef std::vector<Socket *>::iterator SocketListIterator;
+	typedef std::vector<MicroMacro::Socket *>::iterator SocketListIterator;
 	#endif
 #endif

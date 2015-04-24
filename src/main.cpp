@@ -422,8 +422,8 @@ int main(int argc, char **argv)
 				Logger::instance()->add(buffer);
 
 				// Pass to event function
-				Event e;
-				e.type = EVENT_ERROR;
+				MicroMacro::Event e;
+				e.type = MicroMacro::EVENT_ERROR;
 				e.msg = E->getLastErrorMessage();
 				E->runEvent(e);
 
@@ -455,8 +455,8 @@ int main(int argc, char **argv)
 				Logger::instance()->add(buffer);
 
 				// Pass to event function
-				Event e;
-				e.type = EVENT_ERROR;
+				MicroMacro::Event e;
+				e.type = MicroMacro::EVENT_ERROR;
 				e.msg = pEngine->getLastErrorMessage();
 				pEngine->runEvent(e);
 

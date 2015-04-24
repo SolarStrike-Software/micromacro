@@ -9,7 +9,11 @@
 #define VECTOR3D_LUA_H
 
 	typedef struct lua_State lua_State;
-	typedef struct Vector3d Vector3d;
+
+	namespace MicroMacro
+	{
+		struct Vector3d;
+	}
 
 	namespace LuaType
 	{
@@ -43,7 +47,8 @@
 			static int regmod(lua_State *);
 	};
 
-	Vector3d lua_tovector3d(lua_State *, int );
-	void lua_pushvector3d(lua_State *, const Vector3d &);
+
+	MicroMacro::Vector3d lua_tovector3d(lua_State *, int );
+	void lua_pushvector3d(lua_State *, const MicroMacro::Vector3d &);
 
 #endif

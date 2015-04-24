@@ -13,7 +13,11 @@
 	#include <string>
 	#include <vector>
 
-	class Event;
+	namespace MicroMacro
+	{
+		class Event;
+	}
+
 	typedef struct lua_State lua_State;
 
 	#define MACRO_TABLE_NAME		"macro"
@@ -53,7 +57,7 @@
 
 			int runInit(std::vector<std::string> * = NULL);
 			int runMain();
-			int runEvent(Event &);
+			int runEvent(MicroMacro::Event &);
 
 			float getDeltaTime();
 			std::string getLastErrorMessage();

@@ -11,7 +11,7 @@
 #include <string.h>
 #include <new>
 
-Event &Event::operator=(const Event &o)
+MicroMacro::Event &MicroMacro::Event::operator=(const MicroMacro::Event &o)
 {
 	type = o.type;
 	idata1 = o.idata1;

@@ -21,6 +21,10 @@ extern "C"
 	#include <lualib.h>
 }
 
+using MicroMacro::EnumWindowPair;
+using MicroMacro::EnumWindowListPair;
+using MicroMacro::WinInfo;
+
 const char *windowThumbnailClassName = "ThumbnailClass";
 
 // Helper function to Window_lua::find()

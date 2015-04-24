@@ -18,6 +18,7 @@ extern "C"
 	#include <lualib.h>
 }
 
+
 int Class_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
@@ -195,7 +196,7 @@ int Class_lua::vector3d(lua_State *L)
 	if( top != 0 && top !=2 && top != 3 )
 		wrongArgs(L);
 
-	Vector3d vec(0.0, 0.0, 0.0);
+	MicroMacro::Vector3d vec(0.0, 0.0, 0.0);
 	if( top == 3 )
 	{
 		checkType(L, LT_NUMBER, 1);

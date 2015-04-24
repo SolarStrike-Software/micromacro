@@ -44,7 +44,7 @@
 			int lastConsoleSizeX;
 			int lastConsoleSizeY;
 
-			std::queue<Event> eventQueue;
+			std::queue<MicroMacro::Event> eventQueue;
 
 		public:
 			static CMacro *instance();
@@ -65,7 +65,7 @@
 			int getConsoleFontHeight();
 			DWORD getConsoleDefaultAttributes();
 
-			void pushEvent(Event &);
+			void pushEvent(MicroMacro::Event &);
 			void flushEvents();
 
 			int handleHidInput();

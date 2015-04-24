@@ -28,6 +28,9 @@ extern "C"
 
 #define DEFAULT_LOCK_TIMEOUT		1000
 
+using MicroMacro::Socket;
+using MicroMacro::Event;
+
 const char *LuaType::metatable_socket = "socket";
 
 Mutex Socket_lua::socketListLock;
@@ -50,7 +53,7 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 			readBuff[result] = 0; // Enforce NULL-terminator
 			Event e;
 			e.idata1 = (int)pSocket->socket;
-			e.type = EVENT_SOCKETRECEIVED;
+			e.type = MicroMacro::EVENT_SOCKETRECEIVED;
 			e.msg = msg;
 
 			if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
@@ -67,7 +70,7 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 		{ // Connection closed (probably by remote)
 			Event e;
 			e.idata1 = (int)pSocket->socket;
-			e.type = EVENT_SOCKETDISCONNECTED;
+			e.type = MicroMacro::EVENT_SOCKETDISCONNECTED;
 
 			if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
 			{
@@ -90,7 +93,7 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 					{
 						Event e;
 						e.idata1 = (int)pSocket->socket;
-						e.type = EVENT_SOCKETDISCONNECTED;
+						e.type = MicroMacro::EVENT_SOCKETDISCONNECTED;
 
 						if( pSocket->open && pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
 						{
@@ -105,7 +108,7 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 						Event e;
 						e.idata1 = (int)pSocket->socket;
 						e.idata2 = errCode;
-						e.type = EVENT_SOCKETERROR;
+						e.type = MicroMacro::EVENT_SOCKETERROR;
 
 						if( pSocket->open && pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
 						{
@@ -125,7 +128,7 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 						Event e;
 						e.idata1 = (int)pSocket->socket;
 						e.idata2 = errCode;
-						e.type = EVENT_SOCKETERROR;
+						e.type = MicroMacro::EVENT_SOCKETERROR;
 						//Macro::instance()->pushEvent(e);
 						if( pSocket->open && pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
 						{
@@ -175,7 +178,7 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 				{
 					Event e;
 					e.idata1 = (int)pSocket->socket;
-					e.type = EVENT_SOCKETDISCONNECTED;
+					e.type = MicroMacro::EVENT_SOCKETDISCONNECTED;
 
 					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
 					{
@@ -190,7 +193,7 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 					Event e;
 					e.idata1 = (int)pSocket->socket;
 					e.idata2 = errCode;
-					e.type = EVENT_SOCKETERROR;
+					e.type = MicroMacro::EVENT_SOCKETERROR;
 
 					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
 					{
@@ -213,7 +216,7 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 					Event e;
 					e.idata1 = (int)pSocket->socket;
 					e.idata2 = errCode;
-					e.type = EVENT_SOCKETERROR;
+					e.type = MicroMacro::EVENT_SOCKETERROR;
 
 					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT) )
 					{
@@ -237,7 +240,7 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 
 			// Push the event
 			Event e;
-			e.type = EVENT_SOCKETCONNECTED;
+			e.type = MicroMacro::EVENT_SOCKETCONNECTED;
 			e.pSocket = npSocket;
 			npSocket->eventQueue.push(e);
 

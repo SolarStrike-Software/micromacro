@@ -9,6 +9,12 @@
 #include <math.h>
 #include <stdio.h>
 
+using MicroMacro::BatchJob;
+using MicroMacro::MemoryChunk;
+using MicroMacro::Vector3d;
+using MicroMacro::Quaternion;
+using MicroMacro::Vector3d;
+
 BatchJob &BatchJob::operator=(const BatchJob &o)
 {
 	this->count = o.count;
@@ -16,7 +22,7 @@ BatchJob &BatchJob::operator=(const BatchJob &o)
 	return *this;
 }
 
-std::string getChunkString(MemoryChunk *pChunk, size_t offset, size_t length, int &err)
+std::string MicroMacro::getChunkString(MemoryChunk *pChunk, size_t offset, size_t length, int &err)
 {
 	err = 0;
 	if( (offset+length) > pChunk->size )

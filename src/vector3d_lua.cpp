@@ -21,6 +21,9 @@ extern "C"
 	#include <lualib.h>
 }
 
+using MicroMacro::Vector3d;
+using MicroMacro::Quaternion;
+
 const char *LuaType::metatable_vector3d = "vector3d";
 
 int Vector3d_lua::regmod(lua_State *L)
@@ -410,7 +413,7 @@ int Vector3d_lua::moveTowards(lua_State *L)
 }
 
 
-Vector3d lua_tovector3d(lua_State *L, int index)
+MicroMacro::Vector3d lua_tovector3d(lua_State *L, int index)
 {
 	Vector3d vec;
 	lua_getfield(L, index, "x");

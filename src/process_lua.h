@@ -72,7 +72,7 @@
 					err = MEMORY_WRITE_FAIL;
 			}
 
-			static unsigned int readBatch_parsefmt(const char *, std::vector<BatchJob> &);
+			static unsigned int readBatch_parsefmt(const char *, std::vector<MicroMacro::BatchJob> &);
 			static bool procDataCompare(const char *, const char *, const char *);
 
 			// Actual Lua functions

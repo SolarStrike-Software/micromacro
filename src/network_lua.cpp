@@ -23,7 +23,7 @@ extern "C"
 }
 
 
-
+using MicroMacro::Socket;
 
 int Network_lua::regmod(lua_State *L)
 {

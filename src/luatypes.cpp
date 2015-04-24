@@ -38,6 +38,9 @@ namespace LuaType
 	const char *metatable_audioResource = "audio.audioResource";
 }
 
+using MicroMacro::ProcHandle;
+using MicroMacro::AudioResource;
+
 int registerLuaTypes(lua_State *L)
 {
 	// Ncurses windows

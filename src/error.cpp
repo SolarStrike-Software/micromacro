@@ -247,8 +247,8 @@ void pushLuaErrorEvent(lua_State *L, const char *fmt, ...)
 	va_end(va_alist);
 
 	// Queue it
-	Event e;
-	e.type = EVENT_ERROR;
+	MicroMacro::Event e;
+	e.type = MicroMacro::EVENT_ERROR;
 	e.msg = buffer;
 	e.msg += scriptinfo;
 	//Macro::instance()->getEventQueue()->push(e);

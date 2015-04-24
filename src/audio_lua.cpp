@@ -28,6 +28,8 @@ extern "C"
 #include <AL/alc.h>
 #include <AL/alut.h>
 
+using MicroMacro::AudioResource;
+
 int Audio_lua::regmod(lua_State *L)
 {
 	// If the user has opted to disable sound, do nothing!

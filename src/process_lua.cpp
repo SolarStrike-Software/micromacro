@@ -33,6 +33,10 @@ std::vector<DWORD> Process_lua::attachedThreadIds;
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
 
+using MicroMacro::BatchJob;
+using MicroMacro::ProcHandle;
+using MicroMacro::MemoryChunk;
+
 struct EnumFilterWindows
 {
 	DWORD dwPid;
@@ -250,62 +254,62 @@ unsigned int Process_lua::readBatch_parsefmt(const char *fmt, std::vector<BatchJ
 			switch(c)
 			{
 				case 'b':
-					job.type = MEM_BYTE;
+					job.type = MicroMacro::MEM_BYTE;
 					length += sizeof(char) * job.count;
 					out.push_back(job);
 				break;
 				case 'B':
-					job.type = MEM_UBYTE;
+					job.type = MicroMacro::MEM_UBYTE;
 					length += sizeof(unsigned char) * job.count;
 					out.push_back(job);
 				break;
 				case 's':
-					job.type = MEM_SHORT;
+					job.type = MicroMacro::MEM_SHORT;
 					length += sizeof(short) * job.count;
 					out.push_back(job);
 				break;
 				case 'S':
-					job.type = MEM_USHORT;
+					job.type = MicroMacro::MEM_USHORT;
 					length += sizeof(unsigned short) * job.count;
 					out.push_back(job);
 				break;
 				case 'i':
-					job.type = MEM_INT;
+					job.type = MicroMacro::MEM_INT;
 					length += sizeof(int) * job.count;
 					out.push_back(job);
 				break;
 				case 'I':
-					job.type = MEM_UINT;
+					job.type = MicroMacro::MEM_UINT;
 					length += sizeof(unsigned int) * job.count;
 					out.push_back(job);
 				break;
 				case 'h':
-					job.type = MEM_INT64;
+					job.type = MicroMacro::MEM_INT64;
 					length += sizeof(int) * job.count;
 					out.push_back(job);
 				break;
 				case 'H':
-					job.type = MEM_UINT64;
+					job.type = MicroMacro::MEM_UINT64;
 					length += sizeof(unsigned int) * job.count;
 					out.push_back(job);
 				break;
 				case 'f':
-					job.type = MEM_FLOAT;
+					job.type = MicroMacro::MEM_FLOAT;
 					length += sizeof(float) * job.count;
 					out.push_back(job);
 				break;
 				case 'F':
-					job.type = MEM_DOUBLE;
+					job.type = MicroMacro::MEM_DOUBLE;
 					length += sizeof(double) * job.count;
 					out.push_back(job);
 				break;
 				case 'c':
-					job.type = MEM_STRING;
+					job.type = MicroMacro::MEM_STRING;
 					length += sizeof(char) * job.count;
 					out.push_back(job);
 				break;
 				case '_':
-					job.type = MEM_SKIP;
+					job.type = MicroMacro::MEM_SKIP;
 					length += sizeof(char) * job.count;
 					out.push_back(job);
 				break;
@@ -850,7 +854,7 @@ int Process_lua::readBatch(lua_State *L)
 	lua_newtable(L);
 	for(unsigned int i = 0; i < jobs.size(); i++)
 	{
-		if( jobs.at(i).type == MEM_SKIP )
+		if( jobs.at(i).type == MicroMacro::MEM_SKIP )
 		{ // We skip over it. Duh.
 			cursorPos += sizeof(char) * jobs.at(i).count;
 			continue;
@@ -858,7 +862,7 @@ int Process_lua::readBatch(lua_State *L)
 
 		switch(jobs.at(i).type)
 		{
-			case MEM_BYTE:
+			case MicroMacro::MEM_BYTE:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					char data = readBuffer[cursorPos];
@@ -869,7 +873,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_UBYTE:
+			case MicroMacro::MEM_UBYTE:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					unsigned char data = readBuffer[cursorPos];
@@ -880,7 +884,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_SHORT:
+			case MicroMacro::MEM_SHORT:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					short data = *(short*)&readBuffer[cursorPos];
@@ -891,7 +895,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_USHORT:
+			case MicroMacro::MEM_USHORT:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					unsigned short data = *(unsigned short*)&readBuffer[cursorPos];
@@ -902,7 +906,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_INT:
+			case MicroMacro::MEM_INT:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					int data = *(int*)&readBuffer[cursorPos];
@@ -913,7 +917,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_UINT:
+			case MicroMacro::MEM_UINT:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					unsigned int data = *(unsigned int*)&readBuffer[cursorPos];
@@ -924,7 +928,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_INT64:
+			case MicroMacro::MEM_INT64:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					long long data = *(long long*)&readBuffer[cursorPos];
@@ -935,7 +939,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_UINT64:
+			case MicroMacro::MEM_UINT64:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					unsigned long long data = *(unsigned long long*)&readBuffer[cursorPos];
@@ -946,7 +950,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_FLOAT:
+			case MicroMacro::MEM_FLOAT:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					float data = *(float*)&readBuffer[cursorPos];
@@ -957,7 +961,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_DOUBLE:
+			case MicroMacro::MEM_DOUBLE:
 				for(unsigned int j = 0; j < jobs.at(i).count; j++)
 				{
 					double data = *(double*)&readBuffer[cursorPos];
@@ -968,7 +972,7 @@ int Process_lua::readBatch(lua_State *L)
 					++tableIndex;
 				}
 			break;
-			case MEM_STRING:
+			case MicroMacro::MEM_STRING:
 			{
 				unsigned int len = jobs.at(i).count;
 				char *buffer = 0;

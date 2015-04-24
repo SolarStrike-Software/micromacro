@@ -10,7 +10,6 @@
 
 	typedef struct lua_State lua_State;
 	typedef union _LARGE_INTEGER LARGE_INTEGER;
-	typedef struct Vector3d Vector3d;
 
 	namespace LuaType
 	{

@@ -30,6 +30,9 @@ extern "C" {
 }
 #endif
 
+using MicroMacro::Event;
+using MicroMacro::EventType;
+
 CMacro *CMacro::pinstance = 0;
 CMacro *CMacro::instance()
 {
@@ -164,7 +167,7 @@ void CMacro::pollForegroundWindow()
 	{
 		// Trigger window focus change event
 		Event e;
-		e.type = EVENT_FOCUSCHANGED;
+		e.type = MicroMacro::EVENT_FOCUSCHANGED;
 		e.idata1 = ((size_t)foregroundHwnd);
 		pushEvent(e);
 	}
@@ -186,7 +189,7 @@ void CMacro::pollConsoleResize()
 
 			// Trigger window resize event
 			Event e;
-			e.type = EVENT_CONSOLERESIZED;
+			e.type = MicroMacro::EVENT_CONSOLERESIZED;
 			pushEvent(e);
 		}
 	}
@@ -243,9 +246,9 @@ int CMacro::handleHidInput()
 		{ // Key released
 			Event e;
 			if( i > VK_XBUTTON2 )
-				e.type = EVENT_KEYRELEASED;
+				e.type = MicroMacro::EVENT_KEYRELEASED;
 			else
-				e.type = EVENT_MOUSERELEASED;
+				e.type = MicroMacro::EVENT_MOUSERELEASED;
 			e.idata1 = i;
 			e.idata2 = hid.getToggleState(i);
 			try{ pushEvent(e); }
@@ -255,9 +258,9 @@ int CMacro::handleHidInput()
 		{ // Key pressed
 			Event e;
 			if( i > VK_XBUTTON2 )
-				e.type = EVENT_KEYPRESSED;
+				e.type = MicroMacro::EVENT_KEYPRESSED;
 			else
-				e.type = EVENT_MOUSEPRESSED;
+				e.type = MicroMacro::EVENT_MOUSEPRESSED;
 
 			e.idata1 = i;
 			e.idata2 = hid.getToggleState(i);
@@ -281,7 +284,7 @@ int CMacro::handleHidInput()
 			if( hid.joyPressed(i, b) )
 			{
 				Event e;
-				e.type = EVENT_GAMEPADPRESSED;
+				e.type = MicroMacro::EVENT_GAMEPADPRESSED;
 				e.idata1 = i + 1;
 				e.idata2 = b + 1;
 				try{ pushEvent(e); }
@@ -290,7 +293,7 @@ int CMacro::handleHidInput()
 			else if( hid.joyReleased(i, b) )
 			{
 				Event e;
-				e.type = EVENT_GAMEPADRELEASED;
+				e.type = MicroMacro::EVENT_GAMEPADRELEASED;
 				e.idata1 = i + 1;
 				e.idata2 = b + 1;
 				try{ pushEvent(e); }
@@ -302,7 +305,7 @@ int CMacro::handleHidInput()
 		if( hid.joyPOVChanged(i) )
 		{
 			Event e;
-			e.type = EVENT_GAMEPADPOVCHANGED;
+			e.type = MicroMacro::EVENT_GAMEPADPOVCHANGED;
 			e.idata1 = i + 1;
 			e.fdata2 = hid.joyPOV(i)/100;
 			try{ pushEvent(e); }
@@ -315,7 +318,7 @@ int CMacro::handleHidInput()
 			if( hid.joyAxisChanged(i, a) )
 			{
 				Event e;
-				e.type = EVENT_GAMEPADAXISCHANGED;
+				e.type = MicroMacro::EVENT_GAMEPADAXISCHANGED;
 				e.idata1 = i + 1;
 				e.idata2 = a;
 				e.fdata3 = hid.joyAxis(i, a)/65535.0f*100;
@@ -354,12 +357,12 @@ int CMacro::handleEvents()
 	{
 		for(SocketListIterator i = Socket_lua::socketList.begin(); i != Socket_lua::socketList.end(); ++i)
 		{
-			Socket *pSocket = *i;
+			MicroMacro::Socket *pSocket = *i;
 			if( pSocket->mutex.lock() )
 			{
 				while( !pSocket->eventQueue.empty() )
 				{
-					Event e = pSocket->eventQueue.front();
+					MicroMacro::Event e = pSocket->eventQueue.front();
 					success = engine.runEvent(e);
 					pSocket->eventQueue.pop();
 

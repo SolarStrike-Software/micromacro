@@ -19,6 +19,9 @@ extern "C"
 
 const char *LuaType::metatable_memorychunk = "memorychunk";
 
+using MicroMacro::MemoryChunk;
+using MicroMacro::getChunkVariable;
+
 int MemoryChunk_lua::regmod(lua_State *L)
 {
 	const luaL_Reg meta[] = {
