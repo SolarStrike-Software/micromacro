@@ -54,7 +54,7 @@
 			static int regmod(lua_State *);
 			static int cleanup();
 
-			static Mutex socketListLock;
+			static MicroMacro::Mutex socketListLock;
 			static std::vector<MicroMacro::Socket *> socketList;
 	};
 

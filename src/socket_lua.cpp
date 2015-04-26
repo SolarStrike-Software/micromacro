@@ -30,6 +30,7 @@ extern "C"
 
 using MicroMacro::Socket;
 using MicroMacro::Event;
+using MicroMacro::Mutex;
 
 const char *LuaType::metatable_socket = "socket";
 

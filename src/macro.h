@@ -71,7 +71,7 @@
 			int handleHidInput();
 			int handleEvents();
 
-			Mutex eventQueueLock;
+			MicroMacro::Mutex eventQueueLock;
 	};
 
 #endif

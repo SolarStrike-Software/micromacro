@@ -21,27 +21,28 @@ extern "C"
 	#include <lualib.h>
 }
 
-using MicroMacro::EnumWindowPair;
-using MicroMacro::EnumWindowListPair;
-using MicroMacro::WinInfo;
+//using MicroMacro::EnumWindowPair;
+using MicroMacro::EnumWindowListInfo;
+using MicroMacro::WindowInfo;
 
 const char *windowThumbnailClassName = "ThumbnailClass";
 
 // Helper function to Window_lua::find()
 BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 {
-	EnumWindowPair *winpair = (EnumWindowPair *)lparam;
+	//EnumWindowPair *winpair = (EnumWindowPair *)lparam;
+	WindowInfo *wi = (WindowInfo *)lparam;
 	char namestring[2048];
 	char classname[256];
 	GetWindowText(hwnd, (char *)&namestring, sizeof(namestring)-1);
 
 	sztolower(namestring, namestring, strlen(namestring));
-	int match = wildfind(winpair->windowname, namestring);
+	int match = wildfind(wi->name, namestring);
 
 	if( match )
 	{
 		// Looking for just the window, not a specific classname
-		if( strcmp(winpair->classname, "") == 0 )
+		if( strcmp(wi->classname.c_str(), "") == 0 )
 		{
 			// Ensure that this isn't a window preview/overlay
 
@@ -50,7 +51,7 @@ BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 			if( !strcmp((char*)&classname, windowThumbnailClassName))
 			return true;
 
-			winpair->hwnd = hwnd;
+			wi->hwnd = hwnd;
 			return false;
 		}
 		else
@@ -58,21 +59,21 @@ BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 			// Check if this window is valid itself
 			GetClassName(hwnd, (char*)&classname, sizeof(classname)-1);
 
-			if( strcmp(classname, winpair->classname) == 0 )
+			if( strcmp(classname, wi->classname.c_str()) == 0 )
 			{
 				// We have a match
-				winpair->hwnd = hwnd;
+				wi->hwnd = hwnd;
 				return false;
 			}
 
 			// If not, scan it's children
-			HWND controlHwnd = FindWindowEx(hwnd, NULL, winpair->classname, NULL);
+			HWND controlHwnd = FindWindowEx(hwnd, NULL, wi->classname.c_str(), NULL);
 
 			if( controlHwnd == NULL )
 				return true;
 
 			// We have a match
-			winpair->hwnd = controlHwnd;
+			wi->hwnd = controlHwnd;
 			return false;
 		}
 	}
@@ -83,22 +84,22 @@ BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 // Helper function to Window_lua::findList()
 BOOL CALLBACK Window_lua::_findListProc(HWND hwnd, LPARAM lparam)
 {
-	EnumWindowListPair *winpair = (EnumWindowListPair *)lparam;
+	EnumWindowListInfo *wli = (EnumWindowListInfo *)lparam;
 	char namestring[2048];
 	char classname[256];
 	GetWindowText(hwnd, (char *)&namestring, sizeof(namestring)-1);
 
-	WinInfo wi;
+	WindowInfo wi;
 	wi.hwnd = hwnd;
 	wi.name = namestring;	// Copy it before we modify it
 
 	sztolower(namestring, namestring, strlen(namestring));
-	int match = wildfind(winpair->windowname, namestring);
+	int match = wildfind(wli->name, namestring);
 
 	if( match )
 	{
 		// Looking for just the window, not a specific classname
-		if( strcmp(winpair->classname, "") == 0 )
+		if( strcmp(wli->classname.c_str(), "") == 0 )
 		{
 			// Ensure that this isn't a window preview/overlay
 			GetClassName(hwnd, (char*)&classname, sizeof(classname)-1);
@@ -108,7 +109,7 @@ BOOL CALLBACK Window_lua::_findListProc(HWND hwnd, LPARAM lparam)
 			if( !strcmp((char*)&classname, windowThumbnailClassName))
 			return true;
 
-			winpair->windows.push_back(wi);
+			wli->windows.push_back(wi);
 		}
 		else
 		{
@@ -117,31 +118,31 @@ BOOL CALLBACK Window_lua::_findListProc(HWND hwnd, LPARAM lparam)
 
 			wi.classname = classname;	// Copy it before we modify it
 
-			if( strcmp(classname, winpair->classname) == 0 )
+			if( strcmp(classname, wli->classname.c_str()) == 0 )
 			{
 				// We have a match
-				WinInfo wi;
+				WindowInfo wi;
 				wi.hwnd = hwnd;
 				wi.name = namestring;
 				wi.classname = classname;
 
-				winpair->windows.push_back(wi);
+				wli->windows.push_back(wi);
 			}
 
 			// If not, scan it's children
-			HWND controlHwnd = FindWindowEx(hwnd, NULL, winpair->classname, NULL);
+			HWND controlHwnd = FindWindowEx(hwnd, NULL, wli->classname.c_str(), NULL);
 
 			if( controlHwnd != NULL )
 			{
 				GetWindowText(controlHwnd, (char *)&namestring, sizeof(namestring)-1);
 				GetClassName(controlHwnd, (char*)&classname, sizeof(classname)-1);
 
-				WinInfo wi;
+				WindowInfo wi;
 				wi.hwnd = controlHwnd;
 				wi.name = namestring;
 				wi.classname = classname;
 
-				winpair->windows.push_back(wi);
+				wli->windows.push_back(wi);
 			}
 		}
 	}
@@ -179,32 +180,32 @@ int Window_lua::regmod(lua_State *L)
 	luaL_newlib(L, _funcs);
 	lua_setglobal(L, WINDOW_MODULE_NAME);
 
-	lua_pushinteger(L, SW_FORCEMINIMIZE);
-	lua_setglobal(L, "SW_FORCEMINIMIZE");
-	lua_pushinteger(L, SW_HIDE);
-	lua_setglobal(L, "SW_HIDE");
-	lua_pushinteger(L, SW_MAXIMIZE);
-	lua_setglobal(L, "SW_MAXIMIZE");
-	lua_pushinteger(L, SW_MINIMIZE);
-	lua_setglobal(L, "SW_MINIMIZE");
-	lua_pushinteger(L, SW_RESTORE);
-	lua_setglobal(L, "SW_RESTORE");
-	lua_pushinteger(L, SW_SHOW);
-	lua_setglobal(L, "SW_SHOW");
-	lua_pushinteger(L, SW_SHOWDEFAULT);
-	lua_setglobal(L, "SW_SHOWDEFAULT");
-	lua_pushinteger(L, SW_SHOWMAXIMIZED);
-	lua_setglobal(L, "SW_SHOWMAXIMIZED");
-	lua_pushinteger(L, SW_SHOWMINIMIZED);
-	lua_setglobal(L, "SW_SHOWMINIMIZED");
-	lua_pushinteger(L, SW_SHOWMINNOACTIVE);
-	lua_setglobal(L, "SW_SHOWMINNOACTIVE");
-	lua_pushinteger(L, SW_SHOWNA);
-	lua_setglobal(L, "SW_SHOWNA");
-	lua_pushinteger(L, SW_SHOWNOACTIVATE);
-	lua_setglobal(L, "SW_SHOWNOACTIVATE");
-	lua_pushinteger(L, SW_SHOWNORMAL);
-	lua_setglobal(L, "SW_SHOWNORMAL");
+	lua_pushinteger(L,	SW_FORCEMINIMIZE);
+	lua_setglobal(L,	"SW_FORCEMINIMIZE");
+	lua_pushinteger(L,	SW_HIDE);
+	lua_setglobal(L,	"SW_HIDE");
+	lua_pushinteger(L,	SW_MAXIMIZE);
+	lua_setglobal(L,	"SW_MAXIMIZE");
+	lua_pushinteger(L,	SW_MINIMIZE);
+	lua_setglobal(L,	"SW_MINIMIZE");
+	lua_pushinteger(L,	SW_RESTORE);
+	lua_setglobal(L,	"SW_RESTORE");
+	lua_pushinteger(L,	SW_SHOW);
+	lua_setglobal(L,	"SW_SHOW");
+	lua_pushinteger(L,	SW_SHOWDEFAULT);
+	lua_setglobal(L,	"SW_SHOWDEFAULT");
+	lua_pushinteger(L,	SW_SHOWMAXIMIZED);
+	lua_setglobal(L,	"SW_SHOWMAXIMIZED");
+	lua_pushinteger(L,	SW_SHOWMINIMIZED);
+	lua_setglobal(L,	"SW_SHOWMINIMIZED");
+	lua_pushinteger(L,	SW_SHOWMINNOACTIVE);
+	lua_setglobal(L,	"SW_SHOWMINNOACTIVE");
+	lua_pushinteger(L,	SW_SHOWNA);
+	lua_setglobal(L,	"SW_SHOWNA");
+	lua_pushinteger(L,	SW_SHOWNOACTIVATE);
+	lua_setglobal(L,	"SW_SHOWNOACTIVATE");
+	lua_pushinteger(L,	SW_SHOWNORMAL);
+	lua_setglobal(L,	"SW_SHOWNORMAL");
 	return MicroMacro::ERR_OK;
 }
 
@@ -245,18 +246,19 @@ int Window_lua::find(lua_State *L)
 	// Convert the search name to lowercase for matching
 	sztolower(name_lower, name, nameLen);
 
-	EnumWindowPair searchpair;
-	searchpair.windowname = name_lower;
-	searchpair.classname = (char*)classname;//classname_lower;
-	searchpair.hwnd = 0;
+//	EnumWindowPair searchpair;
+	WindowInfo searchWindowInfo;
+	searchWindowInfo.name = name_lower;
+	searchWindowInfo.classname = (char*)classname;//classname_lower;
+	searchWindowInfo.hwnd = 0;
 
-	EnumWindows(_findProc, (LPARAM)&searchpair);
+	EnumWindows(_findProc, (LPARAM)&searchWindowInfo);
 
 	// Free allocated memory
 	delete []name_lower;
 	//delete []classname_lower;
 
-	if( searchpair.hwnd == 0 )
+	if( searchWindowInfo.hwnd == 0 )
 	{ // Throw warning
 		int errCode = GetLastError();
 		pushLuaErrorEvent(L, "Failure to find window. Error code %i (%s)",
@@ -264,7 +266,7 @@ int Window_lua::find(lua_State *L)
 		return 0;
 	}
 
-	lua_pushinteger(L, (lua_Integer)searchpair.hwnd);
+	lua_pushinteger(L, (lua_Integer)searchWindowInfo.hwnd);
 	return 1;
 }
 
@@ -303,33 +305,33 @@ int Window_lua::findList(lua_State *L)
 	// Convert the search name to lowercase for matching
 	sztolower(name_lower, name, nameLen);
 
-	EnumWindowListPair searchpair;
-	searchpair.windowname = name_lower;
-	searchpair.classname = (char*)classname;
+	EnumWindowListInfo searchWinListInfo;
+	searchWinListInfo.name = name_lower;
+	searchWinListInfo.classname = (char*)classname;
 
-	EnumWindows(_findListProc, (LPARAM)&searchpair);
+	EnumWindows(_findListProc, (LPARAM)&searchWinListInfo);
 
 	// Free allocated memory
 	delete []name_lower;
 
-	if( searchpair.windows.empty() )
+	if( searchWinListInfo.windows.empty() )
 		return 0;
 
 	lua_newtable(L);
-	for(unsigned int i = 0; i < searchpair.windows.size(); i++)
+	for(unsigned int i = 0; i < searchWinListInfo.windows.size(); i++)
 	{
 		lua_pushinteger(L, i+1); // Push key
 		lua_newtable(L); // Push value (table)
 			lua_pushstring(L, "hwnd");
-			lua_pushinteger(L, (lua_Integer)searchpair.windows.at(i).hwnd);
+			lua_pushinteger(L, (lua_Integer)searchWinListInfo.windows.at(i).hwnd);
 			lua_settable(L, -3);
 
 			lua_pushstring(L, "name");
-			lua_pushstring(L, searchpair.windows.at(i).name.c_str());
+			lua_pushstring(L, searchWinListInfo.windows.at(i).name.c_str());
 			lua_settable(L, -3);
 
 			lua_pushstring(L, "class");
-			lua_pushstring(L, searchpair.windows.at(i).classname.c_str());
+			lua_pushstring(L, searchWinListInfo.windows.at(i).classname.c_str());
 			lua_settable(L, -3);
 		lua_settable(L, -3); // Set it
 	}

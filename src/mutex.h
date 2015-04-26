@@ -10,18 +10,21 @@
 
 	#include "wininclude.h"
 
-	// Just a very simple mutex wrapper to make our jobs easier.
-	class Mutex
+	namespace MicroMacro
 	{
-		private:
-			HANDLE handle;
+		// Just a very simple mutex wrapper to make our jobs easier.
+		class Mutex
+		{
+			private:
+				HANDLE handle;
 
-		public:
-			Mutex();
-			~Mutex();
-			int lock(int = INFINITE);
-			int unlock();
+			public:
+				Mutex();
+				~Mutex();
+				int lock(int = INFINITE);
+				int unlock();
 
-	};
+		};
+	}
 
 #endif

@@ -24,15 +24,8 @@
 		typedef unsigned int ALuint;
 		class Event;
 
-		/* Used in window.find() */
-		struct EnumWindowPair
-		{
-			HWND hwnd;
-			char *windowname;
-			char *classname;
-		};
 
-		struct WinInfo
+		struct WindowInfo
 		{
 			std::string name;
 			std::string classname;
@@ -40,11 +33,11 @@
 		};
 
 		/* Used in window.findList() */
-		struct EnumWindowListPair
+		struct EnumWindowListInfo
 		{
-			std::vector<WinInfo> windows;
-			char *windowname;
-			char *classname;
+			std::vector<WindowInfo> windows;
+			std::string name;
+			std::string classname;
 		};
 
 		/* Holds a handle to a process and any extra info about an open process */
@@ -54,12 +47,13 @@
 			bool is32bit;
 		};
 
-		/* Used in some window operations */
+		/* Currently has no use */
+		/*
 		struct WindowDCPair
 		{
 			HWND hwnd;
 			HDC hdc;
-		};
+		};*/
 
 		/* Describes a memory read job (type and length) */
 		struct BatchJob

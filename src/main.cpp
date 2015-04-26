@@ -232,9 +232,9 @@ int main(int argc, char **argv)
 			#else
 				const char *bits = "x86";
 			#endif
-			printf("Version %ld.%ld.%ld %s, built on %s-%s-%s\n%s\n\n",
+			printf("Version %ld.%ld.%ld%s revision %ld %s, built on %s-%s-%s\n%s\n\n",
 				AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD,
-				bits,
+				AutoVersion::STATUS_SHORT, AutoVersion::REVISION, bits,
 				AutoVersion::YEAR, AutoVersion::MONTH, AutoVersion::DATE,
 				LUA_VERSION);
 			continue;
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
 			else
 			{
 				// Prep the string, then run it
-				size_t fpos = command.find_first_of(' \t');
+				size_t fpos = command.find_first_of(" \t");
 				if( fpos == std::string::npos )
 					continue;
 

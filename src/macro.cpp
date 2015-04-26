@@ -32,6 +32,7 @@ extern "C" {
 
 using MicroMacro::Event;
 using MicroMacro::EventType;
+using MicroMacro::Mutex;
 
 CMacro *CMacro::pinstance = 0;
 CMacro *CMacro::instance()

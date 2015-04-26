@@ -15,6 +15,8 @@
 #include <stdexcept>
 #include <stdio.h>
 
+using MicroMacro::Mutex;
+
 class bad_mutex_exception : public std::exception
 {
 	virtual const char *what() const throw()
