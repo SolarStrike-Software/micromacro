@@ -75,6 +75,9 @@ int Class_lua::_new(lua_State *L)
 	}
 	else if( top == 1 ) // Create a subclass
 	{
+		// Make sure we've got a table, or bad things will happen.
+		checkType(L, LT_TABLE, 1);
+
 		// Copy methods & variables
 		lua_pushnil(L);
 		while( lua_next(L, 1) )
