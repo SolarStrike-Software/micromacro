@@ -15,11 +15,13 @@
 	class Filesystem_lua
 	{
 		protected:
+			static int getFileName(lua_State *);
+			static int getFilePath(lua_State *);
 			static int directoryExists(lua_State *);
 			static int fileExists(lua_State *);
 			static int getDirectory(lua_State *);
 			static int isDirectory(lua_State *);
-			static int makeDirectory(lua_State *);
+			static int createDirectory(lua_State *);
 			static int fixSlashes(lua_State *);
 			static int getOpenFileName(lua_State *);
 			static int getSaveFileName(lua_State *);

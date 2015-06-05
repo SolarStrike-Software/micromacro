@@ -24,11 +24,13 @@ extern "C"
 int Filesystem_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
+		{"getFileName", Filesystem_lua::getFileName},
+		{"getFilePath", Filesystem_lua::getFilePath},
 		{"directoryExists", Filesystem_lua::directoryExists},
 		{"fileExists", Filesystem_lua::fileExists},
 		{"getDirectory", Filesystem_lua::getDirectory},
 		{"isDirectory", Filesystem_lua::isDirectory},
-		{"makeDirectory", Filesystem_lua::makeDirectory},
+		{"createDirectory", Filesystem_lua::createDirectory},
 		{"fixSlashes", Filesystem_lua::fixSlashes},
 		{"getOpenFileName", Filesystem_lua::getOpenFileName},
 		{"getSaveFileName", Filesystem_lua::getSaveFileName},
@@ -41,6 +43,40 @@ int Filesystem_lua::regmod(lua_State *L)
 	lua_setglobal(L, FILESYSTEM_MODULE_NAME);
 
 	return MicroMacro::ERR_OK;
+}
+
+/*	filesystem.getFileName(string path)
+	Returns:	string
+
+	Returns just the filename section of a full file path.
+*/
+int Filesystem_lua::getFileName(lua_State *L)
+{
+	if( lua_gettop(L) != 1 )
+		wrongArgs(L);
+	checkType(L, LT_STRING, 1);
+
+	const char *path = lua_tostring(L, 1);
+
+	lua_pushstring(L, ::getFileName(path).c_str());
+	return 1;
+}
+
+/*	filesystem.getFilePath(string path)
+	Returns:	boolean
+
+	Returns just the path section of a full file path.
+*/
+int Filesystem_lua::getFilePath(lua_State *L)
+{
+	if( lua_gettop(L) != 1 )
+		wrongArgs(L);
+	checkType(L, LT_STRING, 1);
+
+	const char *path = lua_tostring(L, 1);
+
+	lua_pushstring(L, ::getFilePath(path, false).c_str());
+	return 1;
 }
 
 /*	filesystem.directoryExists(string path)
@@ -131,12 +167,12 @@ int Filesystem_lua::isDirectory(lua_State *L)
 	return 1;
 }
 
-/*	filesystem.makeDirectory(string path)
+/*	filesystem.createDirectory(string path)
 	Returns:	boolean
 
 	Creates a directory at 'path'. Returns true on success, else false.
 */
-int Filesystem_lua::makeDirectory(lua_State *L)
+int Filesystem_lua::createDirectory(lua_State *L)
 {
 	if( lua_gettop(L) != 1 )
 		wrongArgs(L);
@@ -144,11 +180,33 @@ int Filesystem_lua::makeDirectory(lua_State *L)
 	const char *path = lua_tostring(L, 1);
 	bool success;
 
-	SECURITY_ATTRIBUTES attribs;
-	attribs.nLength = sizeof(SECURITY_ATTRIBUTES);
-	attribs.bInheritHandle = false;
-	attribs.lpSecurityDescriptor = NULL;
-	success = CreateDirectory(path, &attribs);
+	std::string tempPath = ::fixSlashes(path, SLASHES_TO_WINDOWS);
+	size_t startPos = 0;
+	size_t nextPos = 0;
+
+	while( true )
+	{
+		nextPos = tempPath.find("\\", nextPos+1);
+
+		/* Extract the name of the next directory in line */
+		std::string directoryName;
+		if( nextPos == std::string::npos )
+			directoryName = tempPath.substr(startPos);
+		else
+			directoryName = tempPath.substr(startPos, nextPos - startPos);
+
+		std::string currentPath = tempPath.substr(0, startPos) + directoryName;
+		startPos = nextPos+1;
+
+		SECURITY_ATTRIBUTES attribs;
+		attribs.nLength = sizeof(SECURITY_ATTRIBUTES);
+		attribs.bInheritHandle = false;
+		attribs.lpSecurityDescriptor = NULL;
+		success = CreateDirectory(currentPath.c_str(), &attribs);
+
+		if( nextPos == std::string::npos || !success )
+			break;
+	}
 
 	lua_pushboolean(L, success);
 	return 1;

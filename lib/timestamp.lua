@@ -150,6 +150,12 @@ function Timestamp:isPast()
 end
 
 
+-- Returns true if the timestamp is right now, otherwise false (past or future)
+function Timestamp:isNow()
+	return self.timevalue ~= os.time();
+end
+
+
 -- Returns the difference between two timestamps in whichever requested unit.
 function Timestamp:diffInSeconds(other)
 	if( type(other) ~= "table" or not other.timevalue ) then
