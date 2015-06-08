@@ -17,6 +17,9 @@ extern "C"
 }
 
 
+int Keyboard_lua::luaHookCallbackRef = 0;
+HHOOK Keyboard_lua::hKeyboardHook = NULL;
+
 int Keyboard_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
@@ -33,11 +36,14 @@ int Keyboard_lua::regmod(lua_State *L)
 		{"virtualRelease", Keyboard_lua::virtualRelease},
 		{"virtualType", Keyboard_lua::virtualType},
 		{"getKeyName", Keyboard_lua::getKeyName},
+		{"setHookCallback", Keyboard_lua::setHookCallback},
 		{NULL, NULL}
 	};
 
 	luaL_newlib(L, _funcs);
 	lua_setglobal(L, KEYBOARD_MODULE_NAME);
+
+	luaHookCallbackRef = 0;
 
 	return MicroMacro::ERR_OK;
 }
@@ -322,4 +328,132 @@ int Keyboard_lua::getKeyName(lua_State *L)
 	GetKeyNameText(lparam, buf, sizeof(buf)-1);
 	lua_pushstring(L, buf);
 	return 1;
+}
+
+
+
+
+
+
+LRESULT CALLBACK Keyboard_lua::lowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	if( nCode < 0 || nCode != HC_ACTION ) // do not process message
+		return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam);
+
+	bool ignoreKey = false;
+    KBDLLHOOKSTRUCT &event = *(PKBDLLHOOKSTRUCT)lParam;
+
+    switch (wParam)
+    {
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+		case WM_SYSKEYUP:
+		case WM_SYSKEYDOWN:
+        {
+			/* Try the Lua callback, see what it returns for us */
+			lua_State *lstate = Macro::instance()->getEngine()->getLuaState();
+
+			int stackbase = lua_gettop(lstate);
+
+			/* Look up the function and check it before attempting to use it */
+			lua_rawgeti(lstate, LUA_REGISTRYINDEX, luaHookCallbackRef);
+			if( lua_type(lstate, 1) != LUA_TFUNCTION )
+				break;
+
+			lua_pushinteger(lstate, event.vkCode);
+
+			int failstate = lua_pcall(lstate, 1, 1, 0);
+			if( failstate == LUA_OK )
+			{
+				if( !lua_isnil(lstate, -1) )
+				{
+					ignoreKey = lua_toboolean(lstate, -1);
+					lua_pop(lstate, 1); // Pop return value;
+				}
+			} else
+			{ /* Throw an error */
+				//stdError();
+				const char *lastErrorMsg = lua_tostring(lstate, lua_gettop(lstate));
+				Macro::instance()->getEngine()->setLastErrorMessage(lastErrorMsg);
+
+				int errState = 0;
+				switch(failstate) {
+					case LUA_ERRRUN:		errState = MicroMacro::ERR_RUN;		break;
+					case LUA_ERRMEM:		errState = MicroMacro::ERR_MEM;		break;
+					case LUA_ERRSYNTAX:		errState = MicroMacro::ERR_SYNTAX;	break;
+					case LUA_ERRFILE:		errState = MicroMacro::ERR_FILE;	break;
+					case LUA_ERRERR:		errState = MicroMacro::ERR_ERR;		break;
+					default:				errState = MicroMacro::ERR_UNKNOWN;	break;
+				}
+				Macro::instance()->getEngine()->setKeyHookErrorState(errState);
+				lua_pop(lstate, 1);
+			}
+
+
+            break;
+        }
+    }
+
+    if( ignoreKey )
+        return 1;
+    else
+        return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
+}
+
+/*	keyboard.setHookCallback(nil|function callback)
+	Returns:	boolean
+
+	Attempt to install a keyboard hook. The callback should be a function
+	that accepts a single number: the virtual key code.
+	If the callback returns true, the key will be dropped.
+	If the callback returns false or nil, the input be left in the queue.
+
+	If you pass nil as the callback, the keyboard hook will instead
+	be removed.
+
+	Please note that your callback function should return almost immediately
+	so you aren't clogging up the input system.
+*/
+int Keyboard_lua::setHookCallback(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+	checkType(L, LT_FUNCTION | LT_NIL, 1);
+
+	// Lets remove the hook
+	if( lua_isnil(L, 1) )
+	{
+		removeHook();
+		lua_pushboolean(L, true);
+		return 1;
+	}
+
+	// Lets install the hook
+	hKeyboardHook = SetWindowsHookEx( WH_KEYBOARD_LL,  lowLevelKeyboardProc, GetModuleHandle(NULL), 0 );
+	if( !hKeyboardHook )
+	{
+		lua_pushboolean(L, false);
+		return 1;
+	}
+
+	luaHookCallbackRef = luaL_ref(L, LUA_REGISTRYINDEX);
+
+	lua_pushboolean(L, true);
+	return 1;
+}
+
+int Keyboard_lua::removeHook()
+{
+	if( hKeyboardHook )
+	{
+		UnhookWindowsHookEx( hKeyboardHook );
+		hKeyboardHook = 0;
+	}
+	luaHookCallbackRef = 0;
+}
+
+int Keyboard_lua::cleanup(lua_State *)
+{
+	removeHook();
 }

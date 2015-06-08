@@ -20,10 +20,11 @@
 
 	typedef struct lua_State lua_State;
 
-	#define MACRO_TABLE_NAME		"macro"
-	#define MACRO_INIT_NAME			"init"
-	#define MACRO_MAIN_NAME			"main"
-	#define MACRO_EVENT_NAME		"event"
+	#define MACRO_TABLE_NAME					"macro"
+	#define MACRO_INIT_NAME						"init"
+	#define MACRO_MAIN_NAME						"main"
+	#define MACRO_EVENT_NAME					"event"
+	#define	MAX_WINDOWS_MESSAGES_PER_CYCLE		100
 
 	class LuaEngine
 	{
@@ -44,9 +45,10 @@
 			std::string lastErrorMsg;
 			TimeType lastTimestamp;			// Holds the timestamp so we can compute delta time
 			float fDeltaTime;				// Holds the time elapsed between last cycle and current logic cycle
+			int keyHookErrorState;
 
 		public:
-			LuaEngine() : lstate(NULL), lastErrorMsg(""), fDeltaTime(0) { };
+			LuaEngine() : lstate(NULL), lastErrorMsg(""), fDeltaTime(0), keyHookErrorState(MicroMacro::ERR_OK) { };
 			~LuaEngine();
 
 			int init();
@@ -58,13 +60,18 @@
 			int runInit(std::vector<std::string> * = NULL);
 			int runMain();
 			int runEvent(MicroMacro::Event &);
+			int dispatchWindowsMessages();
 
 			float getDeltaTime();
 			std::string getLastErrorMessage();
+			void setLastErrorMessage(const char *);
 			lua_State *getLuaState();
 
 			std::string getBasePath();
 			void setBasePath(std::string);
+
+			int getKeyHookErrorState();
+			void setKeyHookErrorState(int);
 	};
 
 

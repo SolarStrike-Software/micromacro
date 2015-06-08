@@ -62,8 +62,25 @@ WSADATA wsadata;
 #endif
 
 
-int main(int argc, char **argv)
+INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nShow)
+//int main(int argc, char **argv)			// See notes below
 {
+	/* We emulate the standard C/C++ main() function in this way.
+		This code exists to keep compatibility simple.
+
+		If you simply comment these lines out and restore main()
+		declaration to "normal," you're good to go.
+	*/
+	int argc = 1;
+	char *argv[2];
+
+	char filename[MAX_PATH];
+	GetModuleFileName( NULL, filename, MAX_PATH );
+	argv[0] = filename;
+	argv[1] = cmdLine;
+	/* END: main() compatibility */
+
+
 	bool running;
 	SetConsoleCtrlHandler(consoleControlCallback, true);
 	printStdHead(); // Intro text output
@@ -430,8 +447,13 @@ int main(int argc, char **argv)
 				break;
 			}
 
-			// Run main callback
-			runState = Macro::instance()->getEngine()->runMain();
+			// Dispatch messages before running macro.main() func
+			runState = Macro::instance()->getEngine()->dispatchWindowsMessages();
+
+			if( runState == MicroMacro::ERR_OK )
+			{ // Run main callback
+				runState = Macro::instance()->getEngine()->runMain();
+			}
 
 			if( runState == MicroMacro::ERR_CLOSE )
 			{ // Script requested to end

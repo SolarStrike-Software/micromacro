@@ -8,6 +8,8 @@
 #ifndef KEYBOARD_LUA_H
 #define KEYBOARD_LUA_H
 
+	#include "wininclude.h"
+
 	#define KEYBOARD_MODULE_NAME		"keyboard"
 	typedef struct lua_State lua_State;
 
@@ -32,7 +34,18 @@
 
 			static int getKeyName(lua_State *);
 
+			static int setHookCallback(lua_State *);
+
+			/* Used internally only */
+			static int removeHook();
+			static LRESULT CALLBACK lowLevelKeyboardProc(int, WPARAM, LPARAM);
+
+			static HHOOK hKeyboardHook;
+			static int luaHookCallbackRef;
+
 		public:
 			static int regmod(lua_State *);
+			static int cleanup(lua_State *);
+
 	};
 #endif

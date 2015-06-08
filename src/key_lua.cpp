@@ -104,7 +104,9 @@ int Key_lua::regmod(lua_State *L)
 		{"VK_Y", 0x59},
 		{"VK_Z", 0x5A},
 		{"VK_LWINDOWS", VK_LWIN},
+		{"VK_LWIN", VK_LWIN},
 		{"VK_RWINDOWS", VK_RWIN},
+		{"VK_RWIN", VK_RWIN},
 		{"VK_APPS", VK_APPS},
 		{"VK_SLEEP", VK_SLEEP},
 		{"VK_NUMPAD0", VK_NUMPAD0}, // Ok, NOW it's numpad time

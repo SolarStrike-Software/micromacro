@@ -254,6 +254,7 @@ int LuaEngine::init()
 
 	lastTimestamp.QuadPart = 0;
 	fDeltaTime = 0.0;
+	keyHookErrorState = MicroMacro::ERR_OK;
 
 	return MicroMacro::ERR_OK;
 }
@@ -288,6 +289,7 @@ int LuaEngine::cleanup()
 	#endif
 
 	Process_lua::cleanup(lstate);
+	Keyboard_lua::cleanup(lstate);
 
 	lua_close(lstate);
 	lstate = NULL;
@@ -651,6 +653,41 @@ int LuaEngine::runEvent(MicroMacro::Event &e)
 	return retval;
 }
 
+
+/*	We may need to dispatch Win32 messages so we aren't
+	clogging things up. Specifically, keyboard hooks come
+	in as messages, and we must respond to them or we will
+	block all of the user's input (super bad idea!)
+*/
+int LuaEngine::dispatchWindowsMessages()
+{
+	// Reset our state(s), as we should begin running the callbacks soon.
+	keyHookErrorState = MicroMacro::ERR_OK;
+
+    MSG messages;
+	for(unsigned int i = 0; i < MAX_WINDOWS_MESSAGES_PER_CYCLE; i++)
+	{
+		if( PeekMessage(&messages, NULL, WM_KEYFIRST, WM_KEYLAST, true) )
+		{
+			/* Translate virtual-key messages into character messages */
+			TranslateMessage(&messages);
+			/* Send message to WindowProcedure */
+			DispatchMessage(&messages);
+
+			continue;
+		}
+		else
+			break;
+	}
+
+	// Check
+	if( keyHookErrorState )
+		return keyHookErrorState;
+
+	// All OK
+	return MicroMacro::ERR_OK;
+}
+
 float LuaEngine::getDeltaTime()
 {
 	return fDeltaTime;
@@ -660,6 +697,11 @@ float LuaEngine::getDeltaTime()
 std::string LuaEngine::getLastErrorMessage()
 {
 	return lastErrorMsg;
+}
+
+void LuaEngine::setLastErrorMessage(const char *msg)
+{
+	lastErrorMsg = msg;
 }
 
 lua_State *LuaEngine::getLuaState()
@@ -675,4 +717,14 @@ std::string LuaEngine::getBasePath()
 void LuaEngine::setBasePath(std::string np)
 {
 	basePath = np;
+}
+
+int LuaEngine::getKeyHookErrorState()
+{
+	return keyHookErrorState;
+}
+
+void LuaEngine::setKeyHookErrorState(int newState)
+{
+	keyHookErrorState = newState;
 }
