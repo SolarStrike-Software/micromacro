@@ -48,6 +48,11 @@ int Keyboard_lua::regmod(lua_State *L)
 	return MicroMacro::ERR_OK;
 }
 
+int Keyboard_lua::cleanup(lua_State *)
+{
+	removeHook();
+}
+
 /*	keyboard.pressed(number vk)
 	Returns:	boolean
 
@@ -331,10 +336,10 @@ int Keyboard_lua::getKeyName(lua_State *L)
 }
 
 
-
-
-
-
+/*
+	Used internally; when a keyboard hook is installed, this function will be used as
+	the callback, and pass the torch on to the user-defined callback.
+*/
 LRESULT CALLBACK Keyboard_lua::lowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	if( nCode < 0 || nCode != HC_ACTION ) // do not process message
@@ -413,6 +418,8 @@ LRESULT CALLBACK Keyboard_lua::lowLevelKeyboardProc(int nCode, WPARAM wParam, LP
 
 	Please note that your callback function should return almost immediately
 	so you aren't clogging up the input system.
+	Your main function must also execute quickly (so don't use any rests!).
+	Failure to execute quickly may lead to dropped or lagged user input.
 */
 int Keyboard_lua::setHookCallback(lua_State *L)
 {
@@ -422,11 +429,16 @@ int Keyboard_lua::setHookCallback(lua_State *L)
 	checkType(L, LT_FUNCTION | LT_NIL, 1);
 
 	// Lets remove the hook
-	if( lua_isnil(L, 1) )
+	if( lua_isnil(L, 1) )	//User requested removal
 	{
 		removeHook();
 		lua_pushboolean(L, true);
 		return 1;
+	}
+
+	if( hKeyboardHook )
+	{
+		removeHook();	// We're installing a new hook, so remove the old one.
 	}
 
 	// Lets install the hook
@@ -443,6 +455,9 @@ int Keyboard_lua::setHookCallback(lua_State *L)
 	return 1;
 }
 
+/*
+	Removes the keyboard hook. Nothing fancy here.
+*/
 int Keyboard_lua::removeHook()
 {
 	if( hKeyboardHook )
@@ -451,9 +466,4 @@ int Keyboard_lua::removeHook()
 		hKeyboardHook = 0;
 	}
 	luaHookCallbackRef = 0;
-}
-
-int Keyboard_lua::cleanup(lua_State *)
-{
-	removeHook();
 }

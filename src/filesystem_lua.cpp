@@ -184,6 +184,10 @@ int Filesystem_lua::createDirectory(lua_State *L)
 	size_t startPos = 0;
 	size_t nextPos = 0;
 
+	/* If given a full path, then start after the drive name */
+	if( tempPath.substr(1, 2).compare(":\\") == 0 )
+		nextPos = 2;
+
 	while( true )
 	{
 		nextPos = tempPath.find("\\", nextPos+1);
@@ -198,11 +202,17 @@ int Filesystem_lua::createDirectory(lua_State *L)
 		std::string currentPath = tempPath.substr(0, startPos) + directoryName;
 		startPos = nextPos+1;
 
-		SECURITY_ATTRIBUTES attribs;
-		attribs.nLength = sizeof(SECURITY_ATTRIBUTES);
-		attribs.bInheritHandle = false;
-		attribs.lpSecurityDescriptor = NULL;
-		success = CreateDirectory(currentPath.c_str(), &attribs);
+
+		if( !::directoryExists(currentPath.c_str()) )
+		{
+			SECURITY_ATTRIBUTES attribs;
+			attribs.nLength = sizeof(SECURITY_ATTRIBUTES);
+			attribs.bInheritHandle = false;
+			attribs.lpSecurityDescriptor = NULL;
+			success = CreateDirectory(currentPath.c_str(), &attribs);
+			if( !success )
+				break;
+		}
 
 		if( nextPos == std::string::npos || !success )
 			break;
