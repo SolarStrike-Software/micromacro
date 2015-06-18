@@ -99,7 +99,6 @@ int Table_addon::find(lua_State *L)
 	lua_pushnil(L);
 	while( lua_next(L, 1) )
 	{
-
 		if( lua_type(L, -1) == valtype )
 		{ // Types match, compare value
 			bool found = false;
@@ -117,13 +116,14 @@ int Table_addon::find(lua_State *L)
 				{
 					const char *userstr = lua_tostring(L, 2);
 					const char *tabstr = lua_tostring(L, -1);
+
 					if( strcmp(userstr, tabstr) == 0 )
 						found = true;
 				}
 				case LUA_TNIL:
-				{ // NOTE: This *probably* should never happen, as nil values should be cleaned by GC.
-					// However, it is better safe than sorry.
-					found = true;
+				{ // Yes, this can occasionally happen if GC hasn't had a chance to remove nils
+					if( lua_isnil(L, -1) )
+						found = true;
 				}
 				break;
 				default: // Not a number or string, just check pointer
