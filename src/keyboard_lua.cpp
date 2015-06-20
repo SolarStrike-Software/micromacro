@@ -365,9 +365,15 @@ LRESULT CALLBACK Keyboard_lua::lowLevelKeyboardProc(int nCode, WPARAM wParam, LP
 			if( lua_type(lstate, 1) != LUA_TFUNCTION )
 				break;
 
-			lua_pushinteger(lstate, event.vkCode);
+			lua_pushinteger(lstate, event.vkCode);	// Push the key code
 
-			int failstate = lua_pcall(lstate, 1, 1, 0);
+			// Push the event type (up/down)
+			if( wParam == WM_KEYUP || wParam == WM_SYSKEYUP )
+				lua_pushstring(lstate, "up");
+			else
+				lua_pushstring(lstate, "down");
+
+			int failstate = lua_pcall(lstate, 2, 1, 0);
 			if( failstate == LUA_OK )
 			{
 				if( !lua_isnil(lstate, -1) )
