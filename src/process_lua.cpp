@@ -285,12 +285,12 @@ unsigned int Process_lua::readBatch_parsefmt(const char *fmt, std::vector<BatchJ
 				break;
 				case 'h':
 					job.type = MicroMacro::MEM_INT64;
-					length += sizeof(int) * job.count;
+					length += sizeof(long long) * job.count;
 					out.push_back(job);
 				break;
 				case 'H':
 					job.type = MicroMacro::MEM_UINT64;
-					length += sizeof(unsigned int) * job.count;
+					length += sizeof(unsigned long long) * job.count;
 					out.push_back(job);
 				break;
 				case 'f':

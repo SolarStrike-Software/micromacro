@@ -472,4 +472,6 @@ int Keyboard_lua::removeHook()
 		hKeyboardHook = 0;
 	}
 	luaHookCallbackRef = 0;
+
+	return 0;
 }
