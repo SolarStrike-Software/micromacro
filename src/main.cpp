@@ -94,7 +94,12 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 	Macro::instance()->getEngine()->setBasePath(baseDirectory);
 	{	/* Run configs */
 		std::string configFilename = baseDirectory;
-		configFilename += "/";
+
+		// Append '/' if needed
+		char lastChar = *configFilename.rbegin();
+		if( lastChar != '/' && lastChar != '\\' )
+			configFilename += "/";
+
 		configFilename += CONFIG_FILENAME;
 
 		if( !fileExists(configFilename.c_str()) )
@@ -149,7 +154,12 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 		if( PathIsRelative(scriptsDir) )
 		{
 			scriptsFullPath = baseDirectory;
-			scriptsFullPath += "\\";
+
+			// Append '\\' if needed
+			char lastChar = *scriptsFullPath.rbegin();
+			if( lastChar != '/' && lastChar != '\\' )
+				scriptsFullPath += "\\";
+
 			scriptsFullPath += scriptsDir;
 			scriptsFullPath = fixSlashes(fixFileRelatives(scriptsFullPath), SLASHES_TO_WINDOWS);
 		}
