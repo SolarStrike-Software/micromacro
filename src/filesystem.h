@@ -25,5 +25,6 @@
 	std::string getFileName(std::string);
 	std::string getFilePath(std::string, bool);
 	std::string fixFileRelatives(std::string);
+	std::string appendToPath(const std::string &, const std::string &);
 
 #endif

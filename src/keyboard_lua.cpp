@@ -51,6 +51,7 @@ int Keyboard_lua::regmod(lua_State *L)
 int Keyboard_lua::cleanup(lua_State *)
 {
 	removeHook();
+	return 0;
 }
 
 /*	keyboard.pressed(number vk)

@@ -217,3 +217,21 @@ std::string fixFileRelatives(std::string instr)
 	return prefix + instr;
 }
 
+std::string appendToPath(const std::string &base, const std::string &addition)
+{
+	std::string result = base;
+
+	// Append '\\' (to result) if needed
+	char lastChar = *result.rbegin();
+	if( lastChar != '/' && lastChar != '\\' )
+		result += "/";
+
+	// Remove pre-pended '\\' (from addition) if needed
+	char firstChar = *addition.begin();
+	if( firstChar == '/' || firstChar == '\\' )
+		result += addition.substr(1);
+	else
+		result += addition;
+
+	return result;
+}

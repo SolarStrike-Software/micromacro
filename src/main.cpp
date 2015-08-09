@@ -93,19 +93,12 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 	/* Copy the base path into the Lua engine; Do this *before* initializing! */
 	Macro::instance()->getEngine()->setBasePath(baseDirectory);
 	{	/* Run configs */
-		std::string configFilename = baseDirectory;
-
-		// Append '/' if needed
-		char lastChar = *configFilename.rbegin();
-		if( lastChar != '/' && lastChar != '\\' )
-			configFilename += "/";
-
-		configFilename += CONFIG_FILENAME;
+		std::string configFilename = appendToPath(baseDirectory, CONFIG_FILENAME);
+		configFilename = fixSlashes(configFilename, SLASHES_TO_STANDARD);
 
 		if( !fileExists(configFilename.c_str()) )
 		{ // Lets try to copy it from default.config.lua, if it exists.
-			std::string defaultConfigFilename = baseDirectory;
-			defaultConfigFilename += "/config.default.lua";
+			std::string defaultConfigFilename = appendToPath(baseDirectory, CONFIG_DEFAULT_FILENAME);
 
 			if( fileExists(defaultConfigFilename.c_str()) )
                 copyFile(defaultConfigFilename.c_str(), configFilename.c_str());
@@ -153,14 +146,7 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 		std::string scriptsFullPath = "";
 		if( PathIsRelative(scriptsDir) )
 		{
-			scriptsFullPath = baseDirectory;
-
-			// Append '\\' if needed
-			char lastChar = *scriptsFullPath.rbegin();
-			if( lastChar != '/' && lastChar != '\\' )
-				scriptsFullPath += "\\";
-
-			scriptsFullPath += scriptsDir;
+			scriptsFullPath = appendToPath(baseDirectory, scriptsDir);
 			scriptsFullPath = fixSlashes(fixFileRelatives(scriptsFullPath), SLASHES_TO_WINDOWS);
 		}
 		else
@@ -700,11 +686,6 @@ std::string autoAdjustScriptFilename(std::string filename)
 	std::string scriptsDir = Macro::instance()->getSettings()->getString(
 		CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY);
 
-	// Append '/' if needed
-	char lastChar = *scriptsDir.rbegin();
-	if( lastChar != '/' && lastChar != '\\' )
-		scriptsDir += "/";
-
 	// Test for the given full path
 	if( fileExists(filename.c_str()) )
 		return filename;
@@ -712,28 +693,17 @@ std::string autoAdjustScriptFilename(std::string filename)
 	// If it is a directory, try appending main.lua
 	if( directoryExists(filename.c_str()) )
 	{
-		path = filename;
-
-		// Append '/' if needed
-		char lastChar = *filename.rbegin();
-		if( lastChar != '/' && lastChar != '\\' )
-			path += "/";
-
-		path += "main.lua";
+		path = appendToPath(filename, "main.lua");
 		if( fileExists(path.c_str()) )
 			return path;
 	}
 
 	// If scriptsDir + filename is a directory, try appending main.lua
-	path = scriptsDir + filename;
+	path = appendToPath(scriptsDir, filename);
 	if( directoryExists(path.c_str()) )
 	{
-		// Append '/' if needed
-		char lastChar = *filename.rbegin();
-		if( lastChar != '/' && lastChar != '\\' )
-			path += "/";
+		path = appendToPath(path, "main.lua");
 
-		path += "main.lua";
 		if( fileExists(path.c_str()) )
 			return path;
 	}
@@ -746,12 +716,12 @@ std::string autoAdjustScriptFilename(std::string filename)
 	if( PathIsRelative(filename.c_str()) )
 	{
 		// Try prepending scripts dir
-		path = scriptsDir + filename;
+		path = appendToPath(scriptsDir, filename);//scriptsDir + filename;
 		if( fileExists(path.c_str()) )
 			return path;
 
 		// Try prepending scripts dir and appending .lua extension
-		path = scriptsDir + filename + ".lua";
+		path += ".lua";
 		if( fileExists(path.c_str()) )
 			return path;
 	}
@@ -979,20 +949,19 @@ void deleteOldLogs(const char *path, unsigned int daysToDelete)
 void openLog()
 {
 	Settings *psettings = Macro::instance()->getSettings();
-	const char *logDir = psettings->getString(CONFVAR_LOG_DIRECTORY).c_str();
+	std::string logDir = psettings->getString(CONFVAR_LOG_DIRECTORY);
 	unsigned int logRemovalDays = (unsigned int)psettings->getInt(CONFVAR_LOG_REMOVAL_DAYS);
 
 	std::string logFullPath;
-	if(	PathIsRelative(logDir) )
+	if(	PathIsRelative(logDir.c_str()) )
 	{
-		logFullPath = baseDirectory;
+		logFullPath = appendToPath(baseDirectory, logDir);
 
 		// Append '\\' if needed
 		char lastChar = *logFullPath.rbegin();
 		if( lastChar != '/' && lastChar != '\\' )
 			logFullPath += "\\";
 
-		logFullPath += logDir;
 		logFullPath = fixSlashes(fixFileRelatives(logFullPath), SLASHES_TO_WINDOWS);
 	}
 	else
@@ -1026,7 +995,7 @@ void openLog()
 	{
 		strftime(szTime, sizeof(szTime)-1, "%Y-%m-%d", timeinfo);
 		slprintf(logfileName, sizeof(logfileName)-1,
-			"%s\\%s-%02u.txt", logFullPath.c_str(), szTime, fileCount);
+			"%s%s-%02u.txt", logFullPath.c_str(), szTime, fileCount);
 		nameFound = !fileExists(logfileName);
 		++fileCount;
 	}

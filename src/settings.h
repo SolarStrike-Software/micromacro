@@ -15,6 +15,7 @@
 
 
 	extern const char *CONFIG_FILENAME;
+	extern const char *CONFIG_DEFAULT_FILENAME;
 	extern const char *CONFVAR_MEMORY_STRING_BUFFER_SIZE;
 	extern const char *CONFVAR_LOG_DIRECTORY;
 	extern const char *CONFVAR_LOG_REMOVAL_DAYS;
