@@ -846,6 +846,8 @@ int Process_lua::readBatch(lua_State *L)
 		pushLuaErrorEvent(L, "Failure reading memory from 0x%p at 0x%p. "\
 			"Error code %i (%s)",
 			pHandle->handle, address, errCode, getWindowsErrorString(errCode).c_str());
+
+		return 0;
 	}
 
 	unsigned int cursorPos = 0;
