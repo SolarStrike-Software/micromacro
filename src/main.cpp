@@ -584,7 +584,7 @@ std::string scriptGUIDialog(std::string defaultFilename)
     int success = GetOpenFileName(&ofn);
     if( success )
     { // User clicked OK
-		retval = ofn.lpstrFile;
+		retval = std::string("\"") + ofn.lpstrFile + std::string("\"");
     }
 
 	// Reset CWD
