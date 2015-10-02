@@ -823,7 +823,7 @@ int Window_lua::getPixel(lua_State *L)
 int Window_lua::pixelSearch(lua_State *L)
 {
 	int top = lua_gettop(L);
-	if( top >= 8 && top <= 10 )
+	if( top < 8 || top > 10 )
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1); // HWND
 	checkType(L, LT_NUMBER, 2); // R
