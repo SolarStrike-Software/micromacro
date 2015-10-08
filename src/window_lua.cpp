@@ -13,6 +13,7 @@
 #include "macro.h"
 #include "luatypes.h"
 #include "types.h"
+#include "mathl.h"
 
 extern "C"
 {
@@ -833,8 +834,12 @@ int Window_lua::pixelSearch(lua_State *L)
 	checkType(L, LT_NUMBER, 6); // y1
 	checkType(L, LT_NUMBER, 7); // x2
 	checkType(L, LT_NUMBER, 8); // y2
-	checkType(L, LT_NUMBER, 9); // accuracy
-	checkType(L, LT_NUMBER, 10); // step
+
+	if( top >= 9 )
+		checkType(L, LT_NUMBER, 9); // accuracy
+
+	if( top >= 10 )
+		checkType(L, LT_NUMBER, 10); // step
 
 	POINT retval;
 	POINT offset;
@@ -883,6 +888,11 @@ int Window_lua::pixelSearch(lua_State *L)
 	offset.y = offset.y - winRect.top;
 	GetClientRect(hwnd, &clientRect);
 
+	// Ensure we're not attempting to work outside the client rect
+	x1 = clamp(x1, 0, (int)clientRect.right);
+	y1 = clamp(y1, 0, (int)clientRect.bottom);
+	x2 = clamp(x2, 0, (int)clientRect.right);
+	y2 = clamp(y2, 0, (int)clientRect.bottom);
 
 	// Grab a copy of the target window as a bitmap
 	HDC hdcScreen = GetDC(NULL);
@@ -903,10 +913,10 @@ int Window_lua::pixelSearch(lua_State *L)
 	}
 
 	// Get info from the screenshot
-	SelectObject(tmpHdc, hBmp);
+	HGDIOBJ origSelectedObject = SelectObject(tmpHdc, hBmp);
 	int pw = PrintWindow(hwnd, tmpHdc, PW_CLIENTONLY);
-	int biWidth = clientRect.right - clientRect.left;
-	int biHeight = clientRect.bottom - clientRect.top;
+	int biWidth = clientRect.right;// - clientRect.left;
+	int biHeight = clientRect.bottom;// - clientRect.top;
 	BITMAPINFO bmpInfo;
 	bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmpInfo.bmiHeader.biWidth = biWidth;
@@ -917,8 +927,14 @@ int Window_lua::pixelSearch(lua_State *L)
 	bmpInfo.bmiHeader.biSizeImage = 0;
 
 	BITMAP obmp;
-	GetObject(hBmp, sizeof(obmp), &obmp);
-	RGBQUAD *_pixels = new RGBQUAD[(biHeight+1)*biWidth];
+	int bytes = GetObject(hBmp, sizeof(obmp), &obmp);
+
+	// Switch back to original object before we call GetDIBits! (important)
+	SelectObject(tmpHdc, origSelectedObject);
+
+
+	int pixelsBound = (biHeight+1)*biWidth;
+	RGBQUAD *_pixels = new RGBQUAD[pixelsBound];
 	int scanlines = GetDIBits(tmpHdc, hBmp, 0, biHeight, _pixels, &bmpInfo, DIB_RGB_COLORS);
 
 	if( pw == 0 || scanlines == 0 || scanlines == ERROR_INVALID_PARAMETER )
@@ -956,19 +972,20 @@ int Window_lua::pixelSearch(lua_State *L)
 			else
 				y = y2 + height - i*step;
 
-			if( x > (offset.x + clientRect.right-clientRect.left) )
+			if( x > (offset.x + clientRect.right/*-clientRect.left*/) )
 			{
 				x = 0;
 				y++;
 				continue;
 			}
-			if( y > (clientRect.bottom-clientRect.top) )
+			if( y > (clientRect.bottom/*-clientRect.top*/) )
 			{
 				i = steps_y;
 				break;
 			}
 
-			RGBQUAD rgba = _pixels[(biHeight-(y+1))*biWidth + x];
+			int index = (biHeight-y)*biWidth + x;
+			RGBQUAD rgba = _pixels[index];
 
 			r2 = rgba.rgbRed;
 			g2 = rgba.rgbGreen;
