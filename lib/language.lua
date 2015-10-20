@@ -75,7 +75,7 @@ function Lang:get(szName)
 	local lookupName = szName;
 
 	-- Check to see if a sub-file was given, parse it and the string name from it.
-	local fileName,subName = string.match(szName, '^(%w*)%.(%w*)');
+	local fileName,subName = string.match(szName, '^([%w%-_]*)%.(.*)$');
 	if( fileName and subName ) then
 		file = fileName;
 		lookupName = subName;
