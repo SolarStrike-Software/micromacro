@@ -652,7 +652,7 @@ int Process_lua::readPtr(lua_State *L)
 	}
 
 	size_t realAddress;
-	if( offsets.size() == 1 )
+	/*if( offsets.size() == 1 )
 	{
 		#ifdef _WIN64
 			if( pHandle->is32bit )	// Must read as 32-bit pointer
@@ -664,23 +664,23 @@ int Process_lua::readPtr(lua_State *L)
 		#endif
 	}
 	else
+*/
 	{
 		realAddress = address;
-		for(unsigned int i = 0; i < offsets.size() - 1; i++)
+		for(unsigned int i = 0; i < offsets.size(); i++)
 		{
 			#ifdef _WIN64
 				if( pHandle->is32bit )	// Must read as 32-bit pointer
-					realAddress = readMemory<unsigned long>(pHandle->handle, realAddress + offsets.at(i), err); // Get value
+					realAddress = readMemory<unsigned long>(pHandle->handle, realAddress, err) + offsets.at(i); // Get value
 				else					// 64-bit pointers are OK!
-					realAddress = readMemory<size_t>(pHandle->handle, realAddress + offsets.at(i), err); // Get value
+					realAddress = readMemory<size_t>(pHandle->handle, realAddress, err) + offsets.at(i); // Get value
 			#else
-				realAddress = readMemory<size_t>(pHandle->handle, realAddress + offsets.at(i), err); // Get value
+				realAddress = readMemory<size_t>(pHandle->handle, realAddress, err) + offsets.at(i); // Get value
 			#endif
 
 			if( err )
 				break;
 		}
-		realAddress = realAddress + offsets.back(); // Add in the last offset
 	}
 
 	if( !err )
@@ -1194,7 +1194,7 @@ int Process_lua::writePtr(lua_State *L)
 	}
 
 	size_t realAddress;
-	if( offsets.size() == 1 )
+	/*if( offsets.size() == 1 )
 		#ifdef _WIN64
 			if( pHandle->is32bit )
 				realAddress = readMemory<unsigned long>(pHandle->handle, address, err) + offsets.at(0);
@@ -1204,23 +1204,23 @@ int Process_lua::writePtr(lua_State *L)
 			realAddress = readMemory<size_t>(pHandle->handle, address, err) + offsets.at(0);
 		#endif
 	else
+*/
 	{
 		realAddress = address;
-		for(unsigned int i = 0; i < offsets.size() - 1; i++)
+		for(unsigned int i = 0; i < offsets.size(); i++)
 		{
 			#ifdef _WIN64
 				if( pHandle->is32bit )
-					realAddress = readMemory<unsigned long>(pHandle->handle, realAddress + offsets.at(i), err); // Get value
+					realAddress = readMemory<unsigned long>(pHandle->handle, realAddress, err) + offsets.at(i); // Get value
 				else
-					realAddress = readMemory<size_t>(pHandle->handle, realAddress + offsets.at(i), err); // Get value
+					realAddress = readMemory<size_t>(pHandle->handle, realAddress, err) + offsets.at(i); // Get value
 			#else
-				realAddress = readMemory<size_t>(pHandle->handle, realAddress + offsets.at(i), err); // Get value
+				realAddress = readMemory<size_t>(pHandle->handle, realAddress, err) + offsets.at(i); // Get value
 			#endif
 
 			if( err )
 				break;
 		}
-		realAddress = realAddress + offsets.back(); // Add in the last offset
 	}
 
 	if( !err )
