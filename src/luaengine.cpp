@@ -25,6 +25,7 @@
 #include "hash_lua.h"
 #include "cli_lua.h"
 #include "memorychunk_lua.h"
+#include "sqlite_lua.h"
 
 #ifdef NETWORKING_ENABLED
 	#include "network_lua.h"
@@ -192,6 +193,7 @@ int LuaEngine::init()
 		Process_lua::regmod,
 		Window_lua::regmod,
 		MemoryChunk_lua::regmod,	// Is this needed?
+		Sqlite_lua::regmod,
 #ifdef NETWORKING_ENABLED
 		Network_lua::regmod,
 		Socket_lua::regmod,

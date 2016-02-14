@@ -17,6 +17,7 @@
 		extern const char *metatable_handle;
 		//extern const char *metatable_windowDC;
 		extern const char *metatable_audioResource;
+		extern const char *metatable_sqlitedb;
 
 		int ncursesWindow_gc(lua_State *);
 		int ncursesWindow_tostring(lua_State *);
@@ -29,6 +30,9 @@
 
 		int audioResource_gc(lua_State *);
 		int audioResource_tostring(lua_State *);
+
+		int sqlitedb_gc(lua_State *);
+		int sqlitedb_tostring(lua_State *);
 	}
 
 	int registerLuaTypes(lua_State *);

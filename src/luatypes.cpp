@@ -28,6 +28,7 @@ extern "C"
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
+#include <sqlite3.h>
 
 namespace LuaType
 {
@@ -36,10 +37,12 @@ namespace LuaType
 	const char *metatable_handle = "process.handle";
 	const char *metatable_windowDC = "window.windowDC";
 	const char *metatable_audioResource = "audio.audioResource";
+	const char *metatable_sqlitedb = "sqlite.dbhandle";
 }
 
 using MicroMacro::ProcHandle;
 using MicroMacro::AudioResource;
+using MicroMacro::SQLiteDb;
 
 int registerLuaTypes(lua_State *L)
 {
@@ -77,6 +80,19 @@ int registerLuaTypes(lua_State *L)
 	lua_pushcfunction(L, LuaType::audioResource_tostring);
 	lua_settable(L, -3);
 	lua_pop(L, 1); // Pop metatable
+
+
+	// SQLite DB handles
+	luaL_newmetatable(L, LuaType::metatable_sqlitedb);
+	lua_pushstring(L, "__gc");
+	lua_pushcfunction(L, LuaType::sqlitedb_gc);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "__tostring");
+	lua_pushcfunction(L, LuaType::sqlitedb_tostring);
+	lua_settable(L, -3);
+	lua_pop(L, 1); // Pop metatable
+
 
 	return MicroMacro::ERR_OK;
 }
@@ -170,6 +186,30 @@ int LuaType::audioResource_tostring(lua_State *L)
 
 	char buffer[128];
 	slprintf(buffer, sizeof(buffer)-1, "Audio resource 0x%p", pResource);
+	lua_pushstring(L, buffer);
+	return 1;
+}
+
+// Close the DB
+int LuaType::sqlitedb_gc(lua_State *L)
+{
+	checkType(L, LT_USERDATA, 1);
+	SQLiteDb *pDb = static_cast<SQLiteDb *>(lua_touserdata(L, 1));
+	if( pDb->opened )
+		sqlite3_close(pDb->db);
+	return 0;
+}
+
+int LuaType::sqlitedb_tostring(lua_State *L)
+{
+	checkType(L, LT_USERDATA, 1);
+	SQLiteDb *pDb = static_cast<SQLiteDb *>(lua_touserdata(L, 1));
+	char buffer[128];
+
+	if( pDb->opened )
+		slprintf(buffer, sizeof(buffer)-1, "SQLite Database 0x%p", pDb);
+	else
+		slprintf(buffer, sizeof(buffer)-1, "Invalid SQLite Database");
 	lua_pushstring(L, buffer);
 	return 1;
 }
