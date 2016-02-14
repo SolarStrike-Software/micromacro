@@ -45,7 +45,7 @@ int Sqlite_lua::callback(void *outvec, int argc, char **argv, char **colName)
 {
 	std::vector<SQLResult> *results = (std::vector<SQLResult>*)(outvec);
 	SQLResult	result;
-	for(unsigned int i = 0; i < argc; i++)
+	for(int i = 0; i < argc; i++)
 	{
 		SQLField	field;
 		field.name		=	colName[i];
@@ -83,7 +83,7 @@ int Sqlite_lua::open(lua_State *L)
 	if( rc )
 	{
 		std::string errmsg = sqlite3_errmsg(pDb->db);
-		char *fmt = "SQLite error occurred opening database: %s\n";
+		const char *fmt = "SQLite error occurred opening database: %s\n";
 		#ifdef DISPLAY_DEBUG_MESSAGES
 			fprintf(stderr, fmt, errmsg.c_str());
 		#endif
