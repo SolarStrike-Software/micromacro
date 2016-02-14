@@ -11,6 +11,7 @@ Some sections of this code or used libraries may retain their own separate licen
 	OpenAL		-	Proprietary
 	ALUT		-	LGPL
 	Ncurses		-	X11 License
+	SQLite		-	Public Domain
 
 
 
