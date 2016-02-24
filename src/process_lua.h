@@ -88,6 +88,7 @@
 			static int findByWindow(lua_State *);
 			static int findByExe(lua_State *);
 			static int getModuleAddress(lua_State *);
+			static int getModuleFilename(lua_State *);
 			static int getModules(lua_State *);
 			static int attachInput(lua_State *);
 			static int detachInput(lua_State *);

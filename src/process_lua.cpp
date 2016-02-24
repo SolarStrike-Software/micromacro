@@ -352,6 +352,7 @@ int Process_lua::regmod(lua_State *L)
 		{"findByWindow", Process_lua::findByWindow},
 		{"findByExe", Process_lua::findByExe},
 		{"getModuleAddress", Process_lua::getModuleAddress},
+		{"getModuleFilename", Process_lua::getModuleFilename},
 		{"getModules", Process_lua::getModules},
 		{"attachInput", Process_lua::attachInput},
 		{"detachInput", Process_lua::detachInput},
@@ -1550,6 +1551,43 @@ int Process_lua::getModuleAddress(lua_State *L)
 	if( !found )
 		return 0;
 	lua_pushinteger(L, addrFound);
+	return 1;
+}
+
+/*	process.getModuleFilename(handle process)
+	Returns (on success):	string filename
+	Returns (on failure):	nil
+
+	Returns the fully-qualified path of a running executable
+*/
+int Process_lua::getModuleFilename(lua_State *L)
+{
+	if( lua_gettop(L) != 1 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+
+	ProcHandle *pHandle = static_cast<ProcHandle *>(lua_touserdata(L, 1));
+	if( pHandle->handle == 0 )
+		luaL_error(L, szInvalidHandleError);
+
+	char *buffer = 0;
+	try {
+		buffer = new char[MAX_PATH + 1];
+	} catch( std::bad_alloc &ba ) { badAllocation(); }
+
+	DWORD retval = GetModuleFileNameEx(pHandle->handle, NULL, buffer, MAX_PATH);
+	if( retval == 0 )
+	{
+		int errCode = GetLastError();
+		pushLuaErrorEvent(L, "Failure getting module filename. Error code %i (%s)",
+			errCode, getWindowsErrorString(errCode).c_str());
+
+		delete []buffer;
+		return 0;
+	}
+
+	lua_pushstring(L, buffer);
+	delete []buffer;
 	return 1;
 }
 
