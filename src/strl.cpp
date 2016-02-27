@@ -61,6 +61,16 @@ int slprintf(char *dest, size_t size, const char *fmt, ...)
 	return ret;
 }
 
+bool strcontains(const char *haystack, const char **needles)
+{
+	for(unsigned int i = 0; needles[i] != NULL; i++)
+	{ // For each needle....
+		if( strstr(haystack, needles[i]) != NULL )
+			return true; // Return true if we found a needle
+	}
+	return false;
+}
+
 // Converts 'src' to lowercase, stores in 'dest'.
 void sztolower(char *dest, const char *src, size_t max_len)
 {

@@ -15,6 +15,7 @@
 #include "settings.h"
 #include "debugmessages.h"
 #include "logger.h"
+#include "filesystem.h"
 
 extern "C"
 {
@@ -1421,6 +1422,19 @@ int Process_lua::findByExe(lua_State *L)
 		return 0;
 	}
 
+
+	// Get the full path (if necessary)
+	bool comparePaths = false;
+	char *namePtr = (char *)name; // Just be careful to not try to edit the contents of this!
+	char fullPath[MAX_PATH+1];
+	const char *lookFor[] = {"/", "\\", NULL};
+	if( strcontains(name, lookFor) ) {
+		comparePaths = true;
+		GetFullPathName(name, MAX_PATH, fullPath, &namePtr);
+	}
+	else
+		strlcpy(fullPath, name, MAX_PATH);
+
 	DWORD foundProcId = 0;
 	DWORD proccount = bytesReturned / sizeof(DWORD);
 	for(unsigned int i = 0; i < proccount; i++)
@@ -1437,7 +1451,7 @@ int Process_lua::findByExe(lua_State *L)
 			int errCode = GetLastError();
 			if( errCode != ERROR_ACCESS_DENIED ) // Skip over processes we cannot access
 			{
-
+				continue;
 			}
 		}
 
@@ -1447,6 +1461,10 @@ int Process_lua::findByExe(lua_State *L)
 		success = EnumProcessModules(handle, &hModule, sizeof(HMODULE), &bytesReturned2);
 		if( success )
 			GetModuleBaseName(handle, hModule, szProcName, sizeof(szProcName)/sizeof(TCHAR));
+
+		// Grab the module's filename
+		char modPath[MAX_PATH];
+		DWORD retval = GetModuleFileNameEx(handle, NULL, modPath, MAX_PATH);
 
 		// Close handle now, we're done with this one
 		CloseHandle(handle);
@@ -1460,13 +1478,39 @@ int Process_lua::findByExe(lua_State *L)
 			found_lower = new char[foundLen+1];
 		} catch( std::bad_alloc &ba ) { badAllocation(); }
 
-		sztolower(name_lower, name, nameLen);
+		// 'name' could contain a full or partial path, so grab just the name section before compare
+		sztolower(name_lower, namePtr, nameLen);
 		sztolower(found_lower, szProcName, foundLen);
 		bool found = wildfind(name_lower, found_lower);
 
 		// Free memory
 		delete []name_lower;
 		delete []found_lower;
+
+		// If the names align, and a full path is set, compare paths!
+		if( comparePaths && found )
+		{
+			// Alloc some memory; we don't want to be forgetful
+			char *givenPath_lower = 0;
+			char *targetPath_lower = 0;
+			try {
+				givenPath_lower = new char[MAX_PATH+1];
+				targetPath_lower = new char[MAX_PATH+1];
+			} catch( std::bad_alloc &ba ) { badAllocation(); }
+
+			// Convert to lower
+			sztolower(givenPath_lower, getFilePath(fullPath, false).c_str(), MAX_PATH);
+			sztolower(targetPath_lower, getFilePath(modPath, false).c_str(), MAX_PATH);
+
+			// If the paths don't match, we must flip back to not found
+			if( strcmp(givenPath_lower, targetPath_lower) != 0 )
+				found = false;
+
+			// Free memory
+			delete []givenPath_lower;
+			delete []targetPath_lower;
+		}
+
 
 		if( found )
 		{ // We have a match

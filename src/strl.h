@@ -14,6 +14,7 @@
 	size_t strlcpy(char *dest, const char*src, size_t max_len);
 	size_t strlcat(char *dest, const char*src, size_t max_len);
 	int slprintf(char *dest, size_t size, const char *fmt, ...);
+	bool strcontains(const char *haystack, const char **needles);
 
 	void sztolower(char *dest, const char *src, size_t max_len);
 	int wildfind(const std::string &format, const std::string &checkstring);
