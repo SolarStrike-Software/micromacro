@@ -15,6 +15,7 @@
 	{
 		protected:
 			static int explode(lua_State *);
+			static int implode(lua_State *);
 			static int trim(lua_State *);
 			static int random(lua_State *);
 			static int toUnicode(lua_State *);

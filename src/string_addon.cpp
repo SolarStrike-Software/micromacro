@@ -30,6 +30,9 @@ int String_addon::regmod(lua_State *L)
 	lua_pushcfunction(L, String_addon::explode);
 	lua_setfield(L, -2, "explode");
 
+	lua_pushcfunction(L, String_addon::implode);
+	lua_setfield(L, -2, "implode");
+
 	lua_pushcfunction(L, String_addon::trim);
 	lua_setfield(L, -2, "trim");
 
@@ -77,6 +80,41 @@ int String_addon::explode(lua_State *L)
 			break;
 	}
 
+	return 1;
+}
+
+/*	string.implode(table str, string glue)
+	Returns:	table
+
+	Does the opposite of explode; joins a table of values
+	together by separating values with 'glue'
+*/
+int String_addon::implode(lua_State *L)
+{
+	if( lua_gettop(L) != 2 )
+		wrongArgs(L);
+	checkType(L, LT_TABLE, 1);
+	checkType(L, LT_STRING, 2);
+
+	const char *glue = lua_tostring(L, 2);
+	std::string holder = "";
+	lua_pushnil(L);
+	bool first = true;
+	while( lua_next(L, 1) )
+	{
+		if( first )
+			first = false;
+		else
+			holder += glue;
+
+		if( lua_isstring(L, -1) ) {
+			const char *nextString = lua_tostring(L, -1);
+			holder += nextString; }
+
+		lua_pop(L, 1); // So we can next
+	}
+
+	lua_pushstring(L, holder.c_str());
 	return 1;
 }
 
