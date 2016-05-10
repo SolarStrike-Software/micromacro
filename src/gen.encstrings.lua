@@ -17,6 +17,7 @@ local stringList =
 	basicTitle			=	"MicroMacro v%ld.%02ld.%ld",
 	logVersionFmt		=	"MicroMacro version %s (%s) %s\n",
 	website				=	"SolarStrike Software\thttp://www.solarstrike.net",
+	taskIconTitle		=	"MicroMacro",
 }
 
 

@@ -39,9 +39,16 @@ extern "C"
 
 #include "debugmessages.h"
 
+#include "resource.h"
+
 const int GAMEPAD_REPOLL_SECONDS = 10;
 char baseDirectory[MAX_PATH+1];
 std::string previousScript;
+NOTIFYICONDATA notifyIconData;
+const int WM_SYSICON = (WM_USER + 1);
+HWND messageReceiveHwnd = NULL;
+
+
 
 std::string scriptGUIDialog(std::string);
 std::string promptForScript();
@@ -56,6 +63,11 @@ void openLog();
 void deleteOldLogs(const char *, unsigned int);
 void clearCliScreen();
 static BOOL WINAPI consoleControlCallback(DWORD);
+LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
+void initNotifyIconData(HWND);
+void addNotifyIcon();
+void removeNotifyIcon();
+HWND createMessageReceiveWindow(HINSTANCE);
 
 #ifdef NETWORKING_ENABLED
 WSADATA wsadata;
@@ -80,6 +92,9 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 	argv[1] = cmdLine;
 	/* END: main() compatibility */
 
+	// Other window initialization stuff here
+	messageReceiveHwnd = createMessageReceiveWindow(hinstance);
+	initNotifyIconData(messageReceiveHwnd);
 
 	bool running;
 	SetConsoleCtrlHandler(consoleControlCallback, true);
@@ -1080,10 +1095,126 @@ static BOOL WINAPI consoleControlCallback(DWORD dwCtrlType)
 				TODO: Gracefully terminate the Lua thread, somehow.
 				Macro::instance()->cleanup();
 			*/
+			removeNotifyIcon();
 			Logger::instance()->add("Process forcefully terminated (Win32 callback)\n");
 			exit(EXIT_SUCCESS);
 			return true;
 		break;
 	}
 	return false;
+}
+
+LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch(message)
+	{
+		case WM_SYSCOMMAND:
+			/*In WM_SYSCOMMAND messages, the four low-order bits of the wParam parameter
+			are used internally by the system. To obtain the correct result when testing the value of wParam,
+			an application must combine the value 0xFFF0 with the wParam value by using the bitwise AND operator.*/
+
+			switch( wParam & 0xFFF0 )
+			{
+				case SC_MINIMIZE:
+				case SC_CLOSE:
+					return 0;
+				break;
+			}
+		break;
+
+		case WM_SYSICON:
+		{
+			if( lParam == WM_LBUTTONUP )
+			{
+				ShowWindow(Macro::instance()->getAppHwnd(), SW_RESTORE);
+			}
+		}
+		break;
+	}
+
+	return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+// Initialize our taskbar icon data
+void initNotifyIconData(HWND hwnd)
+{
+    memset( &notifyIconData, 0, sizeof( NOTIFYICONDATA ) ) ;
+
+    notifyIconData.cbSize = sizeof(NOTIFYICONDATA);
+    notifyIconData.hWnd = hwnd;
+    notifyIconData.uID = ID_TRAY_APP_ICON;
+    notifyIconData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    notifyIconData.uCallbackMessage = WM_SYSICON;
+    notifyIconData.hIcon = (HICON)LoadIcon( GetModuleHandle(NULL), MAKEINTRESOURCE(MAINICON) ) ;
+
+	size_t buffSize = 64;
+	TCHAR decrypted[buffSize+1];
+	EncString::reveal(decrypted, buffSize, EncString::taskIconTitle);
+
+    strncpy(notifyIconData.szTip, decrypted, sizeof(decrypted));
+
+	securezero(decrypted, buffSize);
+	addNotifyIcon();
+}
+
+void addNotifyIcon()
+{
+	Shell_NotifyIcon(NIM_ADD, &notifyIconData);
+}
+
+void removeNotifyIcon()
+{
+	Shell_NotifyIcon(NIM_DELETE, &notifyIconData);
+}
+
+HWND createMessageReceiveWindow(HINSTANCE hinstance)
+{
+	const char *hiddenWindowClass = "catchmsg";
+	// Create our window for receiving Windows messages
+	WNDCLASSEX wincl;
+
+    /* The Window structure */
+    wincl.hInstance = hinstance;
+    wincl.lpszClassName = hiddenWindowClass;
+    wincl.lpfnWndProc = WindowProcedure;      /* This function is called by windows */
+    wincl.style = CS_DBLCLKS;                 /* Catch double-clicks */
+    wincl.cbSize = sizeof (WNDCLASSEX);
+
+    /* Use default icon and mouse-pointer */
+    wincl.hIcon			=	LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(MAINICON));
+    wincl.hIconSm		=	LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(MAINICON));
+    wincl.hCursor		=	LoadCursor (NULL, IDC_ARROW);
+    wincl.lpszMenuName	=	NULL; // No menu
+    wincl.cbClsExtra	=	0;
+    wincl.cbWndExtra	=	0;
+    wincl.hbrBackground =	(HBRUSH)(CreateSolidBrush(RGB(0, 0, 0)));
+
+    if( !RegisterClassEx(&wincl) )
+	{
+		fprintf(stderr, "Failed to register class\n");
+		return 0;
+	}
+
+	HWND hwnd = CreateWindowEx(
+	   0,
+	   hiddenWindowClass,   	// Classname
+	   hiddenWindowClass,   	// Title Text
+	   WS_DISABLED | WS_ICONIC,	// Style
+	   CW_USEDEFAULT,       	// Default position
+	   CW_USEDEFAULT,       	// Default position
+	   0,                   	// Width
+	   0,                   	// Height
+	   HWND_DESKTOP,			// Parent (don't use main console window!)
+	   NULL,                	// No menu
+	   hinstance,
+	   NULL                	 	// No Window Creation data
+	);
+
+    if( !hwnd )
+	{
+		fprintf(stderr, "Failed to create message catcher\n");
+		return 0;
+	}
+
+	return hwnd;
 }

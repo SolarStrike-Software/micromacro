@@ -1,9 +1,10 @@
 #include "winuser.h"
+#include "resource.h"
 #define MANIFEST_RESOURCE_ID 1
 
 MANIFEST_RESOURCE_ID RT_MANIFEST "micromacro.exe.manifest"
 MAINICON ICON "micromacro.ico"
-
+ICO1 ICON DISCARDABLE "micromacro.ico"
 
 /* Include version and software info */
 #define VOS_NT_WINDOWS32			0x00040004L
