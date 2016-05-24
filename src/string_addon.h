@@ -19,6 +19,7 @@
 			static int trim(lua_State *);
 			static int random(lua_State *);
 			static int toUnicode(lua_State *);
+			static int likeness(lua_State *);
 
 		public:
 			static int regmod(lua_State *);

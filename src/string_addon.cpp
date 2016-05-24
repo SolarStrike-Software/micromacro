@@ -42,6 +42,9 @@ int String_addon::regmod(lua_State *L)
 	lua_pushcfunction(L, String_addon::toUnicode);
 	lua_setfield(L, -2, "toUnicode");
 
+	lua_pushcfunction(L, String_addon::likeness);
+	lua_setfield(L, -2, "likeness");
+
 	lua_pop(L, 1); // Pop module off stack
 
 	return MicroMacro::ERR_OK;
@@ -206,4 +209,62 @@ int String_addon::toUnicode(lua_State *L)
 	lua_pushlstring(L, (char*)wStr.c_str(), wStr.size()*sizeof(wchar_t));
 
 	return 1;
+}
+
+/*	string.likeness(string str1, string str2)
+	Returns:	number
+
+	Returns the percentage detailing how alike two strings are.
+	This implementation uses the Levenshtein distance.
+*/
+#ifndef MIN3
+	#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
+#endif
+int String_addon::likeness(lua_State *L)
+{
+	if( lua_gettop(L) != 2 )
+		wrongArgs(L);
+
+	size_t len1;
+	size_t len2;
+	char *str1 = (char *)lua_tolstring(L, 1, &len1);
+	char *str2 = (char *)lua_tolstring(L, 2, &len2);
+
+	size_t largestLen = std::max(len1, len2);
+	float percent;
+	int differences;
+
+	if( largestLen == 0 )
+	{ // Both empty
+		percent		=	100.0;
+		differences =	0;
+	}
+	else
+	{
+		// Build out a matrix of differences
+		// This is heavily based on the code found here:
+		// https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C.2B.2B
+		unsigned int column[len1+1];
+		unsigned int x, y, lastdiag, olddiag;
+		for(y = 1; y <= len1; y++)
+			column[y] = y;
+		for(x = 1; x <= len2; x++)
+		{
+			column[0] = x;
+			for(y = 1, lastdiag = x - 1; y <= len1; y++)
+			{
+				olddiag		=	column[y];
+				column[y]	=	MIN3(column[y] + 1, column[y-1] + 1, lastdiag + (str1[y-1] == str2[x-1] ? 0 : 1));
+				lastdiag	=	olddiag;
+			}
+		}
+
+		// Now we can compute how different the strings are
+		differences	=	column[len1];
+		percent		=	float(largestLen-differences)/largestLen * 100;
+	}
+
+	lua_pushnumber(L,	percent);
+	lua_pushinteger(L,	differences);
+	return 2;
 }
