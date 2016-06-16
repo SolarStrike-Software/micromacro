@@ -152,6 +152,13 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 	} // End of while(true)
 
 	delete []readBuff;
+
+	if( pSocket->mutex.lock() )
+	{
+		pSocket->hThread = NULL;
+		pSocket->mutex.unlock();
+	}
+
 	return 0;
 }
 
