@@ -29,6 +29,6 @@ void debugMessageReal(const char *file, int line, const char *fmt, ...)
 	fprintf(stdout, logbuf2);
 
 	// Log to file
-	Logger::instance()->add(logbuf2);
+	Logger::instance()->add("%s", logbuf2);
 }
 #endif

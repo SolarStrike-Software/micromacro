@@ -101,7 +101,7 @@ void badAllocationReal(const char *file, const char *func, int line)
 		sprintf(buffer, "Bad allocation in function %s, line %d\n", func, line);
 	#endif
 	fprintf(stderr, buffer);
-	Logger::instance()->add(buffer);
+	Logger::instance()->add("%s", buffer);
 
 	// Shut down Ncurses (if needed)
 	if( Ncurses_lua::is_initialized() )

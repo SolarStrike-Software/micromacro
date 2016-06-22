@@ -82,8 +82,9 @@ int Network_lua::socket(lua_State *L)
 	*ppSocket = pSocket;
 
 	//memset(pSocket, 0, sizeof(struct Socket));
-	pSocket->socket = ::socket(AF_INET, streamtype, protocol);
-	pSocket->protocol = protocol;
+	pSocket->socket		=	::socket(AF_INET, streamtype, protocol);
+	pSocket->protocol	=	protocol;
+	pSocket->deleteMe	=	false;
 
 
 	if( pSocket->socket == INVALID_SOCKET )

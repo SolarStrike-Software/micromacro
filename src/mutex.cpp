@@ -37,7 +37,7 @@ Mutex::Mutex()
 		slprintf(errMsg, sizeof(errMsg), "Failed to create a mutex. Error %d: %s\n",
 			err, errString);
 		fprintf(stderr, errMsg);
-		Logger::instance()->add(errMsg);
+		Logger::instance()->add("%s", errMsg);
 		try {
 			throw bad_mutex;
 		} catch(std::exception &e) {
@@ -58,14 +58,15 @@ Mutex::~Mutex()
 	handle = NULL;
 }
 
-int Mutex::lock(int timeoutMsecs)
+int Mutex::lock(int timeoutMsecs, std::string origin)
 {
 	char errBuff[1024];
 	if( !handle )
 	{
+		printf("Current origin: %s\n", origin.c_str());
 		slprintf(errBuff, sizeof(errBuff), "Cannot lock NULL Mutex\n");
 		fprintf(stderr, errBuff);
-		Logger::instance()->add(errBuff);
+		Logger::instance()->add("%s", errBuff);
 		try {
 			throw bad_mutex;
 		} catch(std::exception &e) {
@@ -80,14 +81,16 @@ int Mutex::lock(int timeoutMsecs)
 	switch(dwWaitResult)
 	{
 		case WAIT_OBJECT_0:
+			prevOrigin	=	origin;
 			return true;
 		break;
 
 		case WAIT_ABANDONED:
 		{
+			printf("Previous (known) call: %s\n", prevOrigin.c_str());
 			slprintf(errBuff, sizeof(errBuff), "Waiting for mutex has timed out.\n");
 			fprintf(stderr, errBuff);
-			Logger::instance()->add(errBuff);
+			Logger::instance()->add("%s", errBuff);
 
 			try {
 				throw bad_mutex;
@@ -102,10 +105,11 @@ int Mutex::lock(int timeoutMsecs)
 
 		case WAIT_FAILED:
 		{
+			printf("Previous (known) call: %s\n", prevOrigin.c_str());
 			int errCode = GetLastError();
 			slprintf(errBuff, sizeof(errBuff), "Waiting for mutex has failed. Err code: %d\n", errCode);
 			fprintf(stderr, errBuff);
-			Logger::instance()->add(errBuff);
+			Logger::instance()->add("%s", errBuff);
 
 			try {
 				throw bad_mutex;
@@ -119,9 +123,10 @@ int Mutex::lock(int timeoutMsecs)
 
 		default:
 		{
+			printf("Previous (known) call: %s\n", prevOrigin.c_str());
 			slprintf(errBuff, sizeof(errBuff), "Unknown result from WaitForSingleObject: %d\n", dwWaitResult);
 			fprintf(stderr, errBuff);
-			Logger::instance()->add(errBuff);
+			Logger::instance()->add("%s", errBuff);
 			return false;
 		}
 		break;
@@ -130,14 +135,15 @@ int Mutex::lock(int timeoutMsecs)
 	return true;
 }
 
-int Mutex::unlock()
+int Mutex::unlock(std::string origin)
 {
 	char errBuff[1024];
 	if( !handle )
 	{
+		printf("Current origin: %s\n", origin.c_str());
 		slprintf(errBuff, sizeof(errBuff), "Cannot unlock NULL Mutex\n");
 		fprintf(stderr, errBuff);
-		Logger::instance()->add(errBuff);
+		Logger::instance()->add("%s", errBuff);
 
 		try {
 			throw bad_mutex;
@@ -151,6 +157,7 @@ int Mutex::unlock()
 
 	if( !ReleaseMutex(handle) )
 	{ // Uh oh... That's not good.
+		printf("Current origin: %s\n", origin.c_str());
 		slprintf(errBuff, sizeof(errBuff), "Unable to ReleaseMutex()\n");
 
 		try {
@@ -162,7 +169,7 @@ int Mutex::unlock()
 		}
 
 		fprintf(stderr, errBuff);
-		Logger::instance()->add(errBuff);
+		Logger::instance()->add("%s", errBuff);
 		return false;
 	}
 

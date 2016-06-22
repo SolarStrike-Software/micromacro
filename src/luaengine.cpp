@@ -221,7 +221,7 @@ int LuaEngine::init()
 		{ // Error occurred while loading module
 			const char *err = "One or more modules failed to load.\n";
 			fprintf(stderr, err);
-			Logger::instance()->add(err);
+			Logger::instance()->add("%s", err);
 			return regSuccess;
 		}
 		++i; // Next module
@@ -234,7 +234,7 @@ int LuaEngine::init()
 		{ // Error occurred while loading module
 			const char *err = "Failed to load audio module; disabling sound and moving on.\n";
 			fprintf(stderr, err);
-			Logger::instance()->add(err);
+			Logger::instance()->add("%s", err);
 			Macro::instance()->getSettings()->setInt(CONFVAR_AUDIO_ENABLED, 0);
 		}
 	}
@@ -286,15 +286,16 @@ int LuaEngine::cleanup()
 	if( Ncurses_lua::is_initialized() )
 		Ncurses_lua::cleanup(lstate);
 
-	#ifdef NETWORKING_ENABLED
-	Network_lua::cleanup();
-	#endif
-
 	Process_lua::cleanup(lstate);
 	Keyboard_lua::cleanup(lstate);
 
 	lua_close(lstate);
 	lstate = NULL;
+
+	#ifdef NETWORKING_ENABLED
+		// Run network cleanup *after* closing the Lua state (to ensure sockets aren't going to be hitting the GC during/after cleanup)
+		Network_lua::cleanup();
+	#endif
 
 	lastErrorMsg = ""; // No point holding onto this anymore.
 	return MicroMacro::ERR_OK;
@@ -600,7 +601,8 @@ int LuaEngine::runEvent(MicroMacro::Event &e)
 			luaL_getmetatable(lstate, LuaType::metatable_socket);
 			lua_setmetatable(lstate, -2);
 
-			nargs = 2;
+			lua_pushinteger(lstate, e.idata2);
+			nargs = 3;
 		}
 		break;
 

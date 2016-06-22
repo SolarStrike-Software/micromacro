@@ -13,6 +13,7 @@
 	#include <queue>
 	#include "wininclude.h"
 	#include "mutex.h"
+	#include "event.h"
 
 	struct sqlite3;
 
@@ -24,7 +25,7 @@
 			MEM_INT64, MEM_UINT64, MEM_FLOAT, MEM_DOUBLE, MEM_STRING, MEM_SKIP};
 
 		typedef unsigned int ALuint;
-		class Event;
+		//class Event;
 
 
 		struct WindowInfo
@@ -150,11 +151,28 @@
 		#ifdef NETWORKING_ENABLED
 		struct Socket
 		{
+			Socket()
+			{
+				connected	=	false;
+				open		=	false;
+				deleteMe	=	false;
+			}
+
+			~Socket()
+			{
+				connected	=	false;
+				open		=	false;
+				//deleteMe	=	true;
+				if( socket )
+					closesocket(socket);
+			}
+
 			SOCKET socket;
 			HANDLE hThread;
 			int protocol;
 			bool connected;
 			bool open;
+			bool deleteMe;
 
 			std::queue<Event> eventQueue;
 			std::queue<std::string> recvQueue;

@@ -218,21 +218,21 @@ DWORD CMacro::getConsoleDefaultAttributes()
 
 void CMacro::pushEvent(Event &e)
 {
-	if( eventQueueLock.lock(5) )
+	if( eventQueueLock.lock(5, __FUNCTION__) )
 	{
 		eventQueue.push(e);
-		eventQueueLock.unlock();
+		eventQueueLock.unlock(__FUNCTION__);
 	}
 }
 
 void CMacro::flushEvents()
 {
-	if( eventQueueLock.lock() )
+	if( eventQueueLock.lock(INFINITE, __FUNCTION__) )
 	{
 		// Quickest and easiest way is to just make a new queue, then swap.
 		std::queue<Event> emptyQueue;
 		swap(eventQueue, emptyQueue);
-		eventQueueLock.unlock();
+		eventQueueLock.unlock(__FUNCTION__);
 	}
 }
 
@@ -336,7 +336,7 @@ int CMacro::handleEvents()
 {
 	int success = MicroMacro::ERR_OK;
 
-	if( eventQueueLock.lock() )
+	if( eventQueueLock.lock(INFINITE, __FUNCTION__) )
 	{
 		while( !eventQueue.empty() )
 		{
@@ -350,16 +350,19 @@ int CMacro::handleEvents()
 				break;
 			}
 		}
-		eventQueueLock.unlock();
+		eventQueueLock.unlock(__FUNCTION__);
 	}
 
 	#ifdef NETWORKING_ENABLED
-	if( Socket_lua::socketListLock.lock() )
+	if( Socket_lua::socketListLock.lock(INFINITE, __FUNCTION__) )
 	{
-		for(SocketListIterator i = Socket_lua::socketList.begin(); i != Socket_lua::socketList.end(); ++i)
+		SocketListIterator i;
+
+		// Handle all queued events before considering deleting anything
+		for(i = Socket_lua::socketList.begin(); i != Socket_lua::socketList.end(); ++i)
 		{
 			MicroMacro::Socket *pSocket = *i;
-			if( pSocket->mutex.lock() )
+			if( pSocket->mutex.lock(INFINITE, __FUNCTION__) )
 			{
 				while( !pSocket->eventQueue.empty() )
 				{
@@ -374,10 +377,34 @@ int CMacro::handleEvents()
 					}
 				}
 
-				pSocket->mutex.unlock();
+				pSocket->mutex.unlock(__FUNCTION__);
 			}
 		}
-		Socket_lua::socketListLock.unlock();
+
+
+		// Now iterate over the list again and delete those marked for deletion
+		i	=	Socket_lua::socketList.begin();
+		while( i != Socket_lua::socketList.end() )
+		{
+			MicroMacro::Socket *pSocket = *i;
+			if( pSocket->mutex.lock(INFINITE, __FUNCTION__) )
+			{
+				if( pSocket->deleteMe )
+				{
+					i = Socket_lua::socketList.erase(i);
+					delete pSocket;
+					pSocket = NULL;
+				}
+				else
+				{
+					pSocket->mutex.unlock(__FUNCTION__);
+					++i;
+				}
+			}
+		}
+
+		// Finally we can unlock
+		Socket_lua::socketListLock.unlock(__FUNCTION__);
 	}
 	#endif
 

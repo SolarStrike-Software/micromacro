@@ -44,7 +44,7 @@ int Audio_lua::regmod(lua_State *L)
 		char buffer[512];
 		slprintf(buffer, sizeof(buffer)-1, "Failed to initialize ALUT. Error code %d\n", error);
 		fprintf(stderr, buffer);
-		Logger::instance()->add(buffer);
+		Logger::instance()->add("%s", buffer);
 		return MicroMacro::ERR_INIT_FAIL;
 	}
 

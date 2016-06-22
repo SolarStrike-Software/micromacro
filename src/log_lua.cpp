@@ -58,7 +58,7 @@ int Log_lua::add(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_STRING, 1);
 	const char *str = lua_tostring(L, 1);
-	Logger::instance()->add(str);
+	Logger::instance()->add("%s", str);
 	return 0;
 }
 

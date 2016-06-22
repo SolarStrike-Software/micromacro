@@ -9,6 +9,7 @@
 #define MUTEX_H
 
 	#include "wininclude.h"
+	#include <string>
 
 	namespace MicroMacro
 	{
@@ -17,12 +18,13 @@
 		{
 			private:
 				HANDLE handle;
+				std::string prevOrigin;
 
 			public:
 				Mutex();
 				~Mutex();
-				int lock(int = INFINITE);
-				int unlock();
+				int lock(int = INFINITE, std::string = "");
+				int unlock(std::string = "");
 
 		};
 	}

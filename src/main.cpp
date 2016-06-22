@@ -297,7 +297,7 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 						slprintf(buffer, sizeof(buffer)-1, "String execution error code: %d (%s)\n%s\n",
 							success, getErrorString(success), E->getLastErrorMessage().c_str());
 						fprintf(stderr, "%s\n", buffer);
-						Logger::instance()->add(buffer);
+						Logger::instance()->add("%s", buffer);
 					}
 				}
 			}
@@ -320,7 +320,7 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 					slprintf(buffer, sizeof(buffer)-1, "String execution error code: %d (%s)\n%s\n",
 						success, getErrorString(success), E->getLastErrorMessage().c_str());
 					fprintf(stderr, "%s\n", buffer);
-					Logger::instance()->add(buffer);
+					Logger::instance()->add("%s", buffer);
 				}
 
 				// Make sure we re-initialize our Lua state before we move on
@@ -359,7 +359,7 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 			slprintf(buffer, sizeof(buffer)-1, "Load file error code: %d (%s)\n%s\n",
 				success, getErrorString(success), E->getLastErrorMessage().c_str());
 			fprintf(stderr, "%s\n", buffer);
-			Logger::instance()->add(buffer);
+			Logger::instance()->add("%s", buffer);
 
 			E->reinit();
 			continue;
@@ -378,7 +378,7 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 			slprintf(buffer, sizeof(buffer)-1, "Failed to run init function, err code: %d (%s)\n%s\n",
 				success, getErrorString(success), E->getLastErrorMessage().c_str());
 			fprintf(stderr, "%s\n", buffer);
-			Logger::instance()->add(buffer);
+			Logger::instance()->add("%s", buffer);
 
 			E->reinit();
 			continue;
@@ -447,7 +447,7 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 				slprintf(buffer, sizeof(buffer)-1, "Failed to run event function, err code: %d (%s)\n%s\n",
 					success, getErrorString(success), E->getLastErrorMessage().c_str());
 				fprintf(stderr, "%s\n", buffer);
-				Logger::instance()->add(buffer);
+				Logger::instance()->add("%s", buffer);
 
 				// Pass to event function
 				MicroMacro::Event e;
@@ -485,7 +485,7 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 				slprintf(buffer, sizeof(buffer)-1, "Error in main loop. Error code %d (%s)\n%s\n",
 					runState, getErrorString(runState), pEngine->getLastErrorMessage().c_str());
 				fprintf(stderr, "%s\n", buffer);
-				Logger::instance()->add(buffer);
+				Logger::instance()->add("%s", buffer);
 
 				// Pass to event function
 				MicroMacro::Event e;
@@ -503,14 +503,16 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 				Sleep(0);
 		}
 
+		// Force garbage collection
+		lua_gc(Macro::instance()->getEngine()->getLuaState(), LUA_GCCOLLECT, 0);
+
 		// Shut down Ncurses
 		if( Ncurses_lua::is_initialized() )
 			Ncurses_lua::cleanup(Macro::instance()->getEngine()->getLuaState());
 
-		#ifdef NETWORKING_ENABLED
-			// Make sure we cleanup any networking stuff
-			Network_lua::cleanup();
-		#endif
+		/* Do cleanup, reinit */
+		Macro::instance()->getEngine()->reinit();
+
 
 		// Grab the user's attention
 		FLASHWINFO fwi;
@@ -520,9 +522,6 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 		fwi.uCount = 3;
 		fwi.dwTimeout = 0;
 		FlashWindowEx(&fwi);
-
-		/* Do cleanup, reinit */
-		Macro::instance()->getEngine()->reinit();
 	}
 
 	#ifdef NETWORKING_ENABLED
