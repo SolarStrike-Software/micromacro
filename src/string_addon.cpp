@@ -72,12 +72,15 @@ int String_addon::explode(lua_State *L)
 	{
 		std::size_t found = str.find(delim);
 
-		// Push the string.
-		lua_pushinteger(L, key); // Key
-		lua_pushstring(L, str.substr(0, found).c_str()); // Value
-		str = str.substr(found+delimLen); // Set it
-		lua_settable(L, -3);
-		++key;
+		if( str.size() > 0 )
+		{
+			// Push the string.
+			lua_pushinteger(L, key); // Key
+			lua_pushstring(L, str.substr(0, found).c_str()); // Value
+			str = str.substr(found+delimLen); // Set it
+			lua_settable(L, -3);
+			++key;
+		}
 
 		if( found == std::string::npos )
 			break;
