@@ -156,6 +156,7 @@
 				connected	=	false;
 				open		=	false;
 				deleteMe	=	false;
+				inLua		=	false;
 			}
 
 			~Socket()
@@ -173,6 +174,7 @@
 			bool connected;
 			bool open;
 			bool deleteMe;
+			bool inLua;
 
 			std::queue<Event> eventQueue;
 			std::queue<std::string> recvQueue;

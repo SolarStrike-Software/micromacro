@@ -590,10 +590,18 @@ int LuaEngine::runEvent(MicroMacro::Event &e)
 
 		case MicroMacro::EVENT_SOCKETCONNECTED:
 		{
+			// Ensure that the socket is still valid
+			if( e.pSocket->socket == INVALID_SOCKET )
+				return 0;
+
 			lua_pushstring(lstate, "socketconnected");
-			/*Socket *pSocket;
-			Socket **ppSocket = static_cast<Socket **>(lua_newuserdata(lstate, sizeof(struct Socket)));
-			*ppSocket = pSocket;*/
+
+			if( e.pSocket->mutex.lock(INFINITE, __FUNCTION__) )
+			{
+				e.pSocket->inLua	=	true;
+				e.pSocket->mutex.unlock(__FUNCTION__);
+			}
+
 			MicroMacro::Socket **ppSocket = static_cast<MicroMacro::Socket **>(lua_newuserdata(lstate, sizeof(struct MicroMacro::Socket)));
 			*ppSocket = e.pSocket;
 

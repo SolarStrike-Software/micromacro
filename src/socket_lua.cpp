@@ -137,7 +137,7 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 				//printf("Set delete flag for 0x%x (%d)\n", pSocket, pSocket->socket);
 				closesocket(pSocket->socket);
 				pSocket->open		=	false;
-				pSocket->hThread	=	NULL;
+				//pSocket->hThread	=	NULL;
 				pSocket->connected	=	false;
 				pSocket->socket		=	INVALID_SOCKET;
 				pSocket->mutex.unlock(__FUNCTION__);
@@ -334,6 +334,12 @@ int Socket_lua::cleanup()
 		while( !socketList.empty() )
 		{
 			Socket *pSocket = socketList.front();
+
+			if( (pSocket->inLua && !pSocket->deleteMe) || pSocket->hThread )
+			{ // Make sure we aren't trying to erase it before Lua has shut down
+				Sleep(1);
+				continue;
+			}
 			socketList.erase(socketList.begin());	// Erase from the list
 			delete pSocket;							// Free memory
 			pSocket = NULL;
