@@ -293,6 +293,8 @@ int Socket_lua::regmod(lua_State *L)
 		{"getRecvQueueSize", getRecvQueueSize},
 		{"close", close},
 		{"id", id},
+		{"ip", ip},
+		{"remoteIp", remoteIp},
 		{NULL, NULL}
 	};
 
@@ -609,6 +611,50 @@ int Socket_lua::id(lua_State *L)
 
 	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
 	lua_pushinteger(L, pSocket->socket);
+	return 1;
+}
+
+int Socket_lua::ip(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
+
+	struct sockaddr_in name;
+	int	namelen	=	sizeof(name);
+	getsockname(pSocket->socket, (struct sockaddr *)&name, &namelen);
+
+	char buffer[128];
+	DWORD dwNamelen	=	sizeof(name);
+	DWORD outputLen	=	sizeof(buffer); // Initialize with our original buffer's size
+	WSAAddressToString((sockaddr*)&name, dwNamelen, NULL, buffer, &outputLen);
+
+	lua_pushstring(L, buffer);
+	return 1;
+}
+
+int Socket_lua::remoteIp(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
+
+	struct sockaddr_in name;
+	int	namelen	=	sizeof(name);
+	getpeername(pSocket->socket, (struct sockaddr *)&name, &namelen);
+
+	char buffer[128];
+	DWORD dwNamelen	=	sizeof(name);
+	DWORD outputLen	=	sizeof(buffer); // Initialize with our original buffer's size
+	WSAAddressToString((sockaddr*)&name, dwNamelen, NULL, buffer, &outputLen);
+
+	lua_pushstring(L, buffer);
 	return 1;
 }
 

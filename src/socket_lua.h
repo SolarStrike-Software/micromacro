@@ -43,6 +43,8 @@
 			static int close(lua_State *);
 
 			static int id(lua_State *);
+			static int ip(lua_State *);
+			static int remoteIp(lua_State *);
 
 
 			static DWORD WINAPI socketThread(MicroMacro::Socket *);
