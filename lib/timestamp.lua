@@ -50,6 +50,13 @@ function Timestamp:tomorrow()
 	return Timestamp:today():addDays(1);
 end
 
+-- Returns the local offset from UTC in hours
+function Timestamp:timezoneOffset()
+	local now	=	os.time();
+	local utc	=	os.time(os.date("!*t", now));
+	local seconds	=	os.difftime(now, utc);
+	return seconds / 3600;
+end
 
 -- Returns a string details the time, in a human-readable format
 -- Adjusted based on the timezone offset (if requested), or defaults to local time
@@ -62,6 +69,10 @@ function Timestamp:toHuman(tz_offset)
 
 	-- Otherwise, return local time
 	return os.date("%Y-%m-%d  %H:%M:%S", self.timevalue);
+end
+
+function Timestamp:toUtc()
+	return os.date("%a, %d %b %Y %H:%M:%S UTC", self.timevalue);
 end
 
 
