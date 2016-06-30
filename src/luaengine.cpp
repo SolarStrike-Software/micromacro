@@ -590,9 +590,12 @@ int LuaEngine::runEvent(MicroMacro::Event &e)
 
 		case MicroMacro::EVENT_SOCKETCONNECTED:
 		{
-			// Ensure that the socket is still valid
+			// Ensure that the socket is still valid, if not then don't do anything
 			if( e.pSocket->socket == INVALID_SOCKET )
+			{
+				lua_pop(lstate, 2); // Pop stacktrace, macro table
 				return 0;
+			}
 
 			lua_pushstring(lstate, "socketconnected");
 
