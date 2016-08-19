@@ -11,8 +11,6 @@ function Httpd:constructor(config)
 
 	self:init(config);
 	self.clients = {};
-
-
 end
 
 function Httpd:init(config)
