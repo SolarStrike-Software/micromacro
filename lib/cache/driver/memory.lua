@@ -53,6 +53,21 @@ function MemoryDriver:rememberForever(itemName, callback)
 	return self:remember(itemName, -1, callback);
 end
 
+function MemoryDriver:renew(itemName, minutes)
+	local expire;
+	if( type(minutes) == 'nil' ) then
+		expire	=	nil;
+	elseif( type(minutes) == 'number' or tonumber(minutes) ) then
+		expire	=	minutes * 60;
+	else
+		expire	=	minutes;
+	end
+
+	if( self.items[itemName] ) then
+		self.items[itemName].expires_at	=	expire;
+	end
+end
+
 function MemoryDriver:forget(itemName)
 	-- Removes an item from the cache
 	self.items[itemName] = nil;

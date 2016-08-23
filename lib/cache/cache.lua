@@ -9,7 +9,7 @@ local driverMap = {
 };
 
 local defaultDriverId	=	'db';
-function Cache:constructor(requestedDriver)
+function Cache:constructor(requestedDriver, config)
 	local driverId;
 	if( driverMap[requestedDriver] ) then
 		driverId	=	requestedDriver;
@@ -17,7 +17,7 @@ function Cache:constructor(requestedDriver)
 		driverId	=	defaultDriverId;
 	end
 
-	self.driver		=	driverMap[driverId]();
+	self.driver		=	driverMap[driverId](config);
 end
 
 function Cache:driverName()
@@ -32,8 +32,8 @@ function Cache:has(itemName)
 	return self.driver:has(itemName);
 end
 
-function Cache:set(itemName, value)
-	return self.driver:set(itemName, value);
+function Cache:set(itemName, value, minutes)
+	return self.driver:set(itemName, value, minutes);
 end
 
 function Cache:remember(itemName, minutes, callback)
@@ -42,6 +42,10 @@ end
 
 function Cache:rememberForever(itemName, callback)
 	return self.driver:rememberForever(itemName, callback);
+end
+
+function Cache:renew(itemName, minutes)
+	return self.driver:renew(itemName, minutes);
 end
 
 function Cache:forget(itemName)
