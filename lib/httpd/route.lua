@@ -135,7 +135,7 @@ function _Route:handle(httpd, header, content)
 		return stdError(500, result);
 	end
 
-	controller = _G[controllerName];
+	local controller = _G[controllerName];
 	if( not controller ) then -- If we fail to load the controller file or the controller object isn't found, 404
 		printf("Controller file was loaded but global class \'%s\' is not found\n", controllerName);
 		return stdError(404);

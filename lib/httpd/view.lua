@@ -39,6 +39,20 @@ function _View:render(str)
 		return replacement;
 	end);
 
+	-- Handle fors
+	str	=	string.gsub(str, "%@for%(%s*([0-9A-Za-z%_]*)%s*=%s*([0-9A-Za-z%_]*)%s*,%s*([0-9A-Za-z%_]*)%)%s*(%b{})", function(varName, startCount, endCount, subContent)
+		-- Chop off the encapsulating { and }
+		subContent	=	string.sub(subContent, 2, -2);
+
+		local replacement = '';
+		for i = startCount,endCount do
+			_ENV[varName]	=	sprintf("%d", i);
+			replacement		=	replacement .. self:render(subContent);
+		end
+
+		return replacement;
+	end);
+
 	-- Handle if-else statements
 	str	=	string.gsub(str, "%@if%s*(%b())%s*(%b{})%s*else%s*(%b{})", function(condition, ifContent, elseContent)
 		condition	=	string.sub(condition, 2, -2);
@@ -74,12 +88,27 @@ function _View:render(str)
 	end);
 
 	-- Handle substitutions
+	str	=	string.gsub(str, "{{#(.-)#}}", function(inner) -- Non-output
+		inner	=	string.gsub(inner, "%%}", "}");
+		inner	=	string.gsub(inner, "%%{", "{");
+
+		local chunk;
+		if( string.match(inner, "%s*if%s*%b()%s*then%s*.-end") or string.match(inner, "%x+%s*=%s*.*") ) then
+			chunk = load(inner);
+		else
+			chunk = load('return('.. inner .. ')');
+		end
+		local status,result	=	pcall(chunk)
+
+		return '';
+	end);
+
 	str	=	string.gsub(str, "{{!(.-)!}}", function(inner) -- Un-escaped
 		inner	=	string.gsub(inner, "%%}", "}");
 		inner	=	string.gsub(inner, "%%{", "{");
 
 		local chunk;
-		if( string.match(inner, "%s*if%s*%b()%s*then%s*.-end") ) then
+		if( string.match(inner, "%s*if%s*%b()%s*then%s*.-end") or string.match(inner, "%x+%s*=%s*.*") ) then
 			chunk = load(inner);
 		else
 			chunk = load('return('.. inner .. ')');
@@ -101,7 +130,7 @@ function _View:render(str)
 		inner	=	string.gsub(inner, "%%{", "{");
 
 		local chunk;
-		if( string.match(inner, "%s*if%s*%b()%s*then%s*.-end") ) then
+		if( string.match(inner, "%s*if%s*%b()%s*then%s*.-end") or string.match(inner, "%x+%s*=%s*.*") ) then
 			chunk = load(inner);
 		else
 			chunk = load('return('.. inner .. ')');
@@ -117,6 +146,7 @@ function _View:render(str)
 		end
 		return result;
 	end);
+
 	return str;
 end
 

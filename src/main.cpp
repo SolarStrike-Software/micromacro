@@ -1096,7 +1096,7 @@ static BOOL WINAPI consoleControlCallback(DWORD dwCtrlType)
 			*/
 			removeNotifyIcon();
 			Logger::instance()->add("Process forcefully terminated (Win32 callback)\n");
-			exit(EXIT_SUCCESS);
+			//exit(EXIT_SUCCESS);	// As it turns out, this is a terrible idea! Let's not do that again.
 			return true;
 		break;
 	}

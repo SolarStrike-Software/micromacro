@@ -19,5 +19,10 @@ MicroMacro::Event &MicroMacro::Event::operator=(const MicroMacro::Event &o)
 	idata3 = o.idata3;
 	msg = o.msg;
 	pSocket = o.pSocket;
+
+	customEventDataCount	=	o.customEventDataCount;
+	for(unsigned int i = 0; i < CUSTOM_EVENT_DATA_SLOTS; i++)
+		customEventDatas[i]	=	o.customEventDatas[i];
+
 	return *this;
 }

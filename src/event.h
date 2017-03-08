@@ -9,6 +9,10 @@
 #define EVENT_H
 
 	#include <string>
+	#include "customEvent.h"
+
+	// How many pieces of data can be passed to custom events
+	#define CUSTOM_EVENT_DATA_SLOTS			16
 
 	namespace MicroMacro
 	{
@@ -33,7 +37,8 @@
 			EVENT_SOCKETDISCONNECTED,
 			EVENT_SOCKETRECEIVED,
 			EVENT_SOCKETERROR,
-			EVENT_QUIT
+			EVENT_QUIT,
+			EVENT_CUSTOM,
 		};
 
 		class Event
@@ -42,6 +47,7 @@
 			public:
 				enum MicroMacro::EventType type;
 				std::string msg;
+				unsigned int customEventDataCount;
 				union {
 					size_t idata1;
 					double fdata1;
@@ -56,7 +62,8 @@
 					double fdata3;
 				};
 
-				Event() : type(EVENT_UNKNOWN), msg(""), idata1(0), idata2(0), idata3(0) { };
+				MicroMacro::CustomEventData customEventDatas[CUSTOM_EVENT_DATA_SLOTS];
+				Event() : type(EVENT_UNKNOWN), msg(""), customEventDataCount(0), idata1(0), idata2(0), idata3(0) { };
 				Event &operator=(const Event &);
 		};
 	}

@@ -39,6 +39,8 @@
 			static int is64bit(lua_State *);
 			static int is32bit(lua_State *);
 
+			static int fireEvent(lua_State *);
+
 			void stdError();
 
 			std::string basePath;

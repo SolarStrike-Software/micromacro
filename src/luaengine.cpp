@@ -104,6 +104,43 @@ int LuaEngine::_macrotab_getVersion(lua_State *L)
 	return 1;
 }
 
+// Pushes a user-defined (custom) event onto the queue
+int LuaEngine::fireEvent(lua_State *L)
+{
+	MicroMacro::Event e;
+	e.type	=	MicroMacro::EVENT_CUSTOM;
+
+	int args = lua_gettop(L);
+	unsigned int c = 0; // Count what we push in
+	for(unsigned int i = 0; i < args; i++)
+	{
+		if( i >= CUSTOM_EVENT_DATA_SLOTS ) // Don't jam more info in there than we can hold, OR ELSE
+			break;
+
+		int index = (i + 1);
+		switch( lua_type(L, index) )
+		{
+			case LUA_TNUMBER:
+				e.customEventDatas[i].setValue(lua_tonumber(L, index));
+				c++;
+			break;
+			case LUA_TSTRING:
+			{
+				size_t length;
+				const char *str = lua_tolstring(L, index, &length);
+				e.customEventDatas[i].setValue((char *)str, length);
+				c++;
+			}
+			break;
+		}
+	}
+
+	e.customEventDataCount	=	c;
+	Macro::instance()->pushEvent(e);
+
+	return 0;
+}
+
 /*	Push this into the stack and use it as the message handler
 	for lua_pcall(). This appends the stacktrace to any error
 	messages we might catch.
@@ -170,6 +207,7 @@ int LuaEngine::init()
 		{"getVersion", LuaEngine::_macrotab_getVersion},
 		{"is64bit", LuaEngine::is64bit},
 		{"is32bit", LuaEngine::is32bit},
+		{"fireEvent", LuaEngine::fireEvent},
 		{NULL, NULL}
 	};
 
@@ -640,6 +678,27 @@ int LuaEngine::runEvent(MicroMacro::Event &e)
 		case MicroMacro::EVENT_QUIT:
 			lua_pushstring(lstate, "quit");
 			nargs = 1;
+		break;
+
+		case MicroMacro::EVENT_CUSTOM:
+		{
+			unsigned int c = 0; // We count our pushes independently just in case there's weird data we don't push
+			for(unsigned int i = 0; i < e.customEventDataCount; i++)
+			{
+				switch(e.customEventDatas[i].type)
+				{
+					case LUA_TNUMBER:
+						lua_pushnumber(lstate, e.customEventDatas[i].number);
+						c++;
+					break;
+					case LUA_TSTRING:
+						lua_pushstring(lstate, e.customEventDatas[i].str);
+						c++;
+					break;
+				};
+			}
+			nargs = c;
+		}
 		break;
 
 		case MicroMacro::EVENT_UNKNOWN:

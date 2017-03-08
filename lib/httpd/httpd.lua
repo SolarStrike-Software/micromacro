@@ -23,10 +23,12 @@ function Httpd:init(config)
 	self.port			=	config.port	or	self.port;
 	self.ip				=	config.ip	or	self.ip;
 	self.server			=	network.socket('tcp');
-	self.controllerDir	=	config.controllerDirectory	or	(baseDir .. '/Controllers/');
-	self.viewDir		=	config.viewDirectory		or	(baseDir .. '/Views/');
-	self.staticDir		=	config.staticDirectory		or	(baseDir .. '/Static/');
+	self.controllerDir	=	config.controllerDir	or	(baseDir .. '/Controllers/');
+	self.viewDir		=	config.viewDir			or	(baseDir .. '/Views/');
+	self.staticDir		=	config.staticDir		or	(baseDir .. '/Static/');
 	self.clients		=	{};
+
+	print("self.controllerDir:", self.controllerDir);
 
 	local success	=	self.server:listen(self.ip, self.port);
 	if( success ) then
