@@ -108,6 +108,8 @@ int LuaEngine::_macrotab_getVersion(lua_State *L)
 int LuaEngine::fireEvent(lua_State *L)
 {
 	MicroMacro::Event e;
+	checkType(L, LT_STRING, 1);
+
 	e.type	=	MicroMacro::EVENT_CUSTOM;
 
 	int args = lua_gettop(L);
@@ -118,6 +120,7 @@ int LuaEngine::fireEvent(lua_State *L)
 			break;
 
 		int index = (i + 1);
+		checkType(L, LT_NUMBER | LT_STRING, index);
 		switch( lua_type(L, index) )
 		{
 			case LUA_TNUMBER:
