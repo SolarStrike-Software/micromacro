@@ -20,9 +20,9 @@ MicroMacro::Event &MicroMacro::Event::operator=(const MicroMacro::Event &o)
 	msg = o.msg;
 	pSocket = o.pSocket;
 
-	customEventDataCount	=	o.customEventDataCount;
-	for(unsigned int i = 0; i < CUSTOM_EVENT_DATA_SLOTS; i++)
-		customEventDatas[i]	=	o.customEventDatas[i];
+	customEventDatas.clear();
+	for(unsigned int i = 0; i < customEventDatas.size(); i++)
+		customEventDatas.push_back(o.customEventDatas.at(i));
 
 	return *this;
 }

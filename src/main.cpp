@@ -450,10 +450,10 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 				Logger::instance()->add("%s", buffer);
 
 				// Pass to event function
-				MicroMacro::Event e;
-				e.type = MicroMacro::EVENT_ERROR;
-				e.msg = E->getLastErrorMessage();
-				E->runEvent(e);
+				MicroMacro::Event *pe = new MicroMacro::Event;
+				pe->type = MicroMacro::EVENT_ERROR;
+				pe->msg = E->getLastErrorMessage();
+				E->runEvent(pe);
 
 				break;
 			}
@@ -488,10 +488,10 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 				Logger::instance()->add("%s", buffer);
 
 				// Pass to event function
-				MicroMacro::Event e;
-				e.type = MicroMacro::EVENT_ERROR;
-				e.msg = pEngine->getLastErrorMessage();
-				pEngine->runEvent(e);
+				MicroMacro::Event *pe = new MicroMacro::Event;
+				pe->type = MicroMacro::EVENT_ERROR;
+				pe->msg = pEngine->getLastErrorMessage();
+				pEngine->runEvent(pe);
 
 				break;
 			}

@@ -9,6 +9,7 @@
 #define CUSTOM_EVENT_H
 
 	#include <cstddef>
+	#include <string>
 
 	namespace MicroMacro
 	{
@@ -18,10 +19,8 @@
 				int		type;
 				size_t	length;
 
-				union {
-					double number;
-					char *str;
-				};
+				double number;
+				std::string str;
 
 				CustomEventData();
 				~CustomEventData();

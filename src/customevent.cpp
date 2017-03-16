@@ -22,31 +22,25 @@ CustomEventData::CustomEventData()
 	type	=	LUA_TNIL;
 	length	=	0;
 	number	=	0;
-	str		=	NULL;
 }
 
 CustomEventData::~CustomEventData()
 {
-	delete[] str;
-	str = NULL;
+	str = "";
 }
 
 void CustomEventData::setValue(double newNumber)
 {
-	delete []str; str = NULL;
+	str		=	"";
 	number	=	newNumber;
 	type	=	LUA_TNUMBER;
 }
 
 void CustomEventData::setValue(char *newStr, size_t newLength)
 {
-	if( str != NULL )
-		delete[] str;
-
 	type	=	LUA_TSTRING;
 	length	=	newLength;
-	str		=	new char[length+1];
-	strlcpy(str, newStr, length);
+	str		=	std::string(newStr, newLength);
 }
 
 CustomEventData &CustomEventData::operator=(const CustomEventData &o)
@@ -58,7 +52,7 @@ CustomEventData &CustomEventData::operator=(const CustomEventData &o)
 		number	=	o.number;
 	else if (type == LUA_TSTRING)
 	{	// Lets make a new copy of the data
-		setValue(o.str, o.length);
+		str		=	std::string(o.str, length);
 	}
 
 	return *this;

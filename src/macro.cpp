@@ -167,10 +167,10 @@ void CMacro::pollForegroundWindow()
 	if( foregroundHwnd != lastForegroundHwnd )
 	{
 		// Trigger window focus change event
-		Event e;
-		e.type = MicroMacro::EVENT_FOCUSCHANGED;
-		e.idata1 = ((size_t)foregroundHwnd);
-		pushEvent(e);
+		Event *pe = new Event;
+		pe->type = MicroMacro::EVENT_FOCUSCHANGED;
+		pe->idata1 = ((size_t)foregroundHwnd);
+		pushEvent(pe);
 	}
 }
 
@@ -189,9 +189,9 @@ void CMacro::pollConsoleResize()
 			lastConsoleSizeY = h;
 
 			// Trigger window resize event
-			Event e;
-			e.type = MicroMacro::EVENT_CONSOLERESIZED;
-			pushEvent(e);
+			Event *pe = new Event;
+			pe->type = MicroMacro::EVENT_CONSOLERESIZED;
+			pushEvent(pe);
 		}
 	}
 }
@@ -216,11 +216,11 @@ DWORD CMacro::getConsoleDefaultAttributes()
 	return consoleDefaultAttributes;
 }
 
-void CMacro::pushEvent(Event &e)
+void CMacro::pushEvent(Event *pe)
 {
 	if( eventQueueLock.lock(5, __FUNCTION__) )
 	{
-		eventQueue.push(e);
+		eventQueue.push(pe);
 		eventQueueLock.unlock(__FUNCTION__);
 	}
 }
@@ -230,7 +230,7 @@ void CMacro::flushEvents()
 	if( eventQueueLock.lock(INFINITE, __FUNCTION__) )
 	{
 		// Quickest and easiest way is to just make a new queue, then swap.
-		std::queue<Event> emptyQueue;
+		std::queue<Event *> emptyQueue;
 		swap(eventQueue, emptyQueue);
 		eventQueueLock.unlock(__FUNCTION__);
 	}
@@ -245,27 +245,27 @@ int CMacro::handleHidInput()
 	{
 		if( hid.released(i) )
 		{ // Key released
-			Event e;
+			Event *pe = new Event;
 			if( i > VK_XBUTTON2 )
-				e.type = MicroMacro::EVENT_KEYRELEASED;
+				pe->type = MicroMacro::EVENT_KEYRELEASED;
 			else
-				e.type = MicroMacro::EVENT_MOUSERELEASED;
-			e.idata1 = i;
-			e.idata2 = hid.getToggleState(i);
-			try{ pushEvent(e); }
+				pe->type = MicroMacro::EVENT_MOUSERELEASED;
+			pe->idata1 = i;
+			pe->idata2 = hid.getToggleState(i);
+			try{ pushEvent(pe); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
 		else if( hid.pressed(i) )
 		{ // Key pressed
-			Event e;
+			Event *pe = new Event;
 			if( i > VK_XBUTTON2 )
-				e.type = MicroMacro::EVENT_KEYPRESSED;
+				pe->type = MicroMacro::EVENT_KEYPRESSED;
 			else
-				e.type = MicroMacro::EVENT_MOUSEPRESSED;
+				pe->type = MicroMacro::EVENT_MOUSEPRESSED;
 
-			e.idata1 = i;
-			e.idata2 = hid.getToggleState(i);
-			try{ pushEvent(e); }
+			pe->idata1 = i;
+			pe->idata2 = hid.getToggleState(i);
+			try{ pushEvent(pe); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
 	}
@@ -284,20 +284,20 @@ int CMacro::handleHidInput()
 		{
 			if( hid.joyPressed(i, b) )
 			{
-				Event e;
-				e.type = MicroMacro::EVENT_GAMEPADPRESSED;
-				e.idata1 = i + 1;
-				e.idata2 = b + 1;
-				try{ pushEvent(e); }
+				Event *pe = new Event;
+				pe->type = MicroMacro::EVENT_GAMEPADPRESSED;
+				pe->idata1 = i + 1;
+				pe->idata2 = b + 1;
+				try{ pushEvent(pe); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}
 			else if( hid.joyReleased(i, b) )
 			{
-				Event e;
-				e.type = MicroMacro::EVENT_GAMEPADRELEASED;
-				e.idata1 = i + 1;
-				e.idata2 = b + 1;
-				try{ pushEvent(e); }
+				Event *pe = new Event;
+				pe->type = MicroMacro::EVENT_GAMEPADRELEASED;
+				pe->idata1 = i + 1;
+				pe->idata2 = b + 1;
+				try{ pushEvent(pe); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}
 		}
@@ -305,11 +305,11 @@ int CMacro::handleHidInput()
 		// Check POV (D-pad)
 		if( hid.joyPOVChanged(i) )
 		{
-			Event e;
-			e.type = MicroMacro::EVENT_GAMEPADPOVCHANGED;
-			e.idata1 = i + 1;
-			e.fdata2 = hid.joyPOV(i)/100;
-			try{ pushEvent(e); }
+			Event *pe = new Event;
+			pe->type = MicroMacro::EVENT_GAMEPADPOVCHANGED;
+			pe->idata1 = i + 1;
+			pe->fdata2 = hid.joyPOV(i)/100;
+			try{ pushEvent(pe); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
 
@@ -318,12 +318,12 @@ int CMacro::handleHidInput()
 		{
 			if( hid.joyAxisChanged(i, a) )
 			{
-				Event e;
-				e.type = MicroMacro::EVENT_GAMEPADAXISCHANGED;
-				e.idata1 = i + 1;
-				e.idata2 = a;
-				e.fdata3 = hid.joyAxis(i, a)/65535.0f*100;
-				try{ pushEvent(e); }
+				Event *pe = new Event;
+				pe->type = MicroMacro::EVENT_GAMEPADAXISCHANGED;
+				pe->idata1 = i + 1;
+				pe->idata2 = a;
+				pe->fdata3 = hid.joyAxis(i, a)/65535.0f*100;
+				try{ pushEvent(pe); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}
 		}
@@ -340,8 +340,8 @@ int CMacro::handleEvents()
 	{
 		while( !eventQueue.empty() )
 		{
-			Event e = eventQueue.front();
-			success = engine.runEvent(e);
+			Event *pe = eventQueue.front();
+			success = engine.runEvent(pe);
 			eventQueue.pop();
 
 			if( success != MicroMacro::ERR_OK )
@@ -366,8 +366,8 @@ int CMacro::handleEvents()
 			{
 				while( !pSocket->eventQueue.empty() )
 				{
-					MicroMacro::Event e = pSocket->eventQueue.front();
-					success = engine.runEvent(e);
+					MicroMacro::Event *pe = &pSocket->eventQueue.front();
+					success = engine.runEvent(pe);
 					pSocket->eventQueue.pop();
 
 					if( success != MicroMacro::ERR_OK )

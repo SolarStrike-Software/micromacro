@@ -61,7 +61,7 @@
 
 			int runInit(std::vector<std::string> * = NULL);
 			int runMain();
-			int runEvent(MicroMacro::Event &);
+			int runEvent(MicroMacro::Event *);
 			int dispatchWindowsMessages();
 
 			float getDeltaTime();
