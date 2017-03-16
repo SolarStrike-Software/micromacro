@@ -229,9 +229,17 @@ void CMacro::flushEvents()
 {
 	if( eventQueueLock.lock(INFINITE, __FUNCTION__) )
 	{
+		// Foreach and delete all
+		while( eventQueue.size() )
+		{
+			Event *pe = eventQueue.front();
+			delete pe;
+			eventQueue.pop();
+		}
+		/*
 		// Quickest and easiest way is to just make a new queue, then swap.
 		std::queue<Event *> emptyQueue;
-		swap(eventQueue, emptyQueue);
+		swap(eventQueue, emptyQueue);*/
 		eventQueueLock.unlock(__FUNCTION__);
 	}
 }
@@ -342,6 +350,7 @@ int CMacro::handleEvents()
 		{
 			Event *pe = eventQueue.front();
 			success = engine.runEvent(pe);
+			delete pe;
 			eventQueue.pop();
 
 			if( success != MicroMacro::ERR_OK )
