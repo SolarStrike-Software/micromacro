@@ -1,3 +1,10 @@
+.idea/*
+cmake-build-debug/*
+CMakeFiles/*
+Makefile
+CMakeCache.txt
+CMakeLists.txt
+cmake_install.cmake
 logs/*
 scripts/*
 Release/*

@@ -631,6 +631,7 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 			nargs = 1;
 		break;
 
+		#ifdef NETWORKING_ENABLED
 		case MicroMacro::EVENT_SOCKETCONNECTED:
 		{
 			// Ensure that the socket is still valid, if not then don't do anything
@@ -679,6 +680,7 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 			lua_pushinteger(lstate, pe->idata2);
 			nargs = 3;
 		break;
+        #endif
 
 		case MicroMacro::EVENT_QUIT:
 			lua_pushstring(lstate, "quit");
