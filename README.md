@@ -23,7 +23,7 @@ If anyone is interested in porting this, let me know.
 **Required:** (Standard Win32 libraries italicized)
 * Lua 5.3
 * Libncurses
-* Sqlite 3
+* Sqlite3
 * *Netapi32*
 * *Winmm*
 * *Psapi*
