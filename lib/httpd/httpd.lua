@@ -80,6 +80,7 @@ end
 
 function Httpd:handleMessage(client, data)
 	-- If still receiving data, keep holding it until we've got the full thing
+	local method, resource;
 	if( client.status == 'receiving' ) then
 		client.data = client.data .. data;
 
@@ -108,7 +109,7 @@ function Httpd:handleMessage(client, data)
 		local header = {};
 		local eol	=	string.find(headerStr, "\r\n");
 		local firstline	=	string.sub(headerStr, 0, eol);
-		local method, resource = string.match(firstline, "^([A-Z]*) (.*) HTTP/1%.?");
+		method, resource = string.match(firstline, "^([A-Z]*) (.*) HTTP/1%.?");
 
 		if( not method and not resource ) then -- Malformed input
 			response	=	stdError(400);
