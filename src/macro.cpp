@@ -169,7 +169,9 @@ void CMacro::pollForegroundWindow()
 		// Trigger window focus change event
 		Event *pe = new Event;
 		pe->type = MicroMacro::EVENT_FOCUSCHANGED;
-		pe->idata1 = ((size_t)foregroundHwnd);
+		MicroMacro::EventData ced;
+		ced.setValue((int)foregroundHwnd);
+		pe->data.push_back(ced);
 		pushEvent(pe);
 	}
 }
@@ -258,8 +260,14 @@ int CMacro::handleHidInput()
 				pe->type = MicroMacro::EVENT_KEYRELEASED;
 			else
 				pe->type = MicroMacro::EVENT_MOUSERELEASED;
-			pe->idata1 = i;
-			pe->idata2 = hid.getToggleState(i);
+
+			MicroMacro::EventData ced;
+			ced.setValue((int)i);
+			pe->data.push_back(ced);
+
+			ced.setValue(hid.getToggleState(i));
+			pe->data.push_back(ced);
+
 			try{ pushEvent(pe); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
@@ -271,8 +279,13 @@ int CMacro::handleHidInput()
 			else
 				pe->type = MicroMacro::EVENT_MOUSEPRESSED;
 
-			pe->idata1 = i;
-			pe->idata2 = hid.getToggleState(i);
+			MicroMacro::EventData ced;
+			ced.setValue((int)i);
+			pe->data.push_back(ced);
+
+			ced.setValue(hid.getToggleState(i));
+			pe->data.push_back(ced);
+
 			try{ pushEvent(pe); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
@@ -294,8 +307,16 @@ int CMacro::handleHidInput()
 			{
 				Event *pe = new Event;
 				pe->type = MicroMacro::EVENT_GAMEPADPRESSED;
-				pe->idata1 = i + 1;
-				pe->idata2 = b + 1;
+				//pe->idata1 = i + 1;
+				//pe->idata2 = b + 1;
+
+				MicroMacro::EventData ced;
+				ced.setValue((int)(i + 1));
+				pe->data.push_back(ced);
+
+				ced.setValue((int)(b + 1));
+				pe->data.push_back(ced);
+
 				try{ pushEvent(pe); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}
@@ -303,8 +324,16 @@ int CMacro::handleHidInput()
 			{
 				Event *pe = new Event;
 				pe->type = MicroMacro::EVENT_GAMEPADRELEASED;
-				pe->idata1 = i + 1;
-				pe->idata2 = b + 1;
+				//pe->idata1 = i + 1;
+				//pe->idata2 = b + 1;
+
+				MicroMacro::EventData ced;
+				ced.setValue((int)(i + 1));
+				pe->data.push_back(ced);
+
+				ced.setValue((int)(b + 1));
+				pe->data.push_back(ced);
+
 				try{ pushEvent(pe); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}
@@ -315,8 +344,13 @@ int CMacro::handleHidInput()
 		{
 			Event *pe = new Event;
 			pe->type = MicroMacro::EVENT_GAMEPADPOVCHANGED;
-			pe->idata1 = i + 1;
-			pe->fdata2 = hid.joyPOV(i)/100;
+			MicroMacro::EventData ced;
+			ced.setValue((int)(i + 1));
+			pe->data.push_back(ced);
+
+			ced.setValue((float)hid.joyPOV(i)/100);
+			pe->data.push_back(ced);
+
 			try{ pushEvent(pe); }
 			catch( std::bad_alloc &ba ) { badAllocation(); }
 		}
@@ -328,9 +362,20 @@ int CMacro::handleHidInput()
 			{
 				Event *pe = new Event;
 				pe->type = MicroMacro::EVENT_GAMEPADAXISCHANGED;
-				pe->idata1 = i + 1;
+				/*pe->idata1 = i + 1;
 				pe->idata2 = a;
-				pe->fdata3 = hid.joyAxis(i, a)/65535.0f*100;
+				pe->fdata3 = hid.joyAxis(i, a)/65535.0f*100;*/
+
+				MicroMacro::EventData ced;
+				ced.setValue((int)(i + 1));
+				pe->data.push_back(ced);
+
+				ced.setValue((int)a);
+				pe->data.push_back(ced);
+
+				ced.setValue((float)hid.joyAxis(i, a)/65535.0f*100);
+				pe->data.push_back(ced);
+
 				try{ pushEvent(pe); }
 				catch( std::bad_alloc &ba ) { badAllocation(); }
 			}

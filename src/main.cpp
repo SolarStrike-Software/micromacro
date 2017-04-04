@@ -452,7 +452,9 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 				// Pass to event function
 				MicroMacro::Event *pe = new MicroMacro::Event;
 				pe->type = MicroMacro::EVENT_ERROR;
-				pe->msg = E->getLastErrorMessage();
+				MicroMacro::EventData ced;
+				ced.setValue(E->getLastErrorMessage());
+				pe->data.push_back(ced);
 				E->runEvent(pe);
 
 				break;
@@ -490,7 +492,9 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 				// Pass to event function
 				MicroMacro::Event *pe = new MicroMacro::Event;
 				pe->type = MicroMacro::EVENT_ERROR;
-				pe->msg = pEngine->getLastErrorMessage();
+				MicroMacro::EventData ced;
+				ced.setValue(pEngine->getLastErrorMessage());
+				pe->data.push_back(ced);
 				pEngine->runEvent(pe);
 
 				break;

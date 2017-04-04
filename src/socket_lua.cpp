@@ -31,6 +31,7 @@ extern "C"
 using MicroMacro::Socket;
 using MicroMacro::Event;
 using MicroMacro::Mutex;
+using MicroMacro::EventData;
 
 const char *LuaType::metatable_socket = "socket";
 
@@ -50,12 +51,18 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 		if( result > 0 )
 		{ // Data received
 			// Copy the received data into an event; push it.
-			std::string msg = std::string(readBuff, result);
 			readBuff[result] = 0; // Enforce NULL-terminator
 			Event e;
-			e.idata1 = (int)pSocket->socket;
 			e.type = MicroMacro::EVENT_SOCKETRECEIVED;
-			e.msg = msg;
+
+			// Push the socket ID
+			EventData ced;
+			ced.setValue((int)pSocket->socket);
+			e.data.push_back(ced);
+
+			// Push the received data
+			ced.setValue(readBuff, result);
+			e.data.push_back(ced);
 
 			if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
 			{
@@ -63,15 +70,17 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 					pSocket->recvQueue.pop();
 
 				pSocket->eventQueue.push(e);
-				pSocket->recvQueue.push(msg);
+				pSocket->recvQueue.push(std::string(readBuff, result));
 				pSocket->mutex.unlock(__FUNCTION__);
 			}
 		}
 		else if( result == 0 )
 		{ // Connection closed (probably by remote)
 			Event e;
-			e.idata1 = (int)pSocket->socket;
 			e.type = MicroMacro::EVENT_SOCKETDISCONNECTED;
+			EventData ced;
+			ced.setValue((int)pSocket->socket);
+			e.data.push_back(ced);
 
 			if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
 			{
@@ -92,8 +101,10 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 					case WSAECONNRESET:
 					{
 						Event e;
-						e.idata1 = (int)pSocket->socket;
 						e.type = MicroMacro::EVENT_SOCKETDISCONNECTED;
+						EventData ced;
+						ced.setValue((int)pSocket->socket);
+						e.data.push_back(ced);
 
 						if( pSocket->open )
 						{
@@ -106,9 +117,13 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 					case WSAECONNABORTED:	// Software caused connection abort. (your machine); we should close the socket
 					{
 						Event e;
-						e.idata1 = (int)pSocket->socket;
-						e.idata2 = errCode;
 						e.type = MicroMacro::EVENT_SOCKETERROR;
+						EventData ced;
+						ced.setValue((int)pSocket->socket);
+						e.data.push_back(ced);
+
+						ced.setValue((int)errCode);
+						e.data.push_back(ced);
 
 						if( pSocket->open )
 						{
@@ -123,9 +138,15 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 					#endif
 					{
 						Event e;
-						e.idata1 = (int)pSocket->socket;
-						e.idata2 = errCode;
 						e.type = MicroMacro::EVENT_SOCKETERROR;
+
+						EventData ced;
+						ced.setValue((int)pSocket->socket);
+						e.data.push_back(ced);
+
+						ced.setValue((int)errCode);
+						e.data.push_back(ced);
+
 						if( pSocket->open )
 						{
 							pSocket->eventQueue.push(e);
@@ -184,8 +205,11 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 				case WSAECONNRESET: // CONNRESET; remote side closed the connection forcibly
 				{
 					Event e;
-					e.idata1 = (int)pSocket->socket;
 					e.type = MicroMacro::EVENT_SOCKETDISCONNECTED;
+
+					EventData ced;
+					ced.setValue((int)pSocket->socket);
+					e.data.push_back(ced);
 
 					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
 					{
@@ -198,9 +222,14 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 				case WSAECONNABORTED:	// Software caused connection abort. (your machine); we should close the socket
 				{
 					Event e;
-					e.idata1 = (int)pSocket->socket;
-					e.idata2 = errCode;
 					e.type = MicroMacro::EVENT_SOCKETERROR;
+
+					EventData ced;
+					ced.setValue((int)pSocket->socket);
+					e.data.push_back(ced);
+
+					ced.setValue((int)errCode);
+					e.data.push_back(ced);
 
 					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
 					{
@@ -222,9 +251,14 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 				#endif
 				{
 					Event e;
-					e.idata1 = (int)pSocket->socket;
-					e.idata2 = errCode;
 					e.type = MicroMacro::EVENT_SOCKETERROR;
+
+					EventData ced;
+					ced.setValue((int)pSocket->socket);
+					e.data.push_back(ced);
+
+					ced.setValue((int)errCode);
+					e.data.push_back(ced);
 
 					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
 					{
@@ -249,8 +283,16 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 			// Push the event
 			Event e;
 			e.type		=	MicroMacro::EVENT_SOCKETCONNECTED;
-			e.pSocket	=	npSocket;
-			e.idata2	=	pSocket->socket;
+
+			// Push the new socket
+			EventData ced;
+			ced.setValue(npSocket);
+			e.data.push_back(ced);
+
+			// And the listen socket ID
+			ced.setValue((int)pSocket->socket);
+			e.data.push_back(ced);
+
 			npSocket->eventQueue.push(e);
 
 			/* Now we can record some more info and start the new thread

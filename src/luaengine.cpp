@@ -9,7 +9,7 @@
 #include "luatypes.h"
 #include "macro.h"
 #include "logger.h"
-#include "customevent.h"
+#include "eventdata.h"
 
 #include "ncurses_lua.h"
 #include "time_lua.h"
@@ -120,23 +120,30 @@ int LuaEngine::fireEvent(lua_State *L)
 			break;
 
 		int index = (i + 1);
-		checkType(L, LT_NUMBER | LT_STRING, index);
+		checkType(L, LT_NIL | LT_NUMBER | LT_STRING, index);
 		switch( lua_type(L, index) )
 		{
+			case LUA_TNIL:
+			{
+				MicroMacro::EventData ced;
+				ced.setValue();
+				pe->data.push_back(ced);
+			}
+			break;
 			case LUA_TNUMBER:
 			{
-				MicroMacro::CustomEventData ced;
+				MicroMacro::EventData ced;
 				ced.setValue(lua_tonumber(L, index));
-				pe->customEventDatas.push_back(ced);
+				pe->data.push_back(ced);
 			}
 			break;
 			case LUA_TSTRING:
 			{
 				size_t length;
 				const char *str = lua_tolstring(L, index, &length);
-				MicroMacro::CustomEventData ced;
+				MicroMacro::EventData ced;
 				ced.setValue((char *)str, length);
-				pe->customEventDatas.push_back(ced);
+				pe->data.push_back(ced);
 			}
 			break;
 		}
@@ -553,76 +560,76 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 	{
 		case MicroMacro::EVENT_FOCUSCHANGED:
 			lua_pushstring(lstate, "focuschanged");
-			lua_pushinteger(lstate, pe->idata1);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
 			nargs = 2;
 		break;
 
 		case MicroMacro::EVENT_KEYPRESSED:
 			lua_pushstring(lstate, "keypressed");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushboolean(lstate, pe->idata2);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushboolean(lstate, pe->data.at(1).iNumber);
 			nargs = 3;
 		break;
 
 		case MicroMacro::EVENT_KEYRELEASED:
 			lua_pushstring(lstate, "keyreleased");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushboolean(lstate, pe->idata2);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushboolean(lstate, pe->data.at(1).iNumber);
 			nargs = 3;
 		break;
 
 		case MicroMacro::EVENT_MOUSEPRESSED:
 			lua_pushstring(lstate, "mousepressed");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushboolean(lstate, pe->idata2);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushboolean(lstate, pe->data.at(1).iNumber);
 			nargs = 3;
 		break;
 
 		case MicroMacro::EVENT_MOUSERELEASED:
 			lua_pushstring(lstate, "mousereleased");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushboolean(lstate, pe->idata2);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushboolean(lstate, pe->data.at(1).iNumber);
 			nargs = 3;
 		break;
 
 		case MicroMacro::EVENT_GAMEPADPRESSED:
 			lua_pushstring(lstate, "gamepadpressed");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushinteger(lstate, pe->idata2);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushinteger(lstate, pe->data.at(1).iNumber);
 			nargs = 3;
 		break;
 
 		case MicroMacro::EVENT_GAMEPADRELEASED:
 			lua_pushstring(lstate, "gamepadreleased");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushinteger(lstate, pe->idata2);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushinteger(lstate, pe->data.at(1).iNumber);
 			nargs = 3;
 		break;
 
 		case MicroMacro::EVENT_GAMEPADPOVCHANGED:
 			lua_pushstring(lstate, "gamepadpovchanged");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushnumber(lstate, pe->fdata2);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushnumber(lstate, pe->data.at(1).fNumber);
 			nargs = 3;
 		break;
 
 		case MicroMacro::EVENT_GAMEPADAXISCHANGED:
 			lua_pushstring(lstate, "gamepadaxischanged");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushinteger(lstate, pe->idata2);
-			lua_pushnumber(lstate, pe->fdata3);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushinteger(lstate, pe->data.at(1).iNumber);
+			lua_pushnumber(lstate, pe->data.at(2).fNumber);
 			nargs = 4;
 		break;
 
 		case MicroMacro::EVENT_ERROR:
 			lua_pushstring(lstate, "error");
-			lua_pushstring(lstate, pe->msg.c_str());
+			lua_pushstring(lstate, pe->data.at(0).str.c_str());
 			nargs = 2;
 		break;
 
 		case MicroMacro::EVENT_WARNING:
 			lua_pushstring(lstate, "warning");
-			lua_pushstring(lstate, pe->msg.c_str());
+			lua_pushstring(lstate, pe->data.at(0).str.c_str());
 			nargs = 2;
 		break;
 
@@ -634,8 +641,10 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 		#ifdef NETWORKING_ENABLED
 		case MicroMacro::EVENT_SOCKETCONNECTED:
 		{
+			MicroMacro::Socket *pSocket = pe->data.at(0).pSocket;
+
 			// Ensure that the socket is still valid, if not then don't do anything
-			if( pe->pSocket->socket == INVALID_SOCKET )
+			if( pSocket->socket == INVALID_SOCKET )
 			{
 				lua_pop(lstate, 2); // Pop stacktrace, macro table
 				return 0;
@@ -643,41 +652,41 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 
 			lua_pushstring(lstate, "socketconnected");
 
-			if( pe->pSocket->mutex.lock(INFINITE, __FUNCTION__) )
+			if( pSocket->mutex.lock(INFINITE, __FUNCTION__) )
 			{
-				pe->pSocket->inLua	=	true;
-				pe->pSocket->mutex.unlock(__FUNCTION__);
+				pSocket->inLua	=	true;
+				pSocket->mutex.unlock(__FUNCTION__);
 			}
 
 			MicroMacro::Socket **ppSocket = static_cast<MicroMacro::Socket **>(lua_newuserdata(lstate, sizeof(struct MicroMacro::Socket)));
-			*ppSocket = pe->pSocket;
+			*ppSocket = pSocket;
 
 			// Give it a metatable
 			luaL_getmetatable(lstate, LuaType::metatable_socket);
 			lua_setmetatable(lstate, -2);
 
-			lua_pushinteger(lstate, pe->idata2);
+			lua_pushinteger(lstate, pe->data.at(1).iNumber);
 			nargs = 3;
 		}
 		break;
 
 		case MicroMacro::EVENT_SOCKETRECEIVED:
 			lua_pushstring(lstate, "socketreceived");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushlstring(lstate, pe->msg.c_str(), pe->msg.size());
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushlstring(lstate, pe->data.at(1).str.c_str(), pe->data.at(1).length);
 			nargs = 3;
 		break;
 
 		case MicroMacro::EVENT_SOCKETDISCONNECTED:
 			lua_pushstring(lstate, "socketdisconnected");
-			lua_pushinteger(lstate, pe->idata1);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
 			nargs = 2;
 		break;
 
 		case MicroMacro::EVENT_SOCKETERROR:
 			lua_pushstring(lstate, "socketerror");
-			lua_pushinteger(lstate, pe->idata1);
-			lua_pushinteger(lstate, pe->idata2);
+			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushinteger(lstate, pe->data.at(1).iNumber);
 			nargs = 3;
 		break;
         #endif
@@ -690,16 +699,33 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 		case MicroMacro::EVENT_CUSTOM:
 		{
 			unsigned int c = 0; // We count our pushes independently just in case there's weird data we don't push
-			for(unsigned int i = 0; i < pe->customEventDatas.size(); i++)
+			for(unsigned int i = 0; i < pe->data.size(); i++)
 			{
-				switch(pe->customEventDatas.at(i).type)
+				switch(pe->data.at(i).type)
 				{
-					case LUA_TNUMBER:
-						lua_pushnumber(lstate, pe->customEventDatas.at(i).number);
+					case MicroMacro::ED_NIL:
+						lua_pushnil(lstate);
 						c++;
 					break;
-					case LUA_TSTRING:
-						lua_pushstring(lstate, (char *)pe->customEventDatas.at(i).str.c_str());
+					case MicroMacro::ED_INTEGER:
+						lua_pushnumber(lstate, pe->data.at(i).iNumber);
+						c++;
+					break;
+					case MicroMacro::ED_NUMBER:
+						lua_pushnumber(lstate, pe->data.at(i).fNumber);
+						c++;
+					break;
+					case MicroMacro::ED_STRING:
+						lua_pushstring(lstate, (char *)pe->data.at(i).str.c_str());
+						c++;
+					break;
+					case MicroMacro::ED_SOCKET:
+						MicroMacro::Socket **ppSocket = static_cast<MicroMacro::Socket **>(lua_newuserdata(lstate, sizeof(struct MicroMacro::Socket)));
+						*ppSocket = pe->data.at(i).pSocket;
+
+						// Give it a metatable
+						luaL_getmetatable(lstate, LuaType::metatable_socket);
+						lua_setmetatable(lstate, -2);
 						c++;
 					break;
 				};

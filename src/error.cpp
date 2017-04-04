@@ -249,8 +249,14 @@ void pushLuaErrorEvent(lua_State *L, const char *fmt, ...)
 	// Queue it
 	MicroMacro::Event *pe = new MicroMacro::Event;
 	pe->type = MicroMacro::EVENT_ERROR;
-	pe->msg = buffer;
-	pe->msg += scriptinfo;
+	//pe->msg = buffer;
+	//pe->msg += scriptinfo;
+
+	MicroMacro::EventData ced;
+	std::string msg = buffer;
+	msg += scriptinfo;
+	ced.setValue(msg);
+	pe->data.push_back(ced);
 
 	Macro::instance()->pushEvent(pe);
 }

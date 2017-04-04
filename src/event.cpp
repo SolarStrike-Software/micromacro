@@ -14,15 +14,9 @@
 MicroMacro::Event &MicroMacro::Event::operator=(const MicroMacro::Event &o)
 {
 	type = o.type;
-	idata1 = o.idata1;
-	idata2 = o.idata2;
-	idata3 = o.idata3;
-	msg = o.msg;
-	pSocket = o.pSocket;
-
-	customEventDatas.clear();
-	for(unsigned int i = 0; i < customEventDatas.size(); i++)
-		customEventDatas.push_back(o.customEventDatas.at(i));
+	data.clear();
+	for(unsigned int i = 0; i < data.size(); i++)
+		data.push_back(o.data.at(i));
 
 	return *this;
 }

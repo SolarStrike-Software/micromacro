@@ -10,7 +10,7 @@
 
 	#include <string>
 	#include <vector>
-	#include "customEvent.h"
+	#include "eventdata.h"
 
 	// How many pieces of data can be passed to custom events
 	#define CUSTOM_EVENT_DATA_SLOTS			16
@@ -47,7 +47,7 @@
 			protected:
 			public:
 				enum MicroMacro::EventType type;
-				std::string msg;
+				/*std::string msg;
 
 				union {
 					size_t idata1;
@@ -61,11 +61,11 @@
 				union {
 					size_t idata3;
 					double fdata3;
-				};
+				};*/
 
 
-				std::vector<CustomEventData> customEventDatas;
-				Event() : type(EVENT_UNKNOWN), msg(""), idata1(0), idata2(0), idata3(0) { };
+				std::vector<EventData> data;
+				Event() : type(EVENT_UNKNOWN){ };
 				Event &operator=(const Event &);
 		};
 	}
