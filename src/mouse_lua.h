@@ -8,6 +8,8 @@
 #ifndef MOUSE_LUA_H
 #define MOUSE_LUA_H
 
+	#include "wininclude.h"
+
 	#define MOUSE_MODULE_NAME		"mouse"
 	typedef struct lua_State lua_State;
 
@@ -35,8 +37,18 @@
 			static int setVirtualPosition(lua_State *);
 			static int getVirtualPosition(lua_State *);
 
+			static int setHookCallback(lua_State *);
+
+			/* Used internally only */
+			static int removeHook();
+			static LRESULT CALLBACK lowLevelMouseProc(int, WPARAM, LPARAM);
+
+			static HHOOK hMouseHook;
+			static int luaHookCallbackRef;
+
 		public:
 			static int regmod(lua_State *);
+			static int cleanup(lua_State *);
 	};
 
 #endif

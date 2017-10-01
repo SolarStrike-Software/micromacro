@@ -416,7 +416,8 @@ LRESULT CALLBACK Keyboard_lua::lowLevelKeyboardProc(int nCode, WPARAM wParam, LP
 	Returns:	boolean
 
 	Attempt to install a keyboard hook. The callback should be a function
-	that accepts a single number: the virtual key code.
+	that accepts a number: the virtual key code. Some events may push
+	additional data.
 	If the callback returns true, the key will be dropped.
 	If the callback returns false or nil, the input be left in the queue.
 

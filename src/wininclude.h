@@ -33,6 +33,19 @@
 		#define WPF_ASYNCWINDOWPLACEMENT	0x0004
 	#endif
 
+	#ifndef WM_MOUSEHWHEEL
+		#define WM_MOUSEHWHEEL				0x020E
+	#endif
+
+
+	#ifndef VK_MOUSEMOVE
+		#define VK_MOUSEMOVE				0x200
+	#endif
+
+	#ifndef VK_MOUSEWHEEL
+		#define VK_MOUSEWHEEL				0x201
+	#endif
+
 	#ifdef KEY_EVENT
 		#undef KEY_EVENT
 	#endif

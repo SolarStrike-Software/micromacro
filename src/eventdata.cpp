@@ -40,7 +40,14 @@ void EventData::setValue(int newNumber)
 {
 	str		=	"";
 	iNumber	=	newNumber;
-	type	=	ED_NUMBER;
+	type	=	ED_INTEGER;
+}
+
+void EventData::setValue(unsigned long long newNumber)
+{
+	str			=	"";
+	i64Number	=	newNumber;
+	type		=	ED_64INTEGER;
 }
 
 void EventData::setValue(double newNumber)
@@ -86,6 +93,9 @@ EventData &EventData::operator=(const EventData &o)
 		break;
 		case ED_INTEGER:
 			iNumber	=	o.iNumber;
+		break;
+		case ED_64INTEGER:
+			i64Number	=	o.i64Number;
 		break;
 		case ED_NUMBER:
 			fNumber	=	o.fNumber;

@@ -37,6 +37,8 @@ int Key_lua::regmod(lua_State *L)
 		{"VK_MMOUSE", VK_MBUTTON},
 		{"VK_XMOUSE1", VK_XBUTTON1},
 		{"VK_XMOUSE2", VK_XBUTTON2},
+		{"VK_MOUSEMOVE", VK_MOUSEMOVE},
+		{"VK_MOUSEWHEEL", VK_MOUSEWHEEL},
 		{"VK_BACKSPACE", VK_BACK},
 		{"VK_TAB", VK_TAB},
 		{"VK_RETURN", VK_RETURN},
@@ -160,7 +162,7 @@ int Key_lua::regmod(lua_State *L)
 	int i = 0;
 	while(_vks[i].name)
 	{
-		lua_pushnumber(L, _vks[i].vk);
+		lua_pushinteger(L, _vks[i].vk);
 		lua_setfield(L, -2, _vks[i].name);
 		i++;
 	}

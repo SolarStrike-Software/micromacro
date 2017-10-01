@@ -15,7 +15,7 @@ function Timestamp:constructor(y, mo, d, h, m, s)
 		self.timevalue = os.time(timeTab);
 	elseif( y ) then
 		-- Maybe just the UNIX timestamp
-		self.timevalue = y;
+		self.timevalue = tonumber(y);
 	else
 		self.timevalue =  0;
 	end

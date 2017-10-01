@@ -338,6 +338,7 @@ int LuaEngine::cleanup()
 
 	Process_lua::cleanup(lstate);
 	Keyboard_lua::cleanup(lstate);
+	Mouse_lua::cleanup(lstate);
 
 	lua_close(lstate);
 	lstate = NULL;

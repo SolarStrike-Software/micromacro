@@ -19,6 +19,7 @@
 		{
 			ED_NIL,
 			ED_INTEGER,
+			ED_64INTEGER,
 			ED_NUMBER,
 			ED_STRING,
 			ED_SOCKET,
@@ -32,6 +33,7 @@
 
 				union {
 					int iNumber;
+					unsigned long long i64Number;
 					double fNumber;
 				};
 				std::string str;
@@ -42,6 +44,7 @@
 				~EventData();
 				void setValue();						// NIL
 				void setValue(int);						// Integer
+				void setValue(unsigned long long);		// 64-bit Ints
 				void setValue(double);					// Number
 				void setValue(std::string, size_t = 0);	// String
 				void setValue(char *, size_t);			// String

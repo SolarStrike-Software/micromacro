@@ -170,7 +170,7 @@ void CMacro::pollForegroundWindow()
 		Event *pe = new Event;
 		pe->type = MicroMacro::EVENT_FOCUSCHANGED;
 		MicroMacro::EventData ced;
-		ced.setValue((int)foregroundHwnd);
+		ced.setValue((unsigned long long)foregroundHwnd);
 		pe->data.push_back(ced);
 		pushEvent(pe);
 	}
