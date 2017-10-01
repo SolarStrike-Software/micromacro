@@ -561,7 +561,7 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 	{
 		case MicroMacro::EVENT_FOCUSCHANGED:
 			lua_pushstring(lstate, "focuschanged");
-			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+			lua_pushinteger(lstate, pe->data.at(0).i64Number);
 			nargs = 2;
 		break;
 
@@ -711,6 +711,9 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 					case MicroMacro::ED_INTEGER:
 						lua_pushnumber(lstate, pe->data.at(i).iNumber);
 						c++;
+					break;
+					case MicroMacro::ED_64INTEGER:
+						lua_pushinteger(lstate, pe->data.at(i).i64Number);
 					break;
 					case MicroMacro::ED_NUMBER:
 						lua_pushnumber(lstate, pe->data.at(i).fNumber);
