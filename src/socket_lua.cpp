@@ -894,13 +894,16 @@ int Socket_lua::ip(lua_State *L)
 	struct sockaddr_in name;
 	int	namelen	=	sizeof(name);
 	getsockname(pSocket->socket, (struct sockaddr *)&name, &namelen);
+	char clienthost[/*128*/NI_MAXHOST];
+	char clientservice[NI_MAXSERV];
+	getnameinfo((sockaddr *)&name, sizeof(name), clienthost, sizeof(clienthost),
+		clientservice, sizeof(clientservice), NI_NUMERICHOST|NI_NUMERICSERV);
 
-	char buffer[128];
-	DWORD dwNamelen	=	sizeof(name);
+	/*DWORD dwNamelen	=	sizeof(name);
 	DWORD outputLen	=	sizeof(buffer); // Initialize with our original buffer's size
-	WSAAddressToString((sockaddr*)&name, dwNamelen, NULL, buffer, &outputLen);
+	WSAAddressToString((sockaddr*)&name, dwNamelen, NULL, buffer, &outputLen);*/
 
-	lua_pushstring(L, buffer);
+	lua_pushstring(L, clienthost);
 	return 1;
 }
 
