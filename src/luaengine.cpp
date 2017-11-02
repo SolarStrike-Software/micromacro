@@ -673,7 +673,16 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 
 		case MicroMacro::EVENT_SOCKETRECEIVED:
 			lua_pushstring(lstate, "socketreceived");
-			lua_pushinteger(lstate, pe->data.at(0).iNumber);
+
+			// UDP is connectionless, so we aren't going to rely on socket IDs... instead, we push the sockaddr
+			if( pe->data.at(0).type == MicroMacro::ED_SOCKADDR )
+			{
+				//lua_pushinteger(lstate, pe->data.at(0).iNumber);
+				struct sockaddr_in *pSockaddr_in = static_cast<sockaddr_in *>(lua_newuserdata(lstate, sizeof(struct sockaddr_in)));
+				memcpy(pSockaddr_in, (struct sockaddr *)&pe->data.at(0).remoteAddr, sizeof(struct sockaddr_in));
+			}
+			else
+				lua_pushinteger(lstate, pe->data.at(0).iNumber);
 			lua_pushlstring(lstate, pe->data.at(1).str.c_str(), pe->data.at(1).length);
 			nargs = 3;
 		break;

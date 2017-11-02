@@ -46,7 +46,8 @@ DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
 	size_t maxRecvQueueSize = Macro::instance()->getSettings()->getInt(CONFVAR_RECV_QUEUE_SIZE);
 	while(true)
 	{
-		int result = ::recv(pSocket->socket, readBuff, buffSize, 0);
+		int result = 0;
+		result = ::recv(pSocket->socket, readBuff, buffSize, 0);
 
 		if( result > 0 )
 		{ // Data received
@@ -318,6 +319,145 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 	return 0;
 }
 
+DWORD WINAPI Socket_lua::udpThread(Socket *pSocket)
+{
+	size_t buffSize = Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_BUFFER_SIZE);
+	char *readBuff = new char[buffSize+1];
+	size_t maxRecvQueueSize = Macro::instance()->getSettings()->getInt(CONFVAR_RECV_QUEUE_SIZE);
+	struct sockaddr_in remoteAddr;
+
+	while(true)
+	{
+		int addrlen = sizeof(struct sockaddr_in);
+		int result = recvfrom(pSocket->socket, readBuff, buffSize, 0, (struct sockaddr *)&remoteAddr, &addrlen);
+
+		if( result == SOCKET_ERROR )
+		{
+			int errCode = WSAGetLastError();
+			//pSocket->connected = false;
+			switch(errCode)
+			{
+				case WSAENOTSOCK: // "Not a socket"; we closed the socket in the main thread, so this signals we should shut down this thread
+				{
+					pSocket->socket		=	INVALID_SOCKET;
+				}
+				break;
+
+/*
+				case WSAECONNRESET: // CONNRESET; remote side closed the connection forcibly
+				{
+					Event e;
+					e.type = MicroMacro::EVENT_SOCKETDISCONNECTED;
+
+					EventData ced;
+					ced.setValue((int)pSocket->socket);
+					e.data.push_back(ced);
+
+					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
+					{
+						pSocket->eventQueue.push(e);
+						pSocket->mutex.unlock(__FUNCTION__);
+					}
+				}
+				break;
+*/
+
+				case WSAECONNABORTED:	// Software caused connection abort. (your machine); we should close the socket
+				{
+					Event e;
+					e.type = MicroMacro::EVENT_SOCKETERROR;
+
+					EventData ced;
+					ced.setValue((int)pSocket->socket);
+					e.data.push_back(ced);
+
+					ced.setValue((int)errCode);
+					e.data.push_back(ced);
+
+					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
+					{
+						pSocket->eventQueue.push(e);
+						closesocket(pSocket->socket);
+						pSocket->socket		=	INVALID_SOCKET;
+						pSocket->connected	=	true;
+						pSocket->mutex.unlock(__FUNCTION__);
+					}
+				}
+				break;
+
+				case WSAEINTR: // Interrupted blocking function call (probably terminated a listen thread on script end)
+					pSocket->socket		=	INVALID_SOCKET;
+				break;
+
+				default:
+				#ifdef DISPLAY_DEBUG_MESSAGES
+					fprintf(stderr, "Socket error occurred. Code: %d, listen socket: 0x%p\n", errCode, pSocket->socket);
+				#endif
+				{
+					Event e;
+					e.type = MicroMacro::EVENT_SOCKETERROR;
+
+					EventData ced;
+					ced.setValue((int)pSocket->socket);
+					e.data.push_back(ced);
+
+					ced.setValue((int)errCode);
+					e.data.push_back(ced);
+
+					if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
+					{
+						pSocket->eventQueue.push(e);
+						pSocket->mutex.unlock(__FUNCTION__);
+					}
+				}
+				break;
+			}
+
+
+			if( pSocket->socket == INVALID_SOCKET )
+			{
+				pSocket->open		=	false;
+				pSocket->hThread	=	NULL;
+				pSocket->connected	=	false;
+				pSocket->deleteMe	=	true;
+
+				break; // Break while(true)
+			}
+		}
+		else if( result == 0 )
+		{
+			// Closed connection
+		}
+		else
+		{ // Received data
+			readBuff[result] = 0; // Enforce NULL-terminator
+			Event e;
+			e.type = MicroMacro::EVENT_SOCKETRECEIVED;
+
+			// Push the socket address (sockaddr)
+			EventData ced;
+			ced.setValue(&remoteAddr);
+			e.data.push_back(ced);
+
+			// Push the received data
+			ced.setValue(readBuff, result);
+			e.data.push_back(ced);
+
+			if( pSocket->mutex.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
+			{
+				while( pSocket->recvQueue.size() > (maxRecvQueueSize + 1) )
+					pSocket->recvQueue.pop();
+
+				pSocket->eventQueue.push(e);
+				pSocket->recvQueue.push(std::string(readBuff, result));
+				pSocket->mutex.unlock(__FUNCTION__);
+			}
+		}
+	} // End of: while(true)
+
+	return 0;
+}
+
 int Socket_lua::regmod(lua_State *L)
 {
 	const luaL_Reg meta[] = {
@@ -330,12 +470,14 @@ int Socket_lua::regmod(lua_State *L)
 		{"connect", connect},
 		{"listen", listen},
 		{"send", send},
+		{"sendto", sendto},
 		{"recv", recv},
 		{"flushRecvQueue", flushRecvQueue},
 		{"getRecvQueueSize", getRecvQueueSize},
 		{"close", close},
 		{"id", id},
 		{"ip", ip},
+		{"port", port},
 		{"remoteIp", remoteIp},
 		{NULL, NULL}
 	};
@@ -386,7 +528,6 @@ int Socket_lua::cleanup()
 			delete pSocket;							// Free memory
 			pSocket = NULL;
 		}
-
 		socketListLock.unlock(__FUNCTION__);
 	}
 
@@ -538,7 +679,11 @@ int Socket_lua::listen(lua_State *L)
 	// Start a thread for this socket
 	pSocket->connected = true;
 	pSocket->open = true;
-	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)listenThread, (PVOID)pSocket, 0, NULL);
+
+	if( pSocket->protocol == IPPROTO_TCP )
+		pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)listenThread, (PVOID)pSocket, 0, NULL);
+	else
+		pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)udpThread, (PVOID)pSocket, 0, NULL);
 
 	pSocket->mutex.unlock(__FUNCTION__);
 
@@ -584,6 +729,81 @@ int Socket_lua::send(lua_State *L)
 		int errCode = WSAGetLastError();
 		lua_pushboolean(L, false);
 		return 1;
+	}
+
+	lua_pushboolean(L, true);
+	return 1;
+}
+
+int Socket_lua::sendto(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 3 && top != 4 )
+		wrongArgs(L);
+
+	struct sockaddr_in remoteAddr;
+	memset((char*)&remoteAddr, 0, sizeof(remoteAddr));
+	size_t len;
+	int msgIndex	=	3;
+
+	// If we've been given a sockaddr
+	if( top == 3 )
+	{
+		checkType(L, LT_USERDATA, 2);
+		checkType(L, LT_NUMBER | LT_STRING, 3);
+		msgIndex	=	3; // 'msg' is at index 3 because no IP/port given
+
+		struct sockaddr_in *inRemoteAddr = (sockaddr_in *)lua_touserdata(L, 2);
+		memcpy(&remoteAddr, inRemoteAddr, sizeof(struct sockaddr_in));
+	}
+	else // If we've been given the IP & port
+	{
+		checkType(L, LT_NUMBER | LT_STRING, 2);
+		checkType(L, LT_NUMBER, 3);
+		checkType(L, LT_NUMBER | LT_STRING, 4);
+
+		msgIndex				=	4; // 'msg' is at index 4 because IP/port given
+		remoteAddr.sin_family	=	AF_INET;
+		remoteAddr.sin_port		=	htons(lua_tointeger(L, 3));
+
+		const char *host = lua_tostring(L, 2);
+		{
+			HOSTENT *pHostent;
+			pHostent = gethostbyname(host);
+			remoteAddr.sin_addr = *((LPIN_ADDR)*pHostent->h_addr_list);
+		}
+	}
+
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
+	const char *msg = lua_tolstring(L, msgIndex, &len);
+
+	if( !pSocket->mutex.lock(INFINITE, __FUNCTION__) )
+	{
+		lua_pushboolean(L, false);
+		return 1;
+	}
+
+	int success = ::sendto(pSocket->socket, msg, len, 0, (struct sockaddr *)&remoteAddr, sizeof(remoteAddr));
+	pSocket->mutex.unlock(__FUNCTION__);
+	if( success == SOCKET_ERROR )
+	{
+		int errCode = WSAGetLastError();
+		lua_pushboolean(L, false);
+		return 1;
+	}
+
+	if( !pSocket->connected )
+	{ // We called sendto before recvfrom, it has now become bound so we can launch our udpThread
+		pSocket->connected	=	true;
+		pSocket->open		=	true;
+		pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)udpThread, (PVOID)pSocket, 0, NULL);
+
+		// Lets make a record of it in our list
+		if( socketListLock.lock(DEFAULT_LOCK_TIMEOUT, __FUNCTION__) )
+		{
+			socketList.push_back(pSocket);
+			socketListLock.unlock(__FUNCTION__);
+		}
 	}
 
 	lua_pushboolean(L, true);
@@ -681,6 +901,31 @@ int Socket_lua::ip(lua_State *L)
 	WSAAddressToString((sockaddr*)&name, dwNamelen, NULL, buffer, &outputLen);
 
 	lua_pushstring(L, buffer);
+	return 1;
+}
+
+int Socket_lua::port(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+	checkType(L, LT_USERDATA, 1);
+
+	Socket *pSocket = *static_cast<Socket **>(lua_touserdata(L, 1));
+
+	struct sockaddr_in name;
+	int	namelen	=	sizeof(name);
+	getsockname(pSocket->socket, (struct sockaddr *)&name, &namelen);
+
+	/*char buffer[128];
+	DWORD dwNamelen	=	sizeof(name);
+	DWORD outputLen	=	sizeof(buffer); // Initialize with our original buffer's size
+	WSAAddressToString((sockaddr*)&name, dwNamelen, NULL, buffer, &outputLen);
+	*/
+
+	lua_pushinteger(L, ntohs(name.sin_port));
+
+	//lua_pushstring(L, buffer);
 	return 1;
 }
 

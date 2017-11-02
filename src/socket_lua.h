@@ -37,6 +37,7 @@
 			static int connect(lua_State *);
 			static int listen(lua_State *);
 			static int send(lua_State *);
+			static int sendto(lua_State *);
 			static int recv(lua_State *);
 			static int flushRecvQueue(lua_State *);
 			static int getRecvQueueSize(lua_State *);
@@ -44,11 +45,13 @@
 
 			static int id(lua_State *);
 			static int ip(lua_State *);
+			static int port(lua_State *);
 			static int remoteIp(lua_State *);
 
 
 			static DWORD WINAPI socketThread(MicroMacro::Socket *);
 			static DWORD WINAPI listenThread(MicroMacro::Socket *);
+			static DWORD WINAPI udpThread(MicroMacro::Socket *);
 
 			static bool isIP(const char *);
 

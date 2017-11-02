@@ -80,6 +80,12 @@ void EventData::setValue(MicroMacro::Socket *npSocket)
 	pSocket	=	npSocket;
 }
 
+void EventData::setValue(struct sockaddr_in *newSockAddr)
+{
+	type	=	ED_SOCKADDR;
+	memcpy(&remoteAddr, newSockAddr, sizeof(struct sockaddr_in));
+}
+
 EventData &EventData::operator=(const EventData &o)
 {
 	type	=	o.type;
@@ -102,6 +108,9 @@ EventData &EventData::operator=(const EventData &o)
 		break;
 		case ED_SOCKET:
 			pSocket	=	o.pSocket;
+		break;
+		case ED_SOCKADDR:
+			setValue((struct sockaddr_in *)&o.remoteAddr);
 		break;
 		default:
 		break;
