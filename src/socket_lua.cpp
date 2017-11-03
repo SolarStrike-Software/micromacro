@@ -38,7 +38,7 @@ const char *LuaType::metatable_socket = "socket";
 Mutex Socket_lua::socketListLock;
 std::vector<Socket *> Socket_lua::socketList;
 
-DWORD WINAPI Socket_lua::socketThread(Socket *pSocket)
+DWORD WINAPI Socket_lua::tcpThread(Socket *pSocket)
 {
 	size_t buffSize = Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_BUFFER_SIZE);
 	char *readBuff = new char[buffSize+1];
@@ -306,7 +306,7 @@ DWORD WINAPI Socket_lua::listenThread(Socket *pSocket)
 			npSocket->open		=	true;
 			npSocket->deleteMe	=	false;
 
-			npSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)socketThread, (PVOID)npSocket, 0, NULL);
+			npSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)tcpThread, (PVOID)npSocket, 0, NULL);
 
 			if( socketListLock.lock(INFINITE, __FUNCTION__) )
 			{
@@ -600,7 +600,7 @@ int Socket_lua::connect(lua_State *L)
 	}
 
 	// Start a thread for this socket
-	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)socketThread, (PVOID)pSocket, 0, NULL);
+	pSocket->hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)tcpThread, (PVOID)pSocket, 0, NULL);
 	pSocket->connected = true;
 	pSocket->open = true;
 

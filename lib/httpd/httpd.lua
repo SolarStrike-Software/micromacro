@@ -42,7 +42,7 @@ function Httpd:handleEvent(event, ...)
 	local listeners = {
 		socketconnected	=	function(self, socket, listenSockId)
 			if( listenSockId ~= self.server ) then
-				printf("Client %d from %s (to %s) connected.\n", socket:id(), socket:remoteIp(), socket:ip());	-- Note ipb() is an intentional typo; causing crash in MM, todo
+				printf("Client %d from %s (to %s) connected.\n", socket:id(), socket:remoteIp(), socket:ip());
 				self.clients[socket:id()]	=	{socket = socket, status = 'initial', data = '', dataLen = 0, flashvars = {}};
 			end
 		end,

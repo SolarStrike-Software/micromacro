@@ -49,7 +49,7 @@
 			static int remoteIp(lua_State *);
 
 
-			static DWORD WINAPI socketThread(MicroMacro::Socket *);
+			static DWORD WINAPI tcpThread(MicroMacro::Socket *);
 			static DWORD WINAPI listenThread(MicroMacro::Socket *);
 			static DWORD WINAPI udpThread(MicroMacro::Socket *);
 
