@@ -10,6 +10,7 @@
 
 	#include <string>
 	#include <cstddef>
+	#include <vector>
 
 	size_t strlcpy(char *dest, const char*src, size_t max_len);
 	size_t strlcat(char *dest, const char*src, size_t max_len);
@@ -22,4 +23,6 @@
 	void securezero(void *, size_t);
 
 	std::string strReplaceAll(std::string instr, std::string search, std::string replace);
+
+	void parseCommandLine(const char *inStr, std::vector<char *> &argsArray);
 #endif

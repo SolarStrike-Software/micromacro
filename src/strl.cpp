@@ -10,6 +10,9 @@
 #include <cstdarg>
 #include <stdio.h>
 #include "wininclude.h"
+#include <iostream>
+#include <iterator>
+#include <sstream>
 
 // Just like strncpy, except ensures we always NULL-terminate
 size_t strlcpy(char *dest, const char* src, size_t max_len)
@@ -193,4 +196,33 @@ std::string strReplaceAll(std::string instr, std::string search, std::string rep
 	}
 
 	return instr;
+}
+void parseCommandLine(const char *inStr, std::vector<char *> &argsArray)
+{
+	unsigned int index			=	0;
+	unsigned int lastPullIndex	=	0;
+	unsigned int maxLen			=	strlen(inStr);
+	while(index <= maxLen)
+	{
+		switch(inStr[index])
+		{
+			// Whitespace
+			case ' ':
+			case '\t':
+			case '\n':
+			case 0:
+			{
+				unsigned int len = index - lastPullIndex;
+				if( len > 0 )
+				{ // size_t strlcpy(char *dest, const char* src, size_t max_len)
+					argsArray.push_back(new char[len+1]);
+					strlcpy((char *)argsArray.back(), (char *)&inStr[lastPullIndex], len);
+					lastPullIndex = index + 1;
+				}
+			}
+			break;
+		}
+
+		index++;
+	}
 }
