@@ -73,6 +73,7 @@ HWND createMessageReceiveWindow(HINSTANCE);
 WSADATA wsadata;
 #endif
 
+#include "argv.h"
 
 INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nShow)
 //int main(int argc, char **argv)			// See notes below
@@ -82,22 +83,17 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 
 		If you simply comment these lines out and restore main()
 		declaration to "normal," you're good to go.
-
-		Remember to remove the delete call at the end of main for argv!
 	*/
 	int argc = 1;
-	//char *argv[2];
-	std::vector<char *> argv;
+	Argv argv;
 
 	char filename[MAX_PATH];
 	GetModuleFileName( NULL, filename, MAX_PATH );
-	argv.push_back(new char[strlen(filename)+1]);
-	strlcpy(argv.back(), filename, strlen(filename));
+	argv.add(filename);
 
 	if( strlen(cmdLine) > 0 )
 	{ // If we were passed a command-line, tokenize it and dump it into argv
-
-		parseCommandLine(cmdLine, argv);
+		argv.parse(cmdLine);
 		argc = argv.size();
 	}
 	/* END: main() compatibility */
@@ -546,12 +542,6 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 	#endif
 
 	Logger::instance()->add("All done. Closing down.\n");
-
-	/* Remove this if using standard C++ main() */
-	{
-		for(unsigned int i = 0; i < argv.size(); i++)
-			delete [] argv.at(i);
-	}
 
 	printf("Shutting down; execution finished.\n");
     return 0;
