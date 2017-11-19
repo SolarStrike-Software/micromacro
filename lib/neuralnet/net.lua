@@ -4,7 +4,13 @@ require('neuralnet/synapse');
 NeuralNet	=	class.new();
 
 function NeuralNet:constructor(...)
-	local topology = {...};
+	local topology;
+	if( type(...) == "table" ) then
+		topology = ...;
+	else
+		topology = {...};
+	end
+
 	self.layers	=	{};
 
 	local numLayers	=	#topology;
@@ -95,4 +101,84 @@ function NeuralNet:getResults()
 	end
 
 	return results;
+end
+
+-- Returns a table containing all the data to save the network (topology, layer data, neuron weights)
+function NeuralNet:getExportTable()
+	local export = {};
+
+	export = {};
+	for i,layer in pairs(self.layers) do
+		local tmpLayerData = {};
+		for n,neuron in pairs(layer) do
+			local tmpNeuronData = {};
+			for s, synapse in pairs(neuron.synapses) do
+				table.insert(tmpNeuronData, synapse.weight);
+			end
+			table.insert(tmpLayerData, tmpNeuronData);
+		end
+		table.insert(export, tmpLayerData);
+	end
+
+	return export;
+end
+
+-- Saves to a file
+function NeuralNet:save(filename)
+	local file = io.open(filename, "w");
+	local export = self:getExportTable();
+
+	file:write("return {");
+	for i,v in pairs(export) do
+		file:write("{");
+		for j,k in pairs(v) do
+			file:write("{");
+			for n,m in pairs(k) do
+				if( n < #k ) then
+					file:write(sprintf("%f,", m));
+				else
+					file:write(sprintf("%f", m));
+				end
+			end
+			if( j < #v ) then
+				file:write("},");
+			else
+				file:write("}");
+			end
+		end
+
+		if( i < #export) then
+			file:write("},");
+		else
+			file:write("}");
+		end
+	end
+	file:write("}");
+	file:close();
+end
+
+-- Load from a file
+function NeuralNet:load(filename)
+	print(filesystem.getCWD() .. "/" .. filename);
+	local import = dofile(filesystem.getCWD() .. "/" .. filename);
+
+	if( type(import) ~= "table" ) then
+		error("File does not contain a valid table.", 2);
+	end
+
+	local topology = {};
+	for i,v in pairs(import) do
+		table.insert(topology, #v - 1);
+	end
+
+	self:constructor(topology); -- Recreate network topology
+
+	-- Step through, reassign weights
+	for i,layer in pairs(self.layers) do
+		for j,neuron in pairs(layer) do
+			for n,synapse in pairs(neuron.synapses) do
+				synapse.weight = import[i][j][n];
+			end
+		end
+	end
 end
