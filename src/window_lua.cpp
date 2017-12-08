@@ -28,6 +28,21 @@ using MicroMacro::WindowInfo;
 
 const char *windowThumbnailClassName = "ThumbnailClass";
 
+unsigned char Window_lua::getR(int color)
+{
+	return (unsigned char)(color >> 16);
+}
+
+unsigned char Window_lua::getG(int color)
+{
+	return (unsigned char)((color >> 8) & 0xFF);
+}
+
+unsigned char Window_lua::getB(int color)
+{
+	return (unsigned char)(color & 0xFF);
+}
+
 // Helper function to Window_lua::find()
 BOOL CALLBACK Window_lua::_findProc(HWND hwnd, LPARAM lparam)
 {
@@ -175,6 +190,9 @@ int Window_lua::regmod(lua_State *L)
 		{"saveScreenshot", Window_lua::saveScreenshot},
 		{"getAppHwnd", Window_lua::getAppHwnd},
 		{"getFocusHwnd", Window_lua::getFocusHwnd},
+		{"makeColor", Window_lua::makeColor},
+		{"drawLine", Window_lua::drawLine},
+		{"drawRect", Window_lua::drawRect},
 		{NULL, NULL}
 	};
 
@@ -1110,5 +1128,155 @@ int Window_lua::getAppHwnd(lua_State *L)
 int Window_lua::getFocusHwnd(lua_State *L)
 {
 	lua_pushinteger(L, (size_t)Macro::instance()->getForegroundWindow());
+	return 1;
+}
+
+int Window_lua::makeColor(lua_State *L)
+{
+	if( lua_gettop(L) != 3 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1);
+	checkType(L, LT_NUMBER, 2);
+	checkType(L, LT_NUMBER, 3);
+
+	int cr	=	(int)lua_tointeger(L, 1);
+	int cg	=	(int)lua_tointeger(L, 2);
+	int cb	=	(int)lua_tointeger(L, 3);
+
+	int col = (cr << 16) | (cg << 8) | cb;
+	lua_pushinteger(L, col);
+	return 1;
+}
+
+int Window_lua::drawLine(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top < 5 || top > 7 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1); // hwnd
+	checkType(L, LT_NUMBER, 2); // x1
+	checkType(L, LT_NUMBER, 3); // y1
+	checkType(L, LT_NUMBER, 4); // x2
+	checkType(L, LT_NUMBER, 5); // y2
+
+	if( top >= 6 )
+		checkType(L, LT_NUMBER, 6); // color
+
+	if( top >= 7 )
+		checkType(L, LT_NUMBER, 7); // thickness
+
+	RECT winRect;
+	RECT clientRect;
+	HDC tmpDc;
+	HPEN pen;
+	LOGBRUSH lb;
+	POINT offset;
+
+	HWND hwnd		=	(HWND)lua_tointeger(L, 1);
+	int x1			=	(int)lua_tointeger(L, 2);
+	int y1			=	(int)lua_tointeger(L, 3);
+	int x2			=	(int)lua_tointeger(L, 4);
+	int y2			=	(int)lua_tointeger(L, 5);
+	int color		=	0;
+	int thickness	=	1;
+
+	if( top >= 6 )
+		color		=	(int)lua_tointeger(L, 6);
+
+	if( top >= 7 )
+		thickness	=	(int)lua_tointeger(L, 7);
+
+
+	// Figure out the client offset
+	winRect.left = 0; winRect.top = 0;
+	offset.x = 0; offset.y = 0;
+
+	GetWindowRect(hwnd, &winRect);
+	ClientToScreen(hwnd, &offset);
+	GetClientRect(hwnd, &clientRect);
+
+	tmpDc			=	GetDC(NULL); // Get desktop DC
+	lb.lbStyle		=	BS_SOLID;
+	lb.lbColor		=	RGB( getR(color), getG(color), getB(color) );
+	lb.lbHatch		=	0;
+	pen				=	ExtCreatePen(PS_GEOMETRIC | PS_SOLID, thickness, &lb, 0, NULL);
+
+	SelectObject(tmpDc, pen);
+
+	MoveToEx(tmpDc, offset.x + x1, offset.y + y1, (LPPOINT) NULL);
+	LineTo(tmpDc, offset.x + x2, offset.y + y2);
+
+	DeleteObject(pen);
+	ReleaseDC(NULL, tmpDc);
+
+	lua_pushboolean(L, true);
+	return 1;
+}
+
+int Window_lua::drawRect(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top < 5 || top > 7 )
+		wrongArgs(L);
+	checkType(L, LT_NUMBER, 1); // hwnd
+	checkType(L, LT_NUMBER, 2); // x1
+	checkType(L, LT_NUMBER, 3); // y1
+	checkType(L, LT_NUMBER, 4); // x2
+	checkType(L, LT_NUMBER, 5); // y2
+
+	if( top >= 6 )
+		checkType(L, LT_NUMBER, 6); // color
+
+	if( top >= 7 )
+		checkType(L, LT_NUMBER, 7); // thickness
+
+	RECT winRect;
+	RECT clientRect;
+	HDC tmpDc;
+	HPEN pen;
+	LOGBRUSH lb;
+	POINT offset;
+
+	HWND hwnd		=	(HWND)lua_tointeger(L, 1);
+	int x1			=	(int)lua_tointeger(L, 2);
+	int y1			=	(int)lua_tointeger(L, 3);
+	int x2			=	(int)lua_tointeger(L, 4);
+	int y2			=	(int)lua_tointeger(L, 5);
+	int color		=	0;
+	int thickness	=	1;
+
+	if( top >= 6 )
+		color		=	(int)lua_tointeger(L, 6);
+
+	if( top >= 7 )
+		thickness	=	(int)lua_tointeger(L, 7);
+
+
+	// Figure out the client offset
+	winRect.left = 0; winRect.top = 0;
+	offset.x = 0; offset.y = 0;
+
+	GetWindowRect(hwnd, &winRect);
+	ClientToScreen(hwnd, &offset);
+	GetClientRect(hwnd, &clientRect);
+
+	tmpDc			=	GetDC(NULL); // Get desktop DC
+	lb.lbStyle		=	BS_SOLID;
+	lb.lbColor		=	RGB( getR(color), getG(color), getB(color) );
+	lb.lbHatch		=	0;
+	pen				=	ExtCreatePen(PS_GEOMETRIC | PS_SOLID, thickness, &lb, 0, NULL);
+
+	SelectObject(tmpDc, pen);
+
+	MoveToEx(tmpDc, offset.x + x1, offset.y + y1, (LPPOINT) NULL);
+	LineTo(tmpDc, offset.x + x1, offset.y + y2); // Draw down
+	LineTo(tmpDc, offset.x + x2, offset.y + y2); // Draw across
+	LineTo(tmpDc, offset.x + x2, offset.y + y1); // Draw up
+	LineTo(tmpDc, offset.x + x1, offset.y + y1); // Draw across
+
+	DeleteObject(pen);
+	ReleaseDC(NULL, tmpDc);
+
+	lua_pushboolean(L, true);
 	return 1;
 }

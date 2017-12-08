@@ -18,6 +18,11 @@
 
 	class Window_lua
 	{
+		private:
+			static unsigned char getR(int);
+			static unsigned char getG(int);
+			static unsigned char getB(int);
+
 		protected:
 			static BOOL CALLBACK _findProc(HWND, LPARAM);
 			static BOOL CALLBACK _findListProc(HWND, LPARAM);
@@ -42,6 +47,9 @@
 			static int saveScreenshot(lua_State *);
 			static int getAppHwnd(lua_State *);
 			static int getFocusHwnd(lua_State *);
+			static int makeColor(lua_State *);
+			static int drawLine(lua_State *);
+			static int drawRect(lua_State *);
 
 		public:
 			static int regmod(lua_State *);
