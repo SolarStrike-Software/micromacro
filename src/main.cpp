@@ -250,7 +250,7 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 			continue;
 		}
 
-
+		Macro::instance()->getEngine()->setCloseState(false);
 		/* Check for commands */
 		if( command == "exit" )
 		{ // Days over, let's go home.
@@ -1092,6 +1092,10 @@ static BOOL WINAPI consoleControlCallback(DWORD dwCtrlType)
 	switch(dwCtrlType)
 	{
 		case CTRL_C_EVENT:
+			Macro::instance()->getEngine()->setCloseState(true);
+			return true;
+		break;
+
 		case CTRL_CLOSE_EVENT:
 		case CTRL_LOGOFF_EVENT:
 		case CTRL_SHUTDOWN_EVENT:
@@ -1106,6 +1110,8 @@ static BOOL WINAPI consoleControlCallback(DWORD dwCtrlType)
 				TODO: Gracefully terminate the Lua thread, somehow.
 				Macro::instance()->cleanup();
 			*/
+
+
 			removeNotifyIcon();
 			Logger::instance()->add("Process forcefully terminated (Win32 callback)\n");
 			//exit(EXIT_SUCCESS);	// As it turns out, this is a terrible idea! Let's not do that again.

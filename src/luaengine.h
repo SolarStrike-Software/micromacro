@@ -28,6 +28,7 @@
 	#define MACRO_EVENT_NAME					"event"
 	#define	MAX_WINDOWS_MESSAGES_PER_CYCLE		100
 
+
 	class LuaEngine
 	{
 		protected:
@@ -50,10 +51,9 @@
 			TimeType lastTimestamp;			// Holds the timestamp so we can compute delta time
 			float fDeltaTime;				// Holds the time elapsed between last cycle and current logic cycle
 			int keyHookErrorState;
+			static bool closeState;			// Flag for whether or not we need to force terminate the script (CTRL+C)
 
 			static void closeHook(lua_State *L, lua_Debug *ar);
-
-
 		public:
 			LuaEngine() : lstate(NULL), lastErrorMsg(""), fDeltaTime(0), keyHookErrorState(MicroMacro::ERR_OK) { };
 			~LuaEngine();
@@ -79,6 +79,8 @@
 
 			int getKeyHookErrorState();
 			void setKeyHookErrorState(int);
+
+			static void setCloseState(bool = false);
 	};
 
 
