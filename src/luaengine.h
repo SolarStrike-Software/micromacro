@@ -19,6 +19,8 @@
 	}
 
 	typedef struct lua_State lua_State;
+	typedef struct lua_Debug lua_Debug;
+	typedef void (*lua_Hook) (lua_State *L, lua_Debug *ar);
 
 	#define MACRO_TABLE_NAME					"macro"
 	#define MACRO_INIT_NAME						"init"
@@ -48,6 +50,9 @@
 			TimeType lastTimestamp;			// Holds the timestamp so we can compute delta time
 			float fDeltaTime;				// Holds the time elapsed between last cycle and current logic cycle
 			int keyHookErrorState;
+
+			static void closeHook(lua_State *L, lua_Debug *ar);
+
 
 		public:
 			LuaEngine() : lstate(NULL), lastErrorMsg(""), fDeltaTime(0), keyHookErrorState(MicroMacro::ERR_OK) { };

@@ -77,6 +77,18 @@ void LuaEngine::stdError()
 	lua_pop(lstate, 1);
 }
 
+void LuaEngine::closeHook(lua_State *L, lua_Debug *ar)
+{
+	Macro::instance()->getHid()->poll();
+	if( Macro::instance()->getHid()->pressed(0x43 /* C key */) &&
+		(Macro::instance()->getHid()->isDown(VK_LCONTROL) || Macro::instance()->getHid()->isDown(VK_RCONTROL)) )
+	{
+		lua_pushliteral(L, "CTRL+C pressed.");
+		lua_error(L);
+	}
+}
+
+
 // Placeholder; this gets replaced by user script
 int LuaEngine::_macrotab_init(lua_State *)
 {
@@ -307,6 +319,9 @@ int LuaEngine::init()
 	lastTimestamp.QuadPart = 0;
 	fDeltaTime = 0.0;
 	keyHookErrorState = MicroMacro::ERR_OK;
+
+	// Install hook(s)
+	lua_sethook(lstate, closeHook, LUA_MASKLINE | LUA_MASKCOUNT, 100);
 
 	return MicroMacro::ERR_OK;
 }
