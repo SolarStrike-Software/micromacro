@@ -197,7 +197,8 @@ INT WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 		autoloadScript = true;
 
 	/* Begin main loop */
-	running = true;
+	running			=	true;
+	previousScript	=	"";
 	bool yieldTimeSlice = Macro::instance()->getSettings()->getInt(CONFVAR_YIELD_TIME_SLICE, CONFDEFAULT_YIELD_TIME_SLICE);
 	while(running)
 	{
