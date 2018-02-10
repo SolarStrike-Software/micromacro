@@ -193,10 +193,31 @@ int Table_addon::print(lua_State *L)
 		if( lua_istable(L, -1) && depth < TABLE_PRINT_MAXDEPTH )
 		{
 			printf("%s%s:\ttable: 0x%p\n", depthStr.c_str(), key.c_str(), lua_topointer(L, -1));
-			// Recurse
-			lua_pushinteger(L, depth+1); // Push depth
-			print(L);
+
+			if( lua_topointer(L, -1) != lua_topointer(L, tabIndex) )
+			{
+				// Recurse
+				lua_pushinteger(L, depth+1); // Push depth
+				print(L);
+			}
 		}
+		else if( lua_isfunction(L, -1) )
+			printf("%s%s:\tfunction: 0x%p\n", depthStr.c_str(), key.c_str(), lua_topointer(L, -1));
+		else if( lua_isuserdata(L, -1) )
+			printf("%s%s:\tuserdata: 0x%p\n", depthStr.c_str(), key.c_str(), lua_topointer(L, -1));
+		else if( lua_isboolean(L, -1) )
+		{
+			char *strValue;
+			if( lua_toboolean(L, -1) )
+				strValue = "true";
+			else
+				strValue = "false";
+			printf("%s%s:\t\%s\n", depthStr.c_str(), key.c_str(), strValue);
+		}
+		else if( lua_isnumber(L, -1) )
+			printf("%s%s:\t\%s\n", depthStr.c_str(), key.c_str(), lua_tostring(L, -1));
+		else if( lua_isstring(L, -1) )
+			printf("%s%s:\t\"%s\"\n", depthStr.c_str(), key.c_str(), lua_tostring(L, -1));
 		else
 			printf("%s%s:\t%s\n", depthStr.c_str(), key.c_str(), (char *)lua_tostring(L, -1));
 
