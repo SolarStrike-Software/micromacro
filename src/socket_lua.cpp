@@ -568,6 +568,15 @@ int Socket_lua::connect(lua_State *L)
 	{
 		HOSTENT *pHostent;
 		pHostent = gethostbyname(host);
+		if( pHostent == NULL )
+		{ // Invalid host
+			char errbuff[2048];
+			slprintf(errbuff, sizeof(errbuff), "Could not retrieve host information for %s\n", host);
+
+			lua_pushboolean(L, false);
+			lua_pushstring(L, errbuff);
+			return 2;
+		}
 		server.sin_addr = *((LPIN_ADDR)*pHostent->h_addr_list);
 	}
 
