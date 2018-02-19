@@ -482,12 +482,15 @@ int Socket_lua::regmod(lua_State *L)
 		{NULL, NULL}
 	};
 
-	luaL_newmetatable(L, LuaType::metatable_socket);
-	luaL_setfuncs(L, meta, 0);
-	luaL_newlib(L, methods);
-	lua_setfield(L, -2, "__index");
+	if( Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_ENABLED, CONFDEFAULT_NETWORK_ENABLED) )
+	{
+		luaL_newmetatable(L, LuaType::metatable_socket);
+		luaL_setfuncs(L, meta, 0);
+		luaL_newlib(L, methods);
+		lua_setfield(L, -2, "__index");
 
-	lua_pop(L, 1); // Pop table
+		lua_pop(L, 1); // Pop table
+	}
 
 	return MicroMacro::ERR_OK;
 }
