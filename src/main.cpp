@@ -857,6 +857,9 @@ int loadConfig(const char *filename)
 	#endif
 
 	#ifdef NETWORKING_ENABLED
+	ival = getConfigInt(lstate, CONFVAR_NETWORK_ENABLED, CONFDEFAULT_NETWORK_ENABLED);
+	psettings->setInt(CONFVAR_NETWORK_ENABLED, ival);
+
 	ival = getConfigInt(lstate, CONFVAR_NETWORK_BUFFER_SIZE, CONFDEFAULT_NETWORK_BUFFER_SIZE);
 	if( ival < 16 ) // Make sure it is reasonable...
 		ival = CONFDEFAULT_NETWORK_BUFFER_SIZE;

@@ -14,6 +14,7 @@
 #include "types.h"
 #include "logger.h"
 #include "socket_lua.h"
+#include "settings.h"
 
 extern "C"
 {
@@ -32,8 +33,11 @@ int Network_lua::regmod(lua_State *L)
 		{NULL, NULL}
 	};
 
-	luaL_newlib(L, _funcs);
-	lua_setglobal(L, NETWORK_MODULE_NAME);
+	if( Macro::instance()->getSettings()->getInt(CONFVAR_NETWORK_ENABLED, CONFDEFAULT_NETWORK_ENABLED) )
+	{
+		luaL_newlib(L, _funcs);
+		lua_setglobal(L, NETWORK_MODULE_NAME);
+	}
 
 	return MicroMacro::ERR_OK;
 }
