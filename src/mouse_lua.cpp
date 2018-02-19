@@ -262,6 +262,8 @@ int Mouse_lua::setPosition(lua_State *L)
 
 	// For some unknown reason, if both are 0, it won't move the mouse.
 	// So, just set one of these to 1
+	if( x == 0 && y == 0 )
+		y = 1;
 
 	INPUT inp;
 	inp.type = INPUT_MOUSE;
