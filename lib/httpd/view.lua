@@ -147,6 +147,18 @@ function _View:render(str)
 		return result;
 	end);
 
+	str =	string.gsub(str, "{\\{(.-)}\\}", function(inner)
+		--[[
+			Print out double curly braces with it's contents, raw, for things like Vue.
+			For example {\{ blah }\} prints out: {{ blah }}
+			This *does not* execute any code or escape things.
+			inner	=	string.gsub(inner, "%%}", "}");
+			inner	=	string.gsub(inner, "%%{", "{");
+		]]
+
+		return "{{" .. inner .. "}}";
+	end);
+
 	return str;
 end
 
@@ -183,7 +195,7 @@ function _View:make(fileName, data)
 		str	=	string.sub(str, string.find(str, "\n")+1);
 		local subView	=	class.new(self);
 		local result	=	subView:make(template);
-		str	=	string.gsub(result.content, "@section%(%s*[%\'%\"](.-)[%\'%\"],?%s*[%\'%\"]?(.-)[%\'%\"]?%s*%)", function(sectionName, defaultContent)
+		str	=	string.gsub(result.content, "\n?\t*@section%(%s*[%\'%\"](.-)[%\'%\"],?%s*[%\'%\"]?(.-)[%\'%\"]?%s*%)\n?", function(sectionName, defaultContent)
 			return sections[sectionName] or defaultContent or "";
 		end);
 	end
