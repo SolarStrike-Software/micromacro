@@ -129,7 +129,7 @@ function NeuralNet:getResults()
 	return results;
 end
 
--- Returns a table containing all the data to save the network (topology, layer data, neuron weights)
+-- Returns a table containing all the data to save the network (neuron weights)
 function NeuralNet:getExportTable()
 	local export = {};
 

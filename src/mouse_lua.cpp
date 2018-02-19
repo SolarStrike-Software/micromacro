@@ -253,12 +253,15 @@ int Mouse_lua::setPosition(lua_State *L)
 
 	double fScreenWidth = ::GetSystemMetrics(SM_CXSCREEN)-1;
 	double fScreenHeight = ::GetSystemMetrics(SM_CYSCREEN)-1;
-	int x = (int)lua_tointeger(L, 1);
-	int y = (int)lua_tointeger(L, 2);
+	int x = (int)lua_tonumber(L, 1); // Use tonumber instead of tointeger otherwise it converts all non-integers to 0
+	int y = (int)lua_tonumber(L, 2);
 
 	// Normalize coords to expected value
 	x = round(x * (65535/fScreenWidth));
 	y = round(y * (65535/fScreenHeight));
+
+	// For some unknown reason, if both are 0, it won't move the mouse.
+	// So, just set one of these to 1
 
 	INPUT inp;
 	inp.type = INPUT_MOUSE;
