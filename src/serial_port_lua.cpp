@@ -79,10 +79,6 @@ int Serial_port_lua::tostring(lua_State *L)
 
 int Serial_port_lua::cleanup(lua_State *L)
 {
-	// Close any opened handles here
-
-
-
 	return MicroMacro::ERR_OK;
 }
 
