@@ -131,6 +131,8 @@ int Serial_port_lua::read(lua_State *L)
 	{
 		checkType(L, LT_NUMBER, 2);
 		maxRead = lua_tointeger(L, 2);
+		if( maxRead > SERIAL_BUFFER_SIZE )
+			maxRead = SERIAL_BUFFER_SIZE;
 	}
 
 	if( pSerialPort->status.cbInQue > 0 )
