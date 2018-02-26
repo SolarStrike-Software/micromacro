@@ -14,6 +14,11 @@
 	#include "wininclude.h"
 	#include "mutex.h"
 	#include "event.h"
+	#include "strl.h"
+
+	#include <stdio.h>
+
+	#define SERIAL_PORT_MAX_PORT_NAME		16
 
 	struct sqlite3;
 
@@ -181,6 +186,80 @@
 			Mutex mutex;
 		};
 		#endif
+
+
+		struct SerialPort
+		{
+			SerialPort()
+			{
+				handle		=	NULL;
+				connected	=	false;
+				portName[0]	=	0; // Null-terminate it at position 0
+			}
+
+			~SerialPort()
+			{
+				close();
+			}
+
+			bool open(char *port, int baudRequested = 9600)
+			{
+				char fullPortMaxLength = 32;
+				char fullPortName[fullPortMaxLength];
+				strlcpy(fullPortName, "\\\\.\\", fullPortMaxLength);
+				strlcat(fullPortName, port, fullPortMaxLength);
+
+				connected = false;
+				handle = CreateFileA(static_cast<LPCSTR>(fullPortName), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+				if( handle == INVALID_HANDLE_VALUE )
+				{
+					return false;
+				}
+
+				DCB dcbSerialParameters = {0};
+				if( !GetCommState(handle, &dcbSerialParameters) )
+				{
+					return false;
+				}
+
+				if( baudRequested < 110 )
+					baudRequested = CBR_110;
+				else if( baudRequested > 256000 )
+					baudRequested = CBR_256000;
+
+				dcbSerialParameters.BaudRate		=	baudRequested;
+				dcbSerialParameters.ByteSize		=	8;
+				dcbSerialParameters.StopBits		=	ONESTOPBIT;
+				dcbSerialParameters.Parity			=	NOPARITY;
+				dcbSerialParameters.fDtrControl		=	DTR_CONTROL_ENABLE;
+
+				if( !SetCommState(handle, &dcbSerialParameters) )
+				{
+					return false;
+				}
+
+				connected	=	true;
+				PurgeComm(handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
+				strlcpy((char *)portName, port, SERIAL_PORT_MAX_PORT_NAME);
+				return true;
+			}
+
+			void close()
+			{
+				if( connected )
+				{
+					CloseHandle(handle);
+					handle		=	NULL;
+					connected	=	false;
+					portName[0]	=	0;
+				}
+			}
+
+			HANDLE handle;
+			COMSTAT status;
+			bool connected;
+			char portName[SERIAL_PORT_MAX_PORT_NAME];
+		};
 
 	} // End of namespace MicroMacro
 #endif

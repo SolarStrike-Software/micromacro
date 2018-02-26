@@ -26,6 +26,8 @@
 #include "hash_lua.h"
 #include "cli_lua.h"
 #include "memorychunk_lua.h"
+#include "serial_lua.h"
+#include "serial_port_lua.h"
 #include "sqlite_lua.h"
 
 #ifdef NETWORKING_ENABLED
@@ -259,6 +261,8 @@ int LuaEngine::init()
 		Process_lua::regmod,
 		Window_lua::regmod,
 		MemoryChunk_lua::regmod,	// Is this needed?
+		Serial_lua::regmod,
+		Serial_port_lua::regmod,
 		Sqlite_lua::regmod,
 #ifdef NETWORKING_ENABLED
 		Network_lua::regmod,
