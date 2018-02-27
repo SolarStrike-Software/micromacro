@@ -50,6 +50,9 @@ int Serial_port_lua::gc(lua_State *L)
 	SerialPort *pSerialPort = *static_cast<SerialPort **>(lua_touserdata(L, 1));
 
 	pSerialPort->close();
+
+	// Can now delete new'd memory
+	delete pSerialPort;
 	return 0;
 }
 

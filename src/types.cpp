@@ -14,6 +14,8 @@ using MicroMacro::MemoryChunk;
 using MicroMacro::Vector3d;
 using MicroMacro::Quaternion;
 using MicroMacro::Vector3d;
+using MicroMacro::Socket;
+using MicroMacro::SerialPort;
 
 BatchJob &BatchJob::operator=(const BatchJob &o)
 {
@@ -167,4 +169,90 @@ Quaternion Quaternion::normal()
 {
 	double len = x*x + y*y + z*z + w*w;
 	return Quaternion(w/len, x/len, y/len, z/len);
+}
+
+Socket::Socket()
+{
+	connected	=	false;
+	open		=	false;
+	deleteMe	=	false;
+	inLua		=	false;
+}
+
+Socket::~Socket()
+{
+	connected	=	false;
+	open		=	false;
+	//deleteMe	=	true;
+	if( socket )
+		closesocket(socket);
+}
+
+SerialPort::SerialPort()
+{
+	handle		=	NULL;
+	connected	=	false;
+	portName[0]	=	0; // Null-terminate it at position 0
+}
+
+SerialPort::~SerialPort()
+{
+	close();
+}
+
+bool SerialPort::open(char *port, int baudRequested)
+{
+	char fullPortMaxLength = 32;
+	char fullPortName[fullPortMaxLength];
+	strlcpy(fullPortName, "\\\\.\\", fullPortMaxLength);
+	strlcat(fullPortName, port, fullPortMaxLength);
+
+	connected = false;
+	handle = CreateFileA(static_cast<LPCSTR>(fullPortName), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if( handle == INVALID_HANDLE_VALUE )
+	{
+		return false;
+	}
+
+	DCB dcbSerialParameters = {0};
+	if( !GetCommState(handle, &dcbSerialParameters) )
+	{
+		CloseHandle(handle);
+		handle = NULL;
+		return false;
+	}
+
+	if( baudRequested < 110 )
+		baudRequested = CBR_110;
+	else if( baudRequested > 256000 )
+		baudRequested = CBR_256000;
+
+	dcbSerialParameters.BaudRate		=	baudRequested;
+	dcbSerialParameters.ByteSize		=	8;
+	dcbSerialParameters.StopBits		=	ONESTOPBIT;
+	dcbSerialParameters.Parity			=	NOPARITY;
+	dcbSerialParameters.fDtrControl		=	DTR_CONTROL_ENABLE;
+
+	if( !SetCommState(handle, &dcbSerialParameters) )
+	{
+		CloseHandle(handle);
+		handle = NULL;
+		return false;
+	}
+
+	connected	=	true;
+	PurgeComm(handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
+	strlcpy((char *)portName, port, SERIAL_PORT_MAX_PORT_NAME);
+	return true;
+}
+
+void SerialPort::close()
+{
+	if( connected )
+	{
+		CloseHandle(handle);
+		handle		=	NULL;
+		connected	=	false;
+		portName[0]	=	0;
+	}
 }
