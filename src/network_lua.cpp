@@ -81,9 +81,9 @@ int Network_lua::socket(lua_State *L)
 		}
 	}
 
-	Socket *pSocket = new Socket;
-	pSocket->inLua	=	true;
-	Socket **ppSocket = static_cast<Socket **>(lua_newuserdata(L, sizeof(Socket **)));
+	Socket *pSocket		=	new Socket;
+	pSocket->inLua		=	true;
+	Socket **ppSocket	=	static_cast<Socket **>(lua_newuserdata(L, sizeof(Socket **)));
 	*ppSocket = pSocket;
 
 	pSocket->socket		=	::socket(AF_INET, streamtype, protocol);

@@ -122,7 +122,7 @@ int Serial_port_lua::read(lua_State *L)
 
 	DWORD maxRead = SERIAL_BUFFER_SIZE;
 	char buffer[SERIAL_BUFFER_SIZE];
-	unsigned int toRead;
+	unsigned int toRead = 0;
 	DWORD bytesRead;
 	DWORD errors;
 	ClearCommError(pSerialPort->handle, &errors, &pSerialPort->status);

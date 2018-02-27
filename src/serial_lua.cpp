@@ -53,6 +53,16 @@ int Serial_lua::open(lua_State *L)
 
 	pSerialPort->open(portName, baud);
 
+	if( !pSerialPort->connected )
+	{
+		lua_pop(L, 1); // Pop the garbage port off since it failed.
+		lua_pushboolean(L, false);
+		char errbuff[2048];
+		slprintf(errbuff, sizeof(errbuff), "Failed to open serial port. Err code: %d\n", GetLastError());
+		lua_pushstring(L, errbuff);
+		return 2;
+	}
+
 	// It was created, so give it a metatable
 	luaL_getmetatable(L, LuaType::metatable_serial_port);
 	lua_setmetatable(L, -2);
