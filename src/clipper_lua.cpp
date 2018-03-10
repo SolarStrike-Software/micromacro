@@ -41,6 +41,8 @@ double Clipper_lua::pointPrecision	=	16384.0;	// Seems like a good default value
 int Clipper_lua::regmod(lua_State *L)
 {
 	static const luaL_Reg _funcs[] = {
+		{"getPointPrecision", Clipper_lua::getPointPrecision},
+		{"setPointPrecision", Clipper_lua::setPointPrecision},
 		{"offset", Clipper_lua::offset},
 		{"merge", Clipper_lua::merge},
 		{"pointInPoly", Clipper_lua::pointInPoly},
