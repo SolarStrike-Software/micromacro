@@ -194,7 +194,15 @@ int Clipper_lua::setPointPrecision(lua_State *L)
 		wrongArgs(L);
 	checkType(L, LT_NUMBER, 1);
 
-	pointPrecision	=	lua_tonumber(L, 1);
+	double newPrecision =	lua_tonumber(L, 1);
+
+	if( newPrecision < 1.0 )
+	{
+		lua_pushliteral(L, "Precision must be at least 1.0");
+		lua_error(L);
+	}
+
+	pointPrecision	=	newPrecision;
 	return 0;
 }
 
