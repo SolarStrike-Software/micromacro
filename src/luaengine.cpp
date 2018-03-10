@@ -11,6 +11,7 @@
 #include "logger.h"
 #include "eventdata.h"
 
+#include "clipper_lua.h"
 #include "ncurses_lua.h"
 #include "time_lua.h"
 #include "keyboard_lua.h"
@@ -250,6 +251,7 @@ int LuaEngine::init()
 	/* Register modules & addons */
 	const lua_CFunction regModFuncs[] = {
 		/* Modules */
+		Clipper_lua::regmod,
 		Ncurses_lua::regmod,
 		Time_lua::regmod,
 		Keyboard_lua::regmod,
