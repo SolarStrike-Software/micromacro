@@ -108,7 +108,7 @@ int Clipper_lua::scalePointToDouble(long srcX, long srcY, double &destX, double 
 	return true;
 }
 
-int Clipper_lua::pushPathSolution(lua_State *L, ClipperLib::Path &path)
+void Clipper_lua::pushPathSolution(lua_State *L, ClipperLib::Path &path)
 {
 	lua_newtable(L);
 	for(unsigned int i = 0; i < path.size(); i++)
@@ -139,7 +139,7 @@ int Clipper_lua::pushPathSolution(lua_State *L, ClipperLib::Path &path)
 	}
 }
 
-int Clipper_lua::pushPathsSolution(lua_State *L, ClipperLib::Paths &paths)
+void Clipper_lua::pushPathsSolution(lua_State *L, ClipperLib::Paths &paths)
 {
 	lua_newtable(L);
 	for(unsigned int i = 0; i < paths.size(); i++)

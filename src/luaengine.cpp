@@ -132,7 +132,7 @@ int LuaEngine::fireEvent(lua_State *L)
 
 	pe->type	=	MicroMacro::EVENT_CUSTOM;
 
-	int args = lua_gettop(L);
+	unsigned int args = lua_gettop(L);
 	for(unsigned int i = 0; i < args; i++)
 	{
 		if( i >= CUSTOM_EVENT_DATA_SLOTS ) // Don't jam more info in there than we can hold, OR ELSE

@@ -32,8 +32,8 @@
 			static int scalePointToDouble(long, long, double &, double &);
 
 			// Helpers to return solutions
-			static int pushPathSolution(lua_State *, ClipperLib::Path &);
-			static int pushPathsSolution(lua_State *, ClipperLib::Paths &);
+			static void pushPathSolution(lua_State *, ClipperLib::Path &);
+			static void pushPathsSolution(lua_State *, ClipperLib::Paths &);
 
 		public:
 			static int regmod(lua_State *);

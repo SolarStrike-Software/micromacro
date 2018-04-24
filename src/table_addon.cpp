@@ -209,9 +209,9 @@ int Table_addon::print(lua_State *L)
 		{
 			char *strValue;
 			if( lua_toboolean(L, -1) )
-				strValue = "true";
+				strValue = (char *)"true";
 			else
-				strValue = "false";
+				strValue = (char *)"false";
 			printf("%s%s:\t\%s\n", depthStr.c_str(), key.c_str(), strValue);
 		}
 		else if( lua_isnumber(L, -1) )
