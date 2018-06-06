@@ -77,7 +77,10 @@ LuaEngine::~LuaEngine()
 */
 void LuaEngine::stdError()
 {
-	lastErrorMsg = lua_tostring(lstate, lua_gettop(lstate));
+	if( lua_isstring(lstate, lua_gettop(lstate)) )
+		lastErrorMsg = lua_tostring(lstate, lua_gettop(lstate));
+	else
+		lastErrorMsg = "Unknown error occurred (entered error state but no error message returned).";
 	lua_pop(lstate, 1);
 }
 
