@@ -72,6 +72,10 @@ int Class_lua::_new(lua_State *L)
 		lua_pushstring(L, "__call");
 		lua_pushcfunction(L, Class_lua::__call);
 		lua_settable(L, -3);
+
+		lua_pushstring(L, "is_a");
+		lua_pushcfunction(L, Class_lua::is_a);
+		lua_settable(L, -3);
 	}
 	else if( top == 1 ) // Create a subclass
 	{
@@ -94,6 +98,10 @@ int Class_lua::_new(lua_State *L)
 		lua_setfield(L, newtab_index, "__index");
 
 		lua_setmetatable(L, newtab_index);
+
+		lua_pushstring(L, "is_a");
+		lua_pushcfunction(L, Class_lua::is_a);
+		lua_settable(L, -3);
 
 		// Set parent
 		lua_pushvalue(L, 1); // Copy table 1
@@ -219,5 +227,58 @@ int Class_lua::vector3d(lua_State *L)
 	}
 
 	lua_pushvector3d(L, vec);
+	return 1;
+}
+
+
+/*	class.is_a(table BaseClass)
+	Returns:	boolean
+
+	Checks if this class is an instance of, or child of
+	the given base class.
+*/
+int Class_lua::is_a(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 2 )
+		wrongArgs(L);
+
+	const void *comparisonPointer	=	lua_topointer(L, 2);
+	lua_pop(L, 1); // Pop the comparisonPointer off now so that our main class is on top of the stack.
+
+	// Check if they are the same before checking parents
+	if( lua_topointer(L, 1) == comparisonPointer )
+	{
+		lua_pushboolean(L, true);
+		return 1;
+	}
+
+	lua_getfield(L, 1, "parent");
+	lua_pop(L, 1);
+
+	bool foundParent = false;
+	int origStackCount = lua_gettop(L);
+	while(true)
+	{
+		// Check if it even has a parent
+		lua_getfield(L, -1, "parent");
+		if( lua_isnil(L, -1) || !lua_istable(L, -1) )
+		{
+			break;
+		}
+		else
+		{	// Check if the parent matches our comparison
+			if( lua_topointer(L, -1) == comparisonPointer )
+			{
+				foundParent = true;
+				break;
+			}
+		}
+	}
+
+	// Pop any extra junk we pushed onto the stack
+	int newStackCount = lua_gettop(L);
+	lua_pop(L, newStackCount - origStackCount);
+	lua_pushboolean(L, foundParent);
 	return 1;
 }

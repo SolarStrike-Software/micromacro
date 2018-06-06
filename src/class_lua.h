@@ -28,6 +28,7 @@ extern "C"
 			static int __tostring(lua_State *);
 
 			static int vector3d(lua_State *);
+			static int is_a(lua_State *);
 
 		public:
 			static int regmod(lua_State *);
