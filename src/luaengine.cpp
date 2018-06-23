@@ -677,7 +677,7 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
 			// Ensure that the socket is still valid, if not then don't do anything
 			if( pSocket->socket == INVALID_SOCKET )
 			{
-				lua_pop(lstate, 2); // Pop stacktrace, macro table
+				lua_pop(lstate, 3); // Pop msgh, stacktrace, macro table
 				return 0;
 			}
 
