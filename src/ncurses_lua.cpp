@@ -623,7 +623,7 @@ int Ncurses_lua::setColor(lua_State *L)
 /*	ncurses.setPair(number pairIndex, number foregroundColor, number backgroundColor)
 	Returns:	nil
 
-	Modified the color (foreground/background) pair at a given index.
+	Modifies the color (foreground/background) pair at a given index.
 */
 int Ncurses_lua::setPair(lua_State *L)
 {

@@ -257,11 +257,13 @@ int App::run()
 					getline(std::cin, fullcmd);
 					std::cin.clear();
 
-					if( fullcmd == "exit" ) // Leave interactive mode
+					if( fullcmd == "exit" || fullcmd == "quit" ) // Leave interactive mode
 					{
 						printf("\n\n");
 						break;
 					}
+
+					Macro::instance()->getHid()->poll();
 
 					// Run the string
 					LuaEngine *E = Macro::instance()->getEngine();
