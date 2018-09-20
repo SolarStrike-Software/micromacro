@@ -1075,22 +1075,22 @@ int Process_lua::write(lua_State *L)
 	if( pHandle->handle == 0 )
 		luaL_error(L, szInvalidHandleError);
 
-	if( type == "byte" )
+	if( type == "byte" || type == "ubyte" )
 	{
 		checkType(L, LT_NUMBER, 4);
 		char data = (char)lua_tointeger(L, 4);
 		writeMemory<char>(pHandle->handle, address, data, err);
-	} else if( type == "short" )
+	} else if( type == "short" || type == "ushort" )
 	{
 		checkType(L, LT_NUMBER, 4);
 		short data = (short)lua_tointeger(L, 4);
 		writeMemory<short>(pHandle->handle, address, data, err);
-	} else if( type == "int" )
+	} else if( type == "int" || type == "uint" )
 	{
 		checkType(L, LT_NUMBER, 4);
 		int data = (int)lua_tointeger(L, 4);
 		writeMemory<int>(pHandle->handle, address, data, err);
-	} else if( type == "int64" )
+	} else if( type == "int64" || type == "int64" )
 	{
 		checkType(L, LT_NUMBER, 4);
 		long long data = (long long)lua_tointeger(L, 4);
@@ -1105,7 +1105,7 @@ int Process_lua::write(lua_State *L)
 		checkType(L, LT_NUMBER, 4);
 		double data = (double)lua_tonumber(L, 4);
 		writeMemory<double>(pHandle->handle, address, data, err);
-	} else if( type == "string" )
+	} else if( type == "string" || type == "ustring" )
 	{
 		checkType(L, LT_STRING, 4);
 		size_t maxlen = 0;
@@ -1227,22 +1227,22 @@ int Process_lua::writePtr(lua_State *L)
 
 	if( !err )
 	{ // Write value by type.
-		if( type == "byte" )
+		if( type == "byte" || type == "ubyte" )
 		{
 			checkType(L, LT_NUMBER, 5);
 			char data = (char)lua_tointeger(L, 5);
 			writeMemory<char>(pHandle->handle, realAddress, data, err);
-		} else if( type == "short" )
+		} else if( type == "short" || type == "ushort" )
 		{
 			checkType(L, LT_NUMBER, 5);
 			short data = (short)lua_tointeger(L, 5);
 			writeMemory<short>(pHandle->handle, realAddress, data, err);
-		} else if( type == "int" )
+		} else if( type == "int" || type == "uint" )
 		{
 			checkType(L, LT_NUMBER, 5);
 			int data = (int)lua_tointeger(L, 5);
 			writeMemory<int>(pHandle->handle, realAddress, data, err);
-		} else if( type == "int64" )
+		} else if( type == "int64" || type == "uint64" )
 		{
 			checkType(L, LT_NUMBER, 5);
 			long long data = (long long)lua_tointeger(L, 5);
@@ -1258,7 +1258,7 @@ int Process_lua::writePtr(lua_State *L)
 			double data = (double)lua_tonumber(L, 5);
 			writeMemory<double>(pHandle->handle, realAddress, data, err);
 		}
-		else if( type == "string" )
+		else if( type == "string" || type == "ustring" )
 		{
 			checkType(L, LT_STRING, 5);
 			size_t dataLen;
