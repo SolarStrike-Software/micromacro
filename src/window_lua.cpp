@@ -401,7 +401,9 @@ int Window_lua::getTitle(lua_State *L)
 		int errCode = GetLastError();
 		pushLuaErrorEvent(L, "Failure to get window title. Error code %i (%s)",
 			errCode, getWindowsErrorString(errCode).c_str());
-		return 0;
+
+		lua_pushnil(L);
+		return 1;
 	}
 
 	lua_pushstring(L, buffer);
@@ -462,7 +464,9 @@ int Window_lua::getClassName(lua_State *L)
 		int errCode = GetLastError();
 		pushLuaErrorEvent(L, "Failure to get window class. Error code %i (%s)",
 			errCode, getWindowsErrorString(errCode).c_str());
-		return 0;
+
+		lua_pushnil(L);
+		return 1;
 	}
 
 	lua_pushstring(L, buffer);
@@ -505,7 +509,13 @@ int Window_lua::getRect(lua_State *L)
     WINDOWPLACEMENT wp;
     memset(&wp, 0, sizeof(WINDOWPLACEMENT));
     wp.length = sizeof(WINDOWPLACEMENT);
-    GetWindowPlacement(hwnd, &wp);
+    bool success = GetWindowPlacement(hwnd, &wp);
+
+	if( !success )
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
 	// Push results
 
@@ -588,7 +598,13 @@ int Window_lua::getClientRect(lua_State *L)
     WINDOWPLACEMENT wp;
     memset(&wp, 0, sizeof(WINDOWPLACEMENT));
     wp.length = sizeof(WINDOWPLACEMENT);
-    GetWindowPlacement(hwnd, &wp);
+    bool success = GetWindowPlacement(hwnd, &wp);
+
+	if( !success )
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
 	// Push results
 	lua_pushnumber(L, point.x);
