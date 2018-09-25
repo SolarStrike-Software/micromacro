@@ -66,8 +66,6 @@ function PolyGrid:findPath(startPoint, endPoint)
 		
 		-- Check visibility between nodes, adding connections where there is visibility
 		local v = self.nodes[index];
-		print("index:", index);
-		print("point:", v);
 		for j,k in pairs(self.nodes) do
 			if( v ~= k ) then -- Don't try connecting to yourself...
 				local vis = Pathfinding.checkVisibility(self.offsetPolygons, v, k);
