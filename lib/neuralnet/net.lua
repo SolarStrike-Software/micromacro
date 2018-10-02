@@ -217,4 +217,6 @@ function NeuralNet:load(filename)
 			end
 		end
 	end
+
+	return self;
 end
