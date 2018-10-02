@@ -185,6 +185,11 @@ end
 
 -- Load from a file
 function NeuralNet:load(filename)
+	-- Try to avoid modifying and using the baseclass.
+	if( self == NeuralNet ) then
+		self = self(1,1,1);
+	end
+
 	local file = io.open(filename, "r");
 
 	if( not file ) then
@@ -219,4 +224,22 @@ function NeuralNet:load(filename)
 	end
 
 	return self;
+end
+
+
+
+local meta = getmetatable(NeuralNet);
+function meta:__tostring()
+	local str = "Neural Network";
+
+	if( self.layers ~= nil ) then
+		str = str .. " - Topology: ";
+		for i,v in pairs(self.layers) do
+			if( i > 1 ) then
+				str = str .. ", ";
+			end
+			str = str .. (#v - 1);
+		end
+	end
+	return str;
 end
