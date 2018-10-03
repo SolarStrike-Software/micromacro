@@ -15,6 +15,7 @@
 	{
 		protected:
 			static int distance(lua_State *);
+			static int round(lua_State *);
 
 		public:
 			static int regmod(lua_State *);

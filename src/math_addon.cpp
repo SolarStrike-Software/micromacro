@@ -21,12 +21,33 @@ int Math_addon::regmod(lua_State *L)
 {
 	lua_getglobal(L, MATH_MODULE_NAME);
 
+	lua_pushcfunction(L, Math_addon::round);
+	lua_setfield(L, -2, "round");
+
 	lua_pushcfunction(L, Math_addon::distance);
 	lua_setfield(L, -2, "distance");
 
 	lua_pop(L, 1); // Pop math module
 
 	return MicroMacro::ERR_OK;
+}
+
+/*	math.round(value)
+	Returns:	number
+
+	Rounds a number to the nearest whole value
+*/
+int Math_addon::round(lua_State *L)
+{
+	int top = lua_gettop(L);
+	if( top != 1 )
+		wrongArgs(L);
+
+	checkType(L, LT_NUMBER, 1);
+
+	double value = lua_tonumber(L, 1);
+	lua_pushnumber(L, ::round(value));
+	return 1;
 }
 
 /*	math.distance(x1, y1, x2, y2)
