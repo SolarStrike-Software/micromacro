@@ -25,9 +25,6 @@ extern "C"
 	#include <lualib.h>
 }
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alut.h>
 #include <sqlite3.h>
 
 namespace LuaType
@@ -36,12 +33,10 @@ namespace LuaType
 	const char *metatable_ncursesWindow = "ncurses.window";
 	const char *metatable_handle = "process.handle";
 	const char *metatable_windowDC = "window.windowDC";
-	const char *metatable_audioResource = "audio.audioResource";
 	const char *metatable_sqlitedb = "sqlite.dbhandle";
 }
 
 using MicroMacro::ProcHandle;
-using MicroMacro::AudioResource;
 using MicroMacro::SQLiteDb;
 
 int registerLuaTypes(lua_State *L)
@@ -66,18 +61,6 @@ int registerLuaTypes(lua_State *L)
 
 	lua_pushstring(L, "__tostring");
 	lua_pushcfunction(L, LuaType::handle_tostring);
-	lua_settable(L, -3);
-	lua_pop(L, 1); // Pop metatable
-
-
-	// Audio
-	luaL_newmetatable(L, LuaType::metatable_audioResource);
-	lua_pushstring(L, "__gc");
-	lua_pushcfunction(L, LuaType::audioResource_gc);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, LuaType::audioResource_tostring);
 	lua_settable(L, -3);
 	lua_pop(L, 1); // Pop metatable
 
@@ -162,33 +145,6 @@ int LuaType::windowDC_tostring(lua_State *L)
 	return 1;
 }
 */
-
-// Flush the sound data
-int LuaType::audioResource_gc(lua_State *L)
-{
-	checkType(L, LT_USERDATA, 1);
-	AudioResource *pResource = static_cast<AudioResource *>(lua_touserdata(L, 1));
-
-	if( pResource->buffer != AL_NONE )
-		alDeleteBuffers(1, &pResource->buffer);
-	if( pResource->source != AL_NONE )
-		alDeleteSources(1, &pResource->source);
-
-	pResource->buffer = AL_NONE;
-	pResource->source = AL_NONE;
-	return 0;
-}
-
-int LuaType::audioResource_tostring(lua_State *L)
-{
-	checkType(L, LT_USERDATA, 1);
-	AudioResource *pResource = static_cast<AudioResource *>(lua_touserdata(L, 1));
-
-	char buffer[128];
-	slprintf(buffer, sizeof(buffer)-1, "Audio resource 0x%p", pResource);
-	lua_pushstring(L, buffer);
-	return 1;
-}
 
 // Close the DB
 int LuaType::sqlitedb_gc(lua_State *L)

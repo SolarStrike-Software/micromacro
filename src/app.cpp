@@ -852,13 +852,6 @@ int App::loadConfig(const char *filename)
 	szval = getConfigString(lstate, CONFVAR_SCRIPT_DIRECTORY, CONFDEFAULT_SCRIPT_DIRECTORY);
 	psettings->setString(CONFVAR_SCRIPT_DIRECTORY, szval);
 
-	#ifdef AUDIO_ENABLED
-	ival = getConfigInt(lstate, CONFVAR_AUDIO_ENABLED, CONFDEFAULT_AUDIO_ENABLED);
-	psettings->setInt(CONFVAR_AUDIO_ENABLED, ival);
-	#else
-	psettings->setInt(CONFVAR_AUDIO_ENABLED, 0);
-	#endif
-
 	#ifdef NETWORKING_ENABLED
 	ival = getConfigInt(lstate, CONFVAR_NETWORK_ENABLED, CONFDEFAULT_NETWORK_ENABLED);
 	psettings->setInt(CONFVAR_NETWORK_ENABLED, ival);

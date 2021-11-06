@@ -36,10 +36,6 @@
 	#include "socket_lua.h"
 #endif
 
-#ifdef AUDIO_ENABLED
-	#include "audio_lua.h"
-#endif
-
 #include "global_addon.h"
 #include "string_addon.h"
 #include "math_addon.h"
@@ -302,19 +298,6 @@ int LuaEngine::init()
 		++i; // Next module
 	}
 
-	#ifdef AUDIO_ENABLED
-	{
-		int regSuccess = Audio_lua::regmod(lstate);
-		if( regSuccess != MicroMacro::ERR_OK )
-		{ // Error occurred while loading module
-			const char *err = "Failed to load audio module; disabling sound and moving on.\n";
-			fprintf(stderr, err);
-			Logger::instance()->add("%s", err);
-			Macro::instance()->getSettings()->setInt(CONFVAR_AUDIO_ENABLED, 0);
-		}
-	}
-	#endif
-
 	/* Set path */
 	lua_getglobal(lstate, "package");
 	lua_getfield(lstate, -1, "path");
@@ -358,10 +341,6 @@ int LuaEngine::cleanup()
 {
 	if( !lstate )
 		return MicroMacro::ERR_CLEANUP_FAIL;
-
-	#ifdef AUDIO_ENABLED
-	Audio_lua::cleanup(lstate);
-	#endif
 
 	if( Ncurses_lua::is_initialized() )
 		Ncurses_lua::cleanup(lstate);

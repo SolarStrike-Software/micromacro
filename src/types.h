@@ -72,13 +72,6 @@
 			BatchJob &operator=(const BatchJob &);
 		};
 
-		/* Used to load and play sound */
-		struct AudioResource
-		{
-			ALuint buffer;
-			ALuint source;
-		};
-
 		/* Holds data read from a process */
 		struct MemoryChunk
 		{

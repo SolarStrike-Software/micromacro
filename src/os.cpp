@@ -114,6 +114,10 @@ std::string OS::getOsName()
 	{
 		return std::string("Windows 10");
 	}
+	if ( osvi.dwMajorVersion == 10 && osvi.dwMinorVersion == 0 ) // 10, 0
+	{
+		return std::string("Windows 11");
+	}
 
 	// unknown OS
 	char buffer[256];
