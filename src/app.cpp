@@ -759,10 +759,15 @@ void App::clearCliScreen()
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(stdOut, &csbi);
 
-	FillConsoleOutputCharacter(stdOut, ' ', csbi.dwSize.X * csbi.dwSize.Y,
-		coord, &count);
+	/*FillConsoleOutputCharacter(stdOut, ' ', csbi.dwMaximumWindowSize.X * csbi.dwMaximumWindowSize.Y,
+		coord, &count);*/
 
-	SetConsoleCursorPosition(stdOut, coord);
+	// ANSI clear -- prevents bugginess with ANSI output in the buffer
+	PCWSTR sequence = L"\x1b[2J\x1b[3J";
+    DWORD written = 0;
+	WriteConsoleW(stdOut, sequence, (DWORD)wcslen(sequence), &written, NULL);
+
+    SetConsoleCursorPosition(stdOut, coord);
 }
 
 // Just dump the intro text
