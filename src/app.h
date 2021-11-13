@@ -42,6 +42,8 @@
 				void splitArgs(std::string cmd, std::vector<std::string> &args);
 				std::string promptForScript();
 				std::string scriptGUIDialog(std::string defaultFilename);
+				int enableVirtualTerminal();
+				void renderErrorMessage(int errCode, const char *lastErrorMessage, const char *description);
 
 			public:
 				App(HINSTANCE hinstance, LPSTR cmdLine);

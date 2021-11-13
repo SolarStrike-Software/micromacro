@@ -24,6 +24,10 @@
 	extern const char *CONFVAR_NETWORK_ENABLED;
 	extern const char *CONFVAR_NETWORK_BUFFER_SIZE;
 	extern const char *CONFVAR_RECV_QUEUE_SIZE;
+	extern const char *CONFVAR_STYLE_ERRORS;
+	extern const char *CONFVAR_FILE_STYLE;
+	extern const char *CONFVAR_LINE_NUMBER_STYLE;
+	extern const char *CONFVAR_MESSAGE_STYLE;
 
 	extern const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE;
 	extern const int CONFDEFAULT_LOG_REMOVAL_DAYS;
@@ -33,6 +37,10 @@
 	extern const int CONFDEFAULT_NETWORK_ENABLED;
 	extern const int CONFDEFAULT_NETWORK_BUFFER_SIZE;
 	extern const int CONFDEFAULT_RECV_QUEUE_SIZE;
+	extern const int CONFDEFAULT_STYLE_ERRORS;
+	extern const char *CONFDEFAULT_FILE_STYLE;
+	extern const char *CONFDEFAULT_LINE_NUMBER_STYLE;
+	extern const char *CONFDEFAULT_MESSAGE_STYLE;
 
 	class CSettings;
 	class CSettingValue;

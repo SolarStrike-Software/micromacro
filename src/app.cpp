@@ -4,12 +4,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <sstream>
 #include <stdlib.h>
 #include <queue>
 #include <time.h>
 #include <iostream>
 #include <conio.h>
 #include <Shlwapi.h>
+#include <regex>
 
 #include "macro.h"
 #include "ncurses_lua.h"
@@ -71,6 +73,9 @@ App::~App()
 
 int App::run()
 {
+    // Enable virtual terminal so that we can use ANSI colors
+    this->enableVirtualTerminal();
+
 	// Intro text output
 	printStdHead();
 
@@ -270,11 +275,9 @@ int App::run()
 					int success = E->loadString(fullcmd.c_str());
 					if( success != MicroMacro::ERR_OK )
 					{
-						char buffer[1024];
-						slprintf(buffer, sizeof(buffer)-1, "String execution error code: %d (%s)\n%s\n",
-							success, getErrorString(success), E->getLastErrorMessage().c_str());
-						fprintf(stderr, "%s\n", buffer);
-						Logger::instance()->add("%s", buffer);
+                        std::string lastErrorMessage = E->getLastErrorMessage();
+                        this->renderErrorMessage(success, lastErrorMessage.c_str(), "String execution error");
+                        Logger::instance()->add("%s", lastErrorMessage.c_str());
 					}
 				}
 			}
@@ -293,11 +296,9 @@ int App::run()
 				int success = E->loadString(cmd.c_str());
 				if( success != MicroMacro::ERR_OK )
 				{
-					char buffer[1024];
-					slprintf(buffer, sizeof(buffer)-1, "String execution error code: %d (%s)\n%s\n",
-						success, getErrorString(success), E->getLastErrorMessage().c_str());
-					fprintf(stderr, "%s\n", buffer);
-					Logger::instance()->add("%s", buffer);
+                    std::string lastErrorMessage = E->getLastErrorMessage();
+                    this->renderErrorMessage(success, lastErrorMessage.c_str(), "String execution error");
+                    Logger::instance()->add("%s", lastErrorMessage.c_str());
 				}
 
 				// Make sure we re-initialize our Lua state before we move on
@@ -331,7 +332,6 @@ int App::run()
 
 			// Reset text color (just in case)
 			SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
-
 			char buffer[1024];
 			slprintf(buffer, sizeof(buffer)-1, "Load file error code: %d (%s)\n%s\n",
 				success, getErrorString(success), E->getLastErrorMessage().c_str());
@@ -351,11 +351,9 @@ int App::run()
 			// Reset text color (just in case)
 			SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
 
-			char buffer[1024];
-			slprintf(buffer, sizeof(buffer)-1, "Failed to run init function, err code: %d (%s)\n%s\n",
-				success, getErrorString(success), E->getLastErrorMessage().c_str());
-			fprintf(stderr, "%s\n", buffer);
-			Logger::instance()->add("%s", buffer);
+			std::string lastErrorMessage = E->getLastErrorMessage();
+			this->renderErrorMessage(success, lastErrorMessage.c_str(), "Failed to run init function");
+			Logger::instance()->add("%s", lastErrorMessage.c_str());
 
 			E->reinit();
 			continue;
@@ -420,11 +418,9 @@ int App::run()
 				// Reset text color (just in case)
 				SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
 
-				char buffer[1024];
-				slprintf(buffer, sizeof(buffer)-1, "Failed to run event function, err code: %d (%s)\n%s\n",
-					success, getErrorString(success), E->getLastErrorMessage().c_str());
-				fprintf(stderr, "%s\n", buffer);
-				Logger::instance()->add("%s", buffer);
+                std::string lastErrorMessage = E->getLastErrorMessage();
+                this->renderErrorMessage(success, lastErrorMessage.c_str(), "Failed to run event function");
+                Logger::instance()->add("%s", lastErrorMessage.c_str());
 
 				// Pass to event function
 				MicroMacro::Event *pe = new MicroMacro::Event;
@@ -460,11 +456,9 @@ int App::run()
 				// Reset text color (just in case)
 				SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
 
-				char buffer[1024];
-				slprintf(buffer, sizeof(buffer)-1, "Error in main loop. Error code %d (%s)\n%s\n",
-					runState, getErrorString(runState), pEngine->getLastErrorMessage().c_str());
-				fprintf(stderr, "%s\n", buffer);
-				Logger::instance()->add("%s", buffer);
+				std::string lastErrorMessage = pEngine->getLastErrorMessage();
+				this->renderErrorMessage(runState, lastErrorMessage.c_str(), "Error in main loop");
+				Logger::instance()->add("%s", lastErrorMessage.c_str());
 
 				// Pass to event function
 				MicroMacro::Event *pe = new MicroMacro::Event;
@@ -669,8 +663,6 @@ void App::openLog()
 	else
 		fprintf(stdout, "Failed to open file for logging.\n\n");
 
-
-
 	// Get CPU info
 	HKEY hKey;
 	char szProcessorSpeed[32];
@@ -873,6 +865,18 @@ int App::loadConfig(const char *filename)
 
 	ival = getConfigInt(lstate, CONFVAR_YIELD_TIME_SLICE, CONFDEFAULT_YIELD_TIME_SLICE);
 	psettings->setInt(CONFVAR_YIELD_TIME_SLICE, ival);
+
+	ival = getConfigInt(lstate, CONFVAR_STYLE_ERRORS, CONFDEFAULT_STYLE_ERRORS);
+	psettings->setInt(CONFVAR_STYLE_ERRORS, ival);
+
+	szval = getConfigString(lstate, CONFVAR_FILE_STYLE, CONFDEFAULT_FILE_STYLE);
+	psettings->setString(CONFVAR_FILE_STYLE, szval);
+
+    szval = getConfigString(lstate, CONFVAR_LINE_NUMBER_STYLE, CONFDEFAULT_LINE_NUMBER_STYLE);
+	psettings->setString(CONFVAR_LINE_NUMBER_STYLE, szval);
+
+    szval = getConfigString(lstate, CONFVAR_MESSAGE_STYLE, CONFDEFAULT_LINE_NUMBER_STYLE);
+	psettings->setString(CONFVAR_MESSAGE_STYLE, szval);
 
 	lua_close(lstate);
 	return retval;
@@ -1122,4 +1126,92 @@ std::string App::scriptGUIDialog(std::string defaultFilename)
 	}
 
 	return retval;
+}
+
+int App::enableVirtualTerminal()
+{
+    // https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+    HANDLE handle = Macro::instance()->getAppHandle();
+
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        return GetLastError();
+    }
+
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(handle, &dwMode))
+    {
+        return GetLastError();
+    }
+
+    // Enable virtual terminal if not already set
+    if( !(dwMode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) )
+    {
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if (!SetConsoleMode(handle, dwMode))
+            return GetLastError();
+    }
+
+    return 0;
+}
+
+void App::renderErrorMessage(int errCode, const char *lastErrorMessage, const char *description)
+{
+    char buffer[4096];
+    Settings *psettings = Macro::instance()->getSettings();
+    bool styleErrors = psettings->getInt(CONFVAR_STYLE_ERRORS);
+    std::string renderedError = lastErrorMessage;
+
+    std::string fileStyle = psettings->getString(CONFVAR_FILE_STYLE);
+    std::string lineNumberStyle = psettings->getString(CONFVAR_LINE_NUMBER_STYLE);
+    std::string messageStyle = psettings->getString(CONFVAR_MESSAGE_STYLE);
+
+    if( styleErrors ) {
+        std::regex baseRegex("^([^:]+):(\\d+): ((.|\r|\n)*)\n(stack traceback:\n((.|\r|\n)*))?$");
+        std::cmatch baseMatch;
+        std::string stacktrace = "";
+
+        if (std::regex_match(lastErrorMessage, baseMatch, baseRegex))
+        {
+            renderedError = fileStyle + baseMatch[1].str() + "\x1b[0m:";
+            renderedError += lineNumberStyle + baseMatch[2].str() + "\x1b[0m\n";
+            renderedError += messageStyle + baseMatch[3].str() + "\x1b[0m\n\nStacktrace:\n";
+
+            stacktrace = baseMatch[5].str();
+        }
+        else
+        {
+            baseRegex = std::regex("^((.|\r|\n)*)\nstack traceback:\n((.|\r|\n)*)$");
+            if (std::regex_match(lastErrorMessage, baseMatch, baseRegex))
+            {
+                renderedError = messageStyle + baseMatch[1].str() + "\x1b[0m\n\nStacktrace:\n";
+                stacktrace = baseMatch[3].str();
+            }
+        }
+
+        std::istringstream in(stacktrace);
+        std::string line;
+        std::string renderedStacktrace;
+        std::smatch stacktraceMatch;
+        const std::regex stacktraceRegex("^([^:]+):(\\d+)((.|\r|\n)*)");
+
+        while(std::getline(in, line)) {
+            if (std::regex_match(line, stacktraceMatch, stacktraceRegex))
+            {
+                renderedStacktrace += fileStyle + stacktraceMatch[1].str() + "\x1b[0m:";
+                renderedStacktrace += lineNumberStyle + stacktraceMatch[2].str() + "\x1b[0m";
+                renderedStacktrace += stacktraceMatch[3].str() + "\n";
+            } else
+            {
+                renderedStacktrace += line.c_str();
+                renderedStacktrace += "\n";
+            }
+        }
+        renderedError += renderedStacktrace;
+    }
+
+    slprintf(buffer, sizeof(buffer)-1, "%s -- err code: %d (%s)\n%s\n",
+        description, errCode, getErrorString(errCode), renderedError.c_str());
+
+    fprintf(stderr, "%s\n", buffer);
 }

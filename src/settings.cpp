@@ -18,6 +18,10 @@ const char *CONFVAR_YIELD_TIME_SLICE			=	"yieldTimeSlice";
 const char *CONFVAR_NETWORK_ENABLED				=	"networkEnabled";
 const char *CONFVAR_NETWORK_BUFFER_SIZE			=	"networkBufferSize";
 const char *CONFVAR_RECV_QUEUE_SIZE				=	"recvQueueSize";
+const char *CONFVAR_STYLE_ERRORS                =   "styleErrors";
+const char *CONFVAR_FILE_STYLE                  =   "fileStyle";
+const char *CONFVAR_LINE_NUMBER_STYLE           =   "lineNumberStyle";
+const char *CONFVAR_MESSAGE_STYLE               =   "errMessageStyle";
 
 const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE	=	128;
 const int CONFDEFAULT_LOG_REMOVAL_DAYS			=	7;
@@ -27,6 +31,10 @@ const int CONFDEFAULT_YIELD_TIME_SLICE			=	1;
 const int CONFDEFAULT_NETWORK_ENABLED			=	1;
 const int CONFDEFAULT_NETWORK_BUFFER_SIZE		=	10240;
 const int CONFDEFAULT_RECV_QUEUE_SIZE			= 	100;
+const int CONFDEFAULT_STYLE_ERRORS              =   1;
+const char *CONFDEFAULT_FILE_STYLE              =   "\x1b[38;5;35m";
+const char *CONFDEFAULT_LINE_NUMBER_STYLE       =   "\x1b[38;5;44m";
+const char *CONFDEFAULT_MESSAGE_STYLE           =   "\x1b[38;5;228m";
 
 /* Setting value stuff */
 CSettingValue::CSettingValue()
