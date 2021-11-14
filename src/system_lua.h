@@ -24,6 +24,7 @@
 			static int getActiveCodePage(lua_State *);
 			static int getConsoleCodePage(lua_State *);
 			static int setPriority(lua_State *);
+			static int repollHid(lua_State *L);
 
 		public:
 			static int regmod(lua_State *);

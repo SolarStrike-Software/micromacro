@@ -26,6 +26,7 @@
 				#ifdef NETWORKING_ENABLED
 				WSADATA wsadata;
 				#endif
+				bool ansiTerm = false;
 
 
 				HWND createMessageReceiveWindow(HINSTANCE);

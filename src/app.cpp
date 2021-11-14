@@ -196,6 +196,10 @@ int App::run()
 			securezero(title, sizeof(title));
 		}
 
+		// Reset font rendering
+		if( ansiTerm )
+            printf("\x1b(B\x1b[0m");
+
 		/* Prompt for script, if needed */
 		std::string command;
 		std::vector<std::string> args;
@@ -753,19 +757,22 @@ void App::deleteOldLogs(const char *path, unsigned int daysToDelete)
 void App::clearCliScreen()
 {
 	HANDLE stdOut = Macro::instance()->getAppHandle()/*GetStdHandle(STD_OUTPUT_HANDLE)*/;
-	COORD coord = {0, 0};
-	DWORD count;
+    COORD coord = {0, 0};
 
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	GetConsoleScreenBufferInfo(stdOut, &csbi);
-
-	/*FillConsoleOutputCharacter(stdOut, ' ', csbi.dwMaximumWindowSize.X * csbi.dwMaximumWindowSize.Y,
-		coord, &count);*/
-
-	// ANSI clear -- prevents bugginess with ANSI output in the buffer
-	PCWSTR sequence = L"\x1b[2J\x1b[3J";
-    DWORD written = 0;
-	WriteConsoleW(stdOut, sequence, (DWORD)wcslen(sequence), &written, NULL);
+	if( ansiTerm )
+    {
+        // ANSI clear -- prevents bugginess with ANSI output in the buffer
+        PCWSTR sequence = L"\x1b[2J\x1b[3J";
+        DWORD written = 0;
+        WriteConsoleW(stdOut, sequence, (DWORD)wcslen(sequence), &written, NULL);
+    }
+    else
+    {
+        DWORD count;
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        GetConsoleScreenBufferInfo(stdOut, &csbi);
+        FillConsoleOutputCharacter(stdOut, ' ', csbi.dwMaximumWindowSize.X * csbi.dwMaximumWindowSize.Y, coord, &count);
+    }
 
     SetConsoleCursorPosition(stdOut, coord);
 }
@@ -1155,6 +1162,7 @@ int App::enableVirtualTerminal()
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         if (!SetConsoleMode(handle, dwMode))
             return GetLastError();
+        ansiTerm = true;
     }
 
     return 0;
@@ -1171,7 +1179,7 @@ void App::renderErrorMessage(int errCode, const char *lastErrorMessage, const ch
     std::string lineNumberStyle = psettings->getString(CONFVAR_LINE_NUMBER_STYLE);
     std::string messageStyle = psettings->getString(CONFVAR_MESSAGE_STYLE);
 
-    if( styleErrors ) {
+    if( ansiTerm && styleErrors ) {
         std::regex baseRegex("^([^:]+):(\\d+): ((.|\r|\n)*)\n(stack traceback:\n((.|\r|\n)*))?$");
         std::cmatch baseMatch;
         std::string stacktrace = "";

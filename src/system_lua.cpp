@@ -34,6 +34,7 @@ int System_lua::regmod(lua_State *L)
 		{"getActiveCodePage", System_lua::getActiveCodePage},
 		{"getConsoleCodePage", System_lua::getConsoleCodePage},
 		{"setPriority", System_lua::setPriority},
+		{"repollHid", System_lua::repollHid},
 		{NULL, NULL}
 	};
 
@@ -352,3 +353,19 @@ int System_lua::setPriority(lua_State *L)
 	SetPriorityClass(GetCurrentProcess(), priority);
 	return 0;
 }
+
+/*	system.repollHid()
+	Returns:	nil
+
+	Repolls human input devices
+*/
+int System_lua::repollHid(lua_State *L)
+{
+	if( lua_gettop(L) != 0 )
+		wrongArgs(L);
+
+    Macro::instance()->getHid()->repollGamepadMaxIndex();
+    Macro::instance()->getHid()->poll();
+	return 0;
+}
+
