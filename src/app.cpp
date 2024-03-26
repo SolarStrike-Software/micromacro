@@ -712,10 +712,10 @@ void App::openLog()
 	EncString::reveal(logVersionFmt, sizeof(logVersionFmt), EncString::logVersionFmt);
 
 	Logger::instance()->add(logVersionFmt, AutoVersion::FULLVERSION_STRING, AutoVersion::STATUS, bits);
-	Logger::instance()->add("%s %s, %s\n", szProcessorName, szProcessorSpeed, OS::getOsName().c_str());
-	Logger::instance()->add("User privilege: %s\n", userGroupName.c_str());
+	Logger::instance()->add("%s %s, %s", szProcessorName, szProcessorSpeed, OS::getOsName().c_str());
+	Logger::instance()->add("User privilege: %s", userGroupName.c_str());
 	Logger::instance()->add_raw((char *)&splitLine80);
-	Logger::instance()->add_raw("\n\n");
+	Logger::instance()->add_raw("\n");
 
 	// Flush it
 	securezero(logVersionFmt, sizeof(logVersionFmt));

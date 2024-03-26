@@ -70,7 +70,7 @@ int isWindows64()
 		bool success = fnIsWow64Process(GetCurrentProcess(), &iswow64);
 
 		if( !success )
-			Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d\n",
+			Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d",
 				__FUNCTION__, GetLastError());
 
 		return iswow64;
@@ -1784,7 +1784,7 @@ int Process_lua::is32bit(lua_State *L)
 	}
 
 	if( !success )
-		Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d\n",
+		Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d",
 			__FUNCTION__, GetLastError());
 
 	if( iswow64 )
@@ -1824,7 +1824,7 @@ int Process_lua::is64bit(lua_State *L)
 	}
 
 	if( !success )
-		Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d\n",
+		Logger::instance()->add("Failed to call IsWow64Process() in %s. Error code: %d",
 			__FUNCTION__, GetLastError());
 
 	if( iswow64 )

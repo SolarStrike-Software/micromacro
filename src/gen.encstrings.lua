@@ -15,7 +15,7 @@ local out_filename = "src\\encstring.h";
 local stringList =
 {
 	basicTitle			=	"MicroMacro v%ld.%02ld.%ld",
-	logVersionFmt		=	"MicroMacro version %s (%s) %s\n",
+	logVersionFmt		=	"MicroMacro version %s (%s) %s",
 	website				=	"SolarStrike Software\thttp://www.solarstrike.net",
 	taskIconTitle		=	"MicroMacro",
 }

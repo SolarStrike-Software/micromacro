@@ -290,7 +290,7 @@ int LuaEngine::init()
 		int regSuccess = regModFuncs[i](lstate);
 		if( regSuccess != MicroMacro::ERR_OK )
 		{ // Error occurred while loading module
-			const char *err = "One or more modules failed to load.\n";
+			const char *err = "One or more modules failed to load.";
 			fprintf(stderr, err);
 			Logger::instance()->add("%s", err);
 			return regSuccess;

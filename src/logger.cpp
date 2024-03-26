@@ -103,7 +103,7 @@ void CLogger::add(const char *fmt, ...)
 	_vsnprintf(logbuf, sizeof(logbuf), fmt, va_alist);
 	va_end(va_alist);
 
-	outfile << logbuf;
+	outfile << logbuf << std::endl;
 	outfile.flush();
 }
 
@@ -161,7 +161,7 @@ void CLogger::emergency(const char *msg) {
         return;
     }
 
-    this->add("[%s] %s\n", this->getLevelName(LogLevel::emergency), msg);
+    this->add("[%s] %s", this->getLevelName(LogLevel::emergency), msg);
 }
 
 void CLogger::alert(const char *msg) {
@@ -169,7 +169,7 @@ void CLogger::alert(const char *msg) {
         return;
     }
 
-    this->add("[%s] %s\n", this->getLevelName(LogLevel::alert), msg);
+    this->add("[%s] %s", this->getLevelName(LogLevel::alert), msg);
 }
 
 void CLogger::critical(const char *msg) {
@@ -177,7 +177,7 @@ void CLogger::critical(const char *msg) {
         return;
     }
 
-    this->add("[%s] %s\n", this->getLevelName(LogLevel::critical), msg);
+    this->add("[%s] %s", this->getLevelName(LogLevel::critical), msg);
 }
 
 void CLogger::error(const char *msg) {
@@ -185,7 +185,7 @@ void CLogger::error(const char *msg) {
         return;
     }
 
-    this->add("[%s] %s\n", this->getLevelName(LogLevel::error), msg);
+    this->add("[%s] %s", this->getLevelName(LogLevel::error), msg);
 }
 
 void CLogger::warning(const char *msg) {
@@ -193,7 +193,7 @@ void CLogger::warning(const char *msg) {
         return;
     }
 
-    this->add("[%s] %s\n", this->getLevelName(LogLevel::warning), msg);
+    this->add("[%s] %s", this->getLevelName(LogLevel::warning), msg);
 }
 
 
@@ -202,7 +202,7 @@ void CLogger::notice(const char *msg) {
         return;
     }
 
-    this->add("[%s] %s\n", this->getLevelName(LogLevel::notice), msg);
+    this->add("[%s] %s", this->getLevelName(LogLevel::notice), msg);
 }
 
 void CLogger::info(const char *msg) {
@@ -210,7 +210,7 @@ void CLogger::info(const char *msg) {
         return;
     }
 
-    this->add("[%s] %s\n", this->getLevelName(LogLevel::info), msg);
+    this->add("[%s] %s", this->getLevelName(LogLevel::info), msg);
 }
 
 void CLogger::debug(const char *msg) {
@@ -218,5 +218,5 @@ void CLogger::debug(const char *msg) {
         return;
     }
 
-    this->add("[%s] %s\n", this->getLevelName(LogLevel::debug), msg);
+    this->add("[%s] %s", this->getLevelName(LogLevel::debug), msg);
 }
