@@ -95,13 +95,12 @@ void CLogger::add(const char *fmt, ...)
 	timeinfo = localtime ( &rawtime );
 	char szTime[256];
 	strftime(szTime, sizeof(szTime)-1, "%Y-%m-%d %H:%M:%S", timeinfo);
-	outfile << (char*)&szTime << " : ";
+	outfile << szTime << " : ";
 
 	va_list va_alist;
 	char logbuf[2048] = {0};
 	va_start(va_alist, fmt);
-	_vsnprintf(logbuf + strlen(logbuf), sizeof(logbuf) - strlen(logbuf),
-	fmt, va_alist);
+	_vsnprintf(logbuf, sizeof(logbuf), fmt, va_alist);
 	va_end(va_alist);
 
 	outfile << logbuf;
@@ -126,4 +125,98 @@ void CLogger::add_raw(const char *outstr)
 std::string CLogger::get_filename()
 {
 	return openedFilename;
+}
+
+bool CLogger::meetsLogLevel(LogLevel l) {
+    if (l == LogLevel::emergency) {
+        return true;
+    }
+
+    return l <= this->level;
+}
+
+void CLogger::setLevel(LogLevel l) {
+    if( l < LogLevel::emergency ) {
+        l = LogLevel::emergency;
+	}
+
+    this->level = l;
+}
+
+const char *CLogger::getLevelName(LogLevel level) {
+    switch(level) {
+        case LogLevel::emergency: return "EMERG";
+        case LogLevel::alert: return "ALERT";
+        case LogLevel::critical: return "CRIT";
+        case LogLevel::error: return "ERROR";
+        case LogLevel::warning: return "WARN";
+        case LogLevel::notice: return "NOTICE";
+        case LogLevel::info: return "INFO";
+        case LogLevel::debug: return "DEBUG";
+    }
+}
+
+void CLogger::emergency(const char *msg) {
+    if( !this->meetsLogLevel(LogLevel::emergency) ) {
+        return;
+    }
+
+    this->add("[%s] %s\n", this->getLevelName(LogLevel::emergency), msg);
+}
+
+void CLogger::alert(const char *msg) {
+    if( !this->meetsLogLevel(LogLevel::alert) ) {
+        return;
+    }
+
+    this->add("[%s] %s\n", this->getLevelName(LogLevel::alert), msg);
+}
+
+void CLogger::critical(const char *msg) {
+    if( !this->meetsLogLevel(LogLevel::critical) ) {
+        return;
+    }
+
+    this->add("[%s] %s\n", this->getLevelName(LogLevel::critical), msg);
+}
+
+void CLogger::error(const char *msg) {
+    if( !this->meetsLogLevel(LogLevel::error) ) {
+        return;
+    }
+
+    this->add("[%s] %s\n", this->getLevelName(LogLevel::error), msg);
+}
+
+void CLogger::warning(const char *msg) {
+    if( !this->meetsLogLevel(LogLevel::warning) ) {
+        return;
+    }
+
+    this->add("[%s] %s\n", this->getLevelName(LogLevel::warning), msg);
+}
+
+
+void CLogger::notice(const char *msg) {
+    if( !this->meetsLogLevel(LogLevel::notice) ) {
+        return;
+    }
+
+    this->add("[%s] %s\n", this->getLevelName(LogLevel::notice), msg);
+}
+
+void CLogger::info(const char *msg) {
+    if( !this->meetsLogLevel(LogLevel::info) ) {
+        return;
+    }
+
+    this->add("[%s] %s\n", this->getLevelName(LogLevel::info), msg);
+}
+
+void CLogger::debug(const char *msg) {
+    if( !this->meetsLogLevel(LogLevel::debug) ) {
+        return;
+    }
+
+    this->add("[%s] %s\n", this->getLevelName(LogLevel::debug), msg);
 }

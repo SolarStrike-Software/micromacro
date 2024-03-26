@@ -294,6 +294,7 @@ int App::run()
 
 				std::string cmd = command.substr(fpos+1);
 				printf("Execute string: %s\n\n", cmd.c_str());
+				Logger::instance()->add("Execute string: \'%s\'\n", cmd.c_str());
 
 				// Run the string
 				LuaEngine *E = Macro::instance()->getEngine();
@@ -329,6 +330,7 @@ int App::run()
 
 		/* Run script */
 		printf("Running \'%s\'\n\n", args[0].c_str()/*script.c_str()*/);
+		Logger::instance()->add("Running \'%s\'\n", args[0].c_str());
 		int success = Macro::instance()->getEngine()->loadFile(getFileName(args[0]).c_str());
 		if( success != MicroMacro::ERR_OK )
 		{
@@ -849,6 +851,9 @@ int App::loadConfig(const char *filename)
 
 	ival = getConfigInt(lstate, CONFVAR_LOG_REMOVAL_DAYS, CONFDEFAULT_LOG_REMOVAL_DAYS);
 	psettings->setInt(CONFVAR_LOG_REMOVAL_DAYS, ival);
+
+    ival = getConfigInt(lstate, CONFVAR_LOG_LEVEL, CONFDEFAULT_LOG_LEVEL);
+	Logger::instance()->setLevel(static_cast<LogLevel>(ival));
 
 	szval = getConfigString(lstate, CONFVAR_LOG_DIRECTORY, CONFDEFAULT_LOG_DIRECTORY);
 	psettings->setString(CONFVAR_LOG_DIRECTORY, szval);

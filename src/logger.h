@@ -14,6 +14,18 @@
 	#include <stdlib.h>
 	#include <stdarg.h>
 
+    // As per RFC-5424      https://datatracker.ietf.org/doc/html/rfc5424
+	enum LogLevel {
+	    emergency = 0,
+	    alert,
+	    critical,
+	    error,
+	    warning,
+	    notice,
+	    info,
+	    debug,
+	};
+
 	class CLogger;
 	typedef CLogger Logger;
 
@@ -23,6 +35,10 @@
 			static CLogger *pinstance;
 			std::ofstream outfile;
 			std::string openedFilename;
+			LogLevel level = LogLevel::info;
+
+			bool meetsLogLevel(LogLevel);
+			const char *getLevelName(LogLevel);
 
 		protected:
 			CLogger();
@@ -37,7 +53,17 @@
 			bool is_open();
 			void add(const char *, ...);
 			void add_raw(const char *);
+			void emergency(const char *);
+			void alert(const char *);
+			void critical(const char *);
+			void error(const char *);
+			void warning(const char *);
+			void notice(const char *);
+			void info(const char *);
+			void debug(const char *);
 			std::string get_filename();
+
+			void setLevel(LogLevel);
 	};
 
 #endif

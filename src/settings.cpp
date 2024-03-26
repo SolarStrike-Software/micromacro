@@ -6,6 +6,7 @@
 ******************************************************************************/
 
 #include "settings.h"
+#include "logger.h"
 
 
 const char *CONFIG_FILENAME						=	"config.lua";
@@ -13,6 +14,7 @@ const char *CONFIG_DEFAULT_FILENAME				=	"config.default.lua";
 const char *CONFVAR_MEMORY_STRING_BUFFER_SIZE	=	"memoryStringBufferSize";
 const char *CONFVAR_LOG_DIRECTORY				=	"logDirectory";
 const char *CONFVAR_LOG_REMOVAL_DAYS			=	"logRemovalDays";
+const char *CONFVAR_LOG_LEVEL			        =	"logLevel";
 const char *CONFVAR_SCRIPT_DIRECTORY			=	"scriptDirectory";
 const char *CONFVAR_YIELD_TIME_SLICE			=	"yieldTimeSlice";
 const char *CONFVAR_NETWORK_ENABLED				=	"networkEnabled";
@@ -26,6 +28,7 @@ const char *CONFVAR_MESSAGE_STYLE               =   "errMessageStyle";
 const int CONFDEFAULT_MEMORY_STRING_BUFFER_SIZE	=	128;
 const int CONFDEFAULT_LOG_REMOVAL_DAYS			=	7;
 const char *CONFDEFAULT_LOG_DIRECTORY			=	"logs";
+const LogLevel CONFDEFAULT_LOG_LEVEL			=	LogLevel::info;
 const char *CONFDEFAULT_SCRIPT_DIRECTORY		=	"scripts";
 const int CONFDEFAULT_YIELD_TIME_SLICE			=	1;
 const int CONFDEFAULT_NETWORK_ENABLED			=	1;
