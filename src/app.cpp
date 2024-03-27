@@ -178,6 +178,10 @@ int App::run()
 		// Reset CWD
 		SetCurrentDirectory((LPCTSTR)&baseDirectory);
 
+		// Reset log level to configured default
+		LogLevel logLevel = static_cast<LogLevel>(Macro::instance()->getSettings()->getInt(CONFVAR_LOG_LEVEL));
+		Logger::instance()->setLevel(logLevel);
+
 		#ifdef DEBUG_LSTATE_STACK
 		// Warn to make sure we're not screwing up the stack
 		if( lua_gettop(Macro::instance()->getEngine()->getLuaState()) != 0 )
@@ -853,7 +857,7 @@ int App::loadConfig(const char *filename)
 	psettings->setInt(CONFVAR_LOG_REMOVAL_DAYS, ival);
 
     ival = getConfigInt(lstate, CONFVAR_LOG_LEVEL, CONFDEFAULT_LOG_LEVEL);
-	Logger::instance()->setLevel(static_cast<LogLevel>(ival));
+    psettings->setInt(CONFVAR_LOG_LEVEL, ival);
 
 	szval = getConfigString(lstate, CONFVAR_LOG_DIRECTORY, CONFDEFAULT_LOG_DIRECTORY);
 	psettings->setString(CONFVAR_LOG_DIRECTORY, szval);

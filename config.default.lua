@@ -1,9 +1,11 @@
 --[[ Logging settings ---------------------------------------------------------
     logRemovalDays  Remove logs older than this number in days (0 = disable)
     logDirectory    Location to store log files
+    logLevel        Required log level to reach before the message will be logged
 ]]
 logRemovalDays  = 7;
 logDirectory = "./logs";
+logLevel = 6;
 
 
 --[[ Script settings ----------------------------------------------------------
