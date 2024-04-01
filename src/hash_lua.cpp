@@ -1,8 +1,8 @@
 /******************************************************************************
-	Project: 	MicroMacro
-	Author: 	SolarStrike Software
-	URL:		www.solarstrike.net
-	License:	Modified BSD (see license.txt)
+    Project:    MicroMacro
+    Author:     SolarStrike Software
+    URL:        www.solarstrike.net
+    License:    Modified BSD (see license.txt)
 ******************************************************************************/
 
 #include "hash_lua.h"
@@ -12,35 +12,35 @@
 
 extern "C"
 {
-	#include <lua.h>
-	#include <lauxlib.h>
-	#include <lualib.h>
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
 }
 
 int Hash_lua::regmod(lua_State *L)
 {
-	static const luaL_Reg _funcs[] = {
-		{"sha1", Hash_lua::sha1},
-		{"sha1_file", Hash_lua::sha1_file},
-		{NULL, NULL}
-	};
+    static const luaL_Reg _funcs[] = {
+        {"sha1", Hash_lua::sha1},
+        {"sha1_file", Hash_lua::sha1_file},
+        {NULL, NULL}
+    };
 
-	luaL_newlib(L, _funcs);
-	lua_setglobal(L, HASH_MODULE_NAME);
+    luaL_newlib(L, _funcs);
+    lua_setglobal(L, HASH_MODULE_NAME);
 
-	return MicroMacro::ERR_OK;
+    return MicroMacro::ERR_OK;
 }
 
-/*	sha1(string str)
-	Returns:	string
+/*  sha1(string str)
+    Returns:    string
 
-	Returns the SHA1 hash of a string.
+    Returns the SHA1 hash of a string.
 */
 int Hash_lua::sha1(lua_State *L)
 {
-	if( lua_gettop(L) != 1 )
-		wrongArgs(L);
-	checkType(L, LT_STRING, 1);
+    if( lua_gettop(L) != 1 )
+        wrongArgs(L);
+    checkType(L, LT_STRING, 1);
 
     size_t strlen;
     const char *str = lua_tolstring(L, 1, &strlen);
@@ -50,16 +50,16 @@ int Hash_lua::sha1(lua_State *L)
     return 1;
 }
 
-/*	sha1_file(string filename)
-	Returns:	string
+/*  sha1_file(string filename)
+    Returns:    string
 
-	Returns the SHA1 hash of a file.
+    Returns the SHA1 hash of a file.
 */
 int Hash_lua::sha1_file(lua_State *L)
 {
-	if( lua_gettop(L) != 1 )
-		wrongArgs(L);
-	checkType(L, LT_STRING, 1);
+    if( lua_gettop(L) != 1 )
+        wrongArgs(L);
+    checkType(L, LT_STRING, 1);
 
     size_t filenamelen;
     const char *filename = lua_tolstring(L, 1, &filenamelen);

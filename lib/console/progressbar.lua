@@ -2,8 +2,8 @@ require 'console/output'
 ConsoleProgressBar = class.new()
 
 local output = ConsoleOutput()
-output:setStyle('filledbar', "\x1b[32m%s\x1b[0m")
-output:setStyle('unfilledbar', "\x1b[90m%s\x1b[0m")
+output:setStyle('filledbar', "\x1b[38;5;82m%s\x1b[0m")
+output:setStyle('unfilledbar', "\x1b[38;5;234m%s\x1b[0m")
 
 local function saveCursorPosition()
     io.write('\x1b[s')
