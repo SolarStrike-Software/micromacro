@@ -19,6 +19,7 @@
 	{
 		protected:
 			static int copy(lua_State *);
+			static int merge(lua_State *);
 			static int find(lua_State *);
 			static int print(lua_State *);
 			static int lists(lua_State *);
