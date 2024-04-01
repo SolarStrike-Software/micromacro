@@ -1,8 +1,8 @@
 /******************************************************************************
-	Project: 	MicroMacro
-	Author: 	SolarStrike Software
-	URL:		www.solarstrike.net
-	License:	Modified BSD (see license.txt)
+    Project:    MicroMacro
+    Author:     SolarStrike Software
+    URL:        www.solarstrike.net
+    License:    Modified BSD (see license.txt)
 ******************************************************************************/
 
 #include "event.h"
@@ -13,10 +13,10 @@
 
 MicroMacro::Event &MicroMacro::Event::operator=(const MicroMacro::Event &o)
 {
-	type = o.type;
-	data.clear();
-	for(unsigned int i = 0; i < data.size(); i++)
-		data.push_back(o.data.at(i));
+    type = o.type;
+    data.clear();
+    for(unsigned int i = 0; i < data.size(); i++)
+        data.push_back(o.data.at(i));
 
-	return *this;
+    return *this;
 }
