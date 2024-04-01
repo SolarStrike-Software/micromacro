@@ -5,9 +5,9 @@
 
 extern "C"
 {
-	#include <lua.h>
-	#include <lauxlib.h>
-	#include <lualib.h>
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
 }
 
 using MicroMacro::SerialPort;
@@ -15,57 +15,57 @@ using MicroMacro::SerialPort;
 
 int Serial_lua::regmod(lua_State *L)
 {
-	static const luaL_Reg _funcs[] = {
-		{"open", Serial_lua::open},
-		{NULL, NULL}
-	};
+    static const luaL_Reg _funcs[] = {
+        {"open", Serial_lua::open},
+        {NULL, NULL}
+    };
 
-	luaL_newlib(L, _funcs);
-	lua_setglobal(L, SERIAL_MODULE_NAME);
+    luaL_newlib(L, _funcs);
+    lua_setglobal(L, SERIAL_MODULE_NAME);
 
-	return MicroMacro::ERR_OK;
+    return MicroMacro::ERR_OK;
 }
 
 int Serial_lua::cleanup(lua_State *L)
 {
-	return MicroMacro::ERR_OK;
+    return MicroMacro::ERR_OK;
 }
 
 int Serial_lua::open(lua_State *L)
 {
-	int top = lua_gettop(L);
-	if( top != 1 && top != 2 )
-		wrongArgs(L);
-	checkType(L, LT_STRING, 1);
+    int top = lua_gettop(L);
+    if( top != 1 && top != 2 )
+        wrongArgs(L);
+    checkType(L, LT_STRING, 1);
 
-	char *portName	=	(char *)lua_tostring(L, 1);
-	int baud		=	9600;
+    char *portName  =   (char *)lua_tostring(L, 1);
+    int baud        =   9600;
 
-	if( top >= 2 )
-	{
-		checkType(L, LT_NUMBER, 2);
-		baud		=	(int)lua_tointeger(L, 2);
-	}
+    if( top >= 2 )
+    {
+        checkType(L, LT_NUMBER, 2);
+        baud        =   (int)lua_tointeger(L, 2);
+    }
 
-	SerialPort *pSerialPort = new SerialPort;
-	SerialPort **ppSerialPort = static_cast<SerialPort **>(lua_newuserdata(L, sizeof(SerialPort **)));
-	*ppSerialPort = pSerialPort;
+    SerialPort *pSerialPort = new SerialPort;
+    SerialPort **ppSerialPort = static_cast<SerialPort **>(lua_newuserdata(L, sizeof(SerialPort **)));
+    *ppSerialPort = pSerialPort;
 
-	pSerialPort->open(portName, baud);
+    pSerialPort->open(portName, baud);
 
-	if( !pSerialPort->connected )
-	{
-		lua_pop(L, 1); // Pop the garbage port off since it failed.
-		lua_pushboolean(L, false);
-		char errbuff[2048];
-		slprintf(errbuff, sizeof(errbuff), "Failed to open serial port. Err code: %d\n", GetLastError());
-		lua_pushstring(L, errbuff);
-		return 2;
-	}
+    if( !pSerialPort->connected )
+    {
+        lua_pop(L, 1); // Pop the garbage port off since it failed.
+        lua_pushboolean(L, false);
+        char errbuff[2048];
+        slprintf(errbuff, sizeof(errbuff), "Failed to open serial port. Err code: %d\n", GetLastError());
+        lua_pushstring(L, errbuff);
+        return 2;
+    }
 
-	// It was created, so give it a metatable
-	luaL_getmetatable(L, LuaType::metatable_serial_port);
-	lua_setmetatable(L, -2);
+    // It was created, so give it a metatable
+    luaL_getmetatable(L, LuaType::metatable_serial_port);
+    lua_setmetatable(L, -2);
 
-	return 1;
+    return 1;
 }

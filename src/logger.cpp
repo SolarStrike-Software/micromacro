@@ -1,8 +1,8 @@
 /******************************************************************************
-	Project: 	MicroMacro
-	Author: 	SolarStrike Software
-	URL:		www.solarstrike.net
-	License:	Modified BSD (see license.txt)
+    Project:    MicroMacro
+    Author:     SolarStrike Software
+    URL:        www.solarstrike.net
+    License:    Modified BSD (see license.txt)
 ******************************************************************************/
 
 #include "logger.h"
@@ -15,13 +15,15 @@
 CLogger *CLogger::pinstance = 0;
 CLogger *CLogger::instance()
 {
-	try {
-	if( pinstance == 0 )
-		pinstance = new CLogger;
-	}
-	catch( std::bad_alloc &ba ) { badAllocation(); }
+    try {
+        if( pinstance == 0 )
+            pinstance = new CLogger;
+    }
+    catch( std::bad_alloc &ba ) {
+        badAllocation();
+    }
 
-	return pinstance;
+    return pinstance;
 }
 
 CLogger::CLogger()
@@ -31,80 +33,80 @@ CLogger::CLogger()
 
 CLogger::~CLogger()
 {
-	if( outfile.is_open() )
-	{
-		add("Logging finished. Cleaning up.");
-		outfile.close();
-	}
+    if( outfile.is_open() )
+    {
+        add("Logging finished. Cleaning up.");
+        outfile.close();
+    }
 }
 
 /* Opens the file for logging with given name.
    Returns zero on error, nonzero on success */
 int CLogger::open(const char *filename)
 {
-	if( outfile.is_open() )
-		outfile.close();
+    if( outfile.is_open() )
+        outfile.close();
 
-	openedFilename = "";
-	outfile.open(filename, std::ios::out);
-	if( outfile.is_open() )
-	{
-		time_t rawtime;
-		struct tm * timeinfo;
-		time( &rawtime );
-		timeinfo = localtime ( &rawtime );
-		char szTime[256];
-		strftime(szTime, sizeof(szTime) - 1, "%Y-%m-%d %H:%M:%S", timeinfo);
+    openedFilename = "";
+    outfile.open(filename, std::ios::out);
+    if( outfile.is_open() )
+    {
+        time_t rawtime;
+        struct tm * timeinfo;
+        time( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        char szTime[256];
+        strftime(szTime, sizeof(szTime) - 1, "%Y-%m-%d %H:%M:%S", timeinfo);
 
-		openedFilename = filename;
-		outfile.flush();
-		return true;
-	}
+        openedFilename = filename;
+        outfile.flush();
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 /* Close the currently open file */
 void CLogger::close()
 {
-	if( outfile.is_open() )
-		outfile.close();
+    if( outfile.is_open() )
+        outfile.close();
 }
 
 /* If you guessed that his tells us if the log file is open or not...
-	You guessed correctly.
+    You guessed correctly.
 */
 bool CLogger::is_open()
 {
-	return outfile.is_open();
+    return outfile.is_open();
 }
 
 /* Write formatted output to the file. add() prepends
    output with the date and time, and appends a trailing newline (\n) */
 void CLogger::add(const char *fmt, ...)
 {
-	if( !outfile.is_open() )
-		return;
+    if( !outfile.is_open() )
+        return;
 
-	if( fmt == NULL )
-		return;
+    if( fmt == NULL )
+        return;
 
-	time_t rawtime;
-	struct tm * timeinfo;
-	time( &rawtime );
-	timeinfo = localtime ( &rawtime );
-	char szTime[256];
-	strftime(szTime, sizeof(szTime)-1, "%Y-%m-%d %H:%M:%S", timeinfo);
-	outfile << szTime << " : ";
+    time_t rawtime;
+    struct tm * timeinfo;
+    time( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    char szTime[256];
+    strftime(szTime, sizeof(szTime) - 1, "%Y-%m-%d %H:%M:%S", timeinfo);
+    outfile << szTime << " : ";
 
-	va_list va_alist;
-	char logbuf[2048] = {0};
-	va_start(va_alist, fmt);
-	_vsnprintf(logbuf, sizeof(logbuf), fmt, va_alist);
-	va_end(va_alist);
+    va_list va_alist;
+    char logbuf[2048] = {0};
+    va_start(va_alist, fmt);
+    _vsnprintf(logbuf, sizeof(logbuf), fmt, va_alist);
+    va_end(va_alist);
 
-	outfile << logbuf << std::endl;
-	outfile.flush();
+    outfile << logbuf << std::endl;
+    outfile.flush();
 }
 
 /* Write unformatted output to the file. add_raw() does not prepend
@@ -112,19 +114,19 @@ void CLogger::add(const char *fmt, ...)
    newline (\n) */
 void CLogger::add_raw(const char *outstr)
 {
-	if( !outfile.is_open() )
-		return;
+    if( !outfile.is_open() )
+        return;
 
-	if( outstr == NULL )
-		return;
+    if( outstr == NULL )
+        return;
 
-	outfile << outstr;
-	outfile.flush();
+    outfile << outstr;
+    outfile.flush();
 }
 
 std::string CLogger::get_filename()
 {
-	return openedFilename;
+    return openedFilename;
 }
 
 bool CLogger::meetsLogLevel(LogLevel l) {
@@ -138,21 +140,29 @@ bool CLogger::meetsLogLevel(LogLevel l) {
 void CLogger::setLevel(LogLevel l) {
     if( l < LogLevel::emergency ) {
         l = LogLevel::emergency;
-	}
+    }
 
     this->level = l;
 }
 
 const char *CLogger::getLevelName(LogLevel level) {
     switch(level) {
-        case LogLevel::emergency: return "EMERG";
-        case LogLevel::alert: return "ALERT";
-        case LogLevel::critical: return "CRIT";
-        case LogLevel::error: return "ERROR";
-        case LogLevel::warning: return "WARN";
-        case LogLevel::notice: return "NOTICE";
-        case LogLevel::info: return "INFO";
-        case LogLevel::debug: return "DEBUG";
+        case LogLevel::emergency:
+            return "EMERG";
+        case LogLevel::alert:
+            return "ALERT";
+        case LogLevel::critical:
+            return "CRIT";
+        case LogLevel::error:
+            return "ERROR";
+        case LogLevel::warning:
+            return "WARN";
+        case LogLevel::notice:
+            return "NOTICE";
+        case LogLevel::info:
+            return "INFO";
+        case LogLevel::debug:
+            return "DEBUG";
     }
 }
 
