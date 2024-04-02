@@ -61,32 +61,53 @@ function ConsoleProgressBarStyle:getUnfilledChar(position, filledWidth, totalWid
     return self.emptyChar
 end
 
-DefaultConsoleProgressBarStyle = ConsoleProgressBarStyle()
+DefaultConsoleProgressBarStyle = ConsoleProgressBarStyle();
+
+--[[ Safe Mode style ]]
+SafeModeConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle);
+function SafeModeConsoleProgressBarStyle:constructor()
+    SafeModeConsoleProgressBarStyle.parent.constructor(self)
+
+    self.fullChar = '='
+    self.emptyChar = ' '
+    self.filledBarFmt = "%s"
+    self.unfilledBarFmt = "%s"
+end
 
 --[[ Minimalist style ]]
-MinimalistConsoleProgressBarStyle = ConsoleProgressBarStyle()
-MinimalistConsoleProgressBarStyle.showPercent = false
-MinimalistConsoleProgressBarStyle.showRaw = false
-MinimalistConsoleProgressBarStyle.showBar = true
-MinimalistConsoleProgressBarStyle.fullChar = 'x'
-MinimalistConsoleProgressBarStyle.emptyChar = ' '
-MinimalistConsoleProgressBarStyle.filledBarFmt = "\x1b[38;5;27m%s\x1b[0m"
-MinimalistConsoleProgressBarStyle.unfilledBarFmt = "\x1b[38;5;1m%s\x1b[0m"
+MinimalistConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
+function MinimalistConsoleProgressBarStyle:constructor()
+    MinimalistConsoleProgressBarStyle.parent.constructor(self)
 
+    self.showPercent = false
+    self.showRaw = false
+    self.showBar = true
+    self.fullChar = 'x'
+    self.emptyChar = ' '
+    self.filledBarFmt = "\x1b[38;5;27m%s\x1b[0m"
+    self.unfilledBarFmt = "\x1b[38;5;1m%s\x1b[0m"
+end
 
 --[[ Solid green style ]]
-SolidGreenConsoleProgressBarStyle = ConsoleProgressBarStyle()
-SolidGreenConsoleProgressBarStyle.fullChar = ' '
-SolidGreenConsoleProgressBarStyle.emptyChar = ' '
-SolidGreenConsoleProgressBarStyle.filledBarFmt = "\x1b[38;5;41;48;5;46m%s\x1b[0m"
-SolidGreenConsoleProgressBarStyle.unfilledBarFmt = "\x1b[38;5;1m%s\x1b[0m"
+SolidGreenConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
+function SolidGreenConsoleProgressBarStyle:constructor()
+    SolidGreenConsoleProgressBarStyle.parent.constructor(self)
 
+    self.fullChar = ' '
+    self.emptyChar = ' '
+    self.filledBarFmt = "\x1b[38;5;41;48;5;46m%s\x1b[0m"
+    self.unfilledBarFmt = "\x1b[38;5;1m%s\x1b[0m"
+end
 
 --[[ Stoplight style ]]
-StoplightConsoleProgressBarStyle = ConsoleProgressBarStyle()
-StoplightConsoleProgressBarStyle.fullChar = ' '
-StoplightConsoleProgressBarStyle.emptyChar = ' '
-StoplightConsoleProgressBarStyle.unfilledBarFmt = "\x1b[38;5;1m%s\x1b[0m"
+StoplightConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
+function StoplightConsoleProgressBarStyle:constructor()
+    StoplightConsoleProgressBarStyle.parent.constructor(self)
+
+    self.fullChar = ' '
+    self.emptyChar = ' '
+    self.unfilledBarFmt = "\x1b[38;5;1m%s\x1b[0m"
+end
 
 function StoplightConsoleProgressBarStyle:getFilledStyle(position, filledWidth, totalWidth, step, minStep, maxStep)
     -- Uncomplete; yellow light
@@ -98,9 +119,13 @@ function StoplightConsoleProgressBarStyle:getFilledStyle(position, filledWidth, 
 end
 
 --[[ Rainbow style ]]
-RainbowConsoleProgressBarStyle = ConsoleProgressBarStyle()
-RainbowConsoleProgressBarStyle.fullChar = ' '
-RainbowConsoleProgressBarStyle.emptyChar = ' '
+RainbowConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
+function RainbowConsoleProgressBarStyle:constructor()
+    RainbowConsoleProgressBarStyle.parent.constructor(self)
+
+    self.fullChar = ' '
+    self.emptyChar = ' '
+end
 
 function RainbowConsoleProgressBarStyle:getFilledStyle(position, filledWidth, totalWidth, step, minStep, maxStep)
     local ratio<const> = position / totalWidth
@@ -112,17 +137,21 @@ function RainbowConsoleProgressBarStyle:getFilledStyle(position, filledWidth, to
 end
 
 --[[ Ocean Wave style ]]
-OceanWaveConsoleProgressBarStyle = ConsoleProgressBarStyle()
-OceanWaveConsoleProgressBarStyle.filledChar = '#'
-OceanWaveConsoleProgressBarStyle.emptyChar = ' '
-OceanWaveConsoleProgressBarStyle.unfilledBarFmt = "\x1b[38;5;1;48;5;234m%s\x1b[0m"
-OceanWaveConsoleProgressBarStyle.minRedrawTime = 0.1
+OceanWaveConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
+function OceanWaveConsoleProgressBarStyle:constructor()
+    OceanWaveConsoleProgressBarStyle.parent.constructor(self)
+
+    self.fullChar = '~'
+    self.emptyChar = ' '
+    self.unfilledBarFmt = "\x1b[38;5;1;48;5;234m%s\x1b[0m"
+    self.minRedrawTime = 0.1
+end
 
 function OceanWaveConsoleProgressBarStyle:getFilledStyle(position, filledWidth, totalWidth, step, minStep, maxStep)
     local i64DiminishFactor<const> = 16776960 -- time.getNow() returns really big numbers; we need to scale it down a lot!
     local timeOffset<const> = math.round(math.sin(time.getNow() / i64DiminishFactor) * 10)
-    local colors <const> = {21, 25, 26, 27, 31, 32, 33, 37, 38, 39}
-    local color <const> = (timeOffset + position) % (#colors - 1) + 1
+    local colors<const> = {21, 25, 26, 27, 31, 32, 33, 37, 38, 39}
+    local color<const> = math.round(timeOffset + position) % (#colors - 1) + 1
 
     return "\x1b[38;5;" .. sprintf("%d", colors[color]) .. ";48;5;234m%s\x1b[0m"
 end

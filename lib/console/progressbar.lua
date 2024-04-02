@@ -16,8 +16,12 @@ function ConsoleProgressBar:constructor(min, max, width, style)
     self.max = max or 100
     self.current = self.min
     self.width = width or 20
-    self.style = style or ConsoleProgressBarStyle();
 
+    if ConsoleOutput():isAnsiAvailable() then
+        self.style = style or DefaultConsoleProgressBarStyle()
+    else
+        self.style = SafeModeConsoleProgressBarStyle()
+    end
 
     self.lastDrawTime = time.getNow()
     self.lastDrawRatio = 0
