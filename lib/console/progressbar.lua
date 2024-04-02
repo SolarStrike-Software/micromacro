@@ -81,13 +81,13 @@ function ConsoleProgressBar:draw()
         local filledBlocksStr = ''
         for i = 1, filledWidth do
             local char = self.style:getFilledChar(i, filledWidth, self.width)
-            filledBlocksStr = filledBlocksStr .. sprintf(self.style:getFilledStyle(i, filledWidth, self.width), char)
+            filledBlocksStr = filledBlocksStr .. sprintf(self.style:getFilledStyle(i, filledWidth, self.width, self.current, self.min, self.max), char)
         end
 
         local unfilledBlocksStr = ''
         for i = 1, unfilledWidth do
             local char = self.style:getUnfilledChar(i, filledWidth, self.width)
-            unfilledBlocksStr = unfilledBlocksStr .. sprintf(self.style:getUnfilledStyle(i, filledWidth, self.width), char)
+            unfilledBlocksStr = unfilledBlocksStr .. sprintf(self.style:getUnfilledStyle(i, filledWidth, self.width, self.current, self.min, self.max), char)
         end
 
         result = result .. self.style.startFmt .. filledBlocksStr .. unfilledBlocksStr .. self.style.endFmt .. ' '
