@@ -1,8 +1,6 @@
 ConsoleOutput = class.new()
 
 
-
-
 function ConsoleOutput:constructor()
     self.useAnsi = true
     self.ansiAvailable = self:isAnsiAvailable()
@@ -14,7 +12,7 @@ function ConsoleOutput:constructor()
         ['comment'] = "\x1b[33m%s\x1b[0m",
         ['success'] = "\x1b[32m%s\x1b[0m",
         ['fail'] = "\x1b[31m%s\x1b[0m",
-        ['warning'] = "\x1b[1;30;43m%s\x1b[0;0m",
+        ['warning'] = "\x1b[30;43m%s\x1b[0;0m",
         ['error'] = "\x1b[1;97;41m%s\x1b[0;0m",
     }
 end
