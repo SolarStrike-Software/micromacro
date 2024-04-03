@@ -63,6 +63,37 @@ end
 
 DefaultConsoleProgressBarStyle = ConsoleProgressBarStyle();
 
+--[[ Helpers ]]
+
+local function hsv2rgb(h, s, v)
+    local hh = h
+    while (hh >= 360.0) do
+        hh = hh - 360.0
+    end
+
+    hh = hh / 60.0 -- Convert from degrees
+
+    local ff = hh - math.floor(hh)
+    local p = v * (1.0 - s)
+    local q = v * (1.0 - (s * ff))
+    local t = v * (1.0 - (s * (1.0 - ff)))
+
+    hh = math.floor(hh)
+    if hh == 0 then
+        return v, t, p
+    elseif hh == 1 then
+        return q, v, p
+    elseif hh == 2 then
+        return p, v, t
+    elseif hh == 3 then
+        return p, q, v
+    elseif hh == 4 then
+        return t, p, v
+    else
+        return v, p, q
+    end
+end
+
 --[[ Safe Mode style ]]
 SafeModeConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle);
 function SafeModeConsoleProgressBarStyle:constructor()
@@ -74,28 +105,19 @@ function SafeModeConsoleProgressBarStyle:constructor()
     self.unfilledBarFmt = "%s"
 end
 
---[[ Minimalist style ]]
-MinimalistConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
-function MinimalistConsoleProgressBarStyle:constructor()
-    MinimalistConsoleProgressBarStyle.parent.constructor(self)
+--[[ Solid style ]]
+SolidConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
+function SolidConsoleProgressBarStyle:constructor(r, g, b)
+    SolidConsoleProgressBarStyle.parent.constructor(self)
 
-    self.showPercent = false
-    self.showRaw = false
-    self.showBar = true
-    self.fullChar = 'x'
-    self.emptyChar = ' '
-    self.filledBarFmt = "\x1b[38;5;27m%s\x1b[0m"
-    self.unfilledBarFmt = "\x1b[38;5;1m%s\x1b[0m"
-end
-
---[[ Solid green style ]]
-SolidGreenConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
-function SolidGreenConsoleProgressBarStyle:constructor()
-    SolidGreenConsoleProgressBarStyle.parent.constructor(self)
+    r = math.floor(r or 64)
+    g = math.floor(g or 255)
+    b = math.floor(b or 64)
 
     self.fullChar = ' '
     self.emptyChar = ' '
-    self.filledBarFmt = "\x1b[38;5;41;48;5;46m%s\x1b[0m"
+    self.filledBarFmt =
+        "\x1b[38;5;41;48;2;" .. sprintf("%d", r) .. ";" .. sprintf("%d", g) .. ";" .. sprintf("%d", b) .. "m%s\x1b[0m"
     self.unfilledBarFmt = "\x1b[38;5;1m%s\x1b[0m"
 end
 
@@ -126,36 +148,6 @@ function RainbowConsoleProgressBarStyle:constructor(saturation)
     self.fullChar = ' '
     self.emptyChar = ' '
     self.saturation = saturation or 1.0
-end
-
--- [[ Convert from HSV color to RGB color ]]
-local function hsv2rgb(h, s, v)
-    local hh = h
-    while (hh >= 360.0) do
-        hh = hh - 360.0
-    end
-
-    hh = hh / 60.0 -- Convert from degrees
-
-    local ff = hh - math.floor(hh)
-    local p = v * (1.0 - s)
-    local q = v * (1.0 - (s * ff))
-    local t = v * (1.0 - (s * (1.0 - ff)))
-
-    hh = math.floor(hh)
-    if hh == 0 then
-        return v, t, p
-    elseif hh == 1 then
-        return q, v, p
-    elseif hh == 2 then
-        return p, v, t
-    elseif hh == 3 then
-        return p, q, v
-    elseif hh == 4 then
-        return t, p, v
-    else
-        return v, p, q
-    end
 end
 
 function RainbowConsoleProgressBarStyle:getFilledStyle(position, filledWidth, totalWidth, step, minStep, maxStep)
