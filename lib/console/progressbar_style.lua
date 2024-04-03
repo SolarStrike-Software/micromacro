@@ -1,14 +1,14 @@
 ConsoleProgressBarStyle = class.new()
 
-function ConsoleProgressBarStyle:constructor()
+function ConsoleProgressBarStyle:constructor(character)
     self.showPercent = true
     self.showRaw = true
     self.showBar = true
 
     self.startFmt = '['
     self.endFmt = ']'
-    self.emptyChar = '#'
-    self.fullChar = '#'
+    self.emptyChar = character or '#'
+    self.fullChar = character or '#'
 
     self.filledBarFmt = "\x1b[38;5;82m%s\x1b[0m"
     self.unfilledBarFmt = "\x1b[38;5;235m%s\x1b[0m"
@@ -48,6 +48,12 @@ end
 --[[
     Get a character to use for a filled block of the progress bar.
     Defaults to the fullChar set on the style, but can be overridden to get more control
+    `position` is the current character index from the left side of the bar, beginning at 1 until `totalWidth`
+    `filledWidth` is the number of filled characters in the bar
+    `totalWidth` is the total width of the bar, in characters
+    `step` is the progress bar's current processing index (x/max)
+    `minStep` is the minimum steps; typically 0 or 1; 0% completion
+    `maxStep` is the maximum number of steps to be complete to reach 100%
 ]]
 function ConsoleProgressBarStyle:getFilledChar(position, filledWidth, totalWidth, step, minStep, maxStep)
     return self.fullChar
@@ -56,15 +62,18 @@ end
 --[[
     Get a character to use for a unfilled block of the progress bar.
     Defaults to the emptyChar set on the style, but can be overridden to get more control
+    `position` is the current character index from the left side of the bar, beginning at 1 until `totalWidth`
+    `filledWidth` is the number of filled characters in the bar
+    `totalWidth` is the total width of the bar, in characters
+    `step` is the progress bar's current processing index (x/max)
+    `minStep` is the minimum steps; typically 0 or 1; 0% completion
+    `maxStep` is the maximum number of steps to be complete to reach 100%
 ]]
 function ConsoleProgressBarStyle:getUnfilledChar(position, filledWidth, totalWidth, step, minStep, maxStep)
     return self.emptyChar
 end
 
-DefaultConsoleProgressBarStyle = ConsoleProgressBarStyle();
-
 --[[ Helpers ]]
-
 local function hsv2rgb(h, s, v)
     local hh = h
     while (hh >= 360.0) do
@@ -142,16 +151,23 @@ end
 
 --[[ Rainbow style ]]
 RainbowConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
-function RainbowConsoleProgressBarStyle:constructor(saturation)
+function RainbowConsoleProgressBarStyle:constructor(saturation, animSpeed)
     RainbowConsoleProgressBarStyle.parent.constructor(self)
 
     self.fullChar = ' '
     self.emptyChar = ' '
     self.saturation = saturation or 1.0
+    self.speed = animSpeed or nil
 end
 
 function RainbowConsoleProgressBarStyle:getFilledStyle(position, filledWidth, totalWidth, step, minStep, maxStep)
-    local h<const> = (position / totalWidth) * 360
+    local i64DiminishFactor<const> = 8388480 -- time.getNow() returns really big numbers; we need to scale it down a lot!
+    local timeOffset = 0
+    if (self.speed ~= nil) then
+        timeOffset = math.round(time.getNow() / i64DiminishFactor * (-self.speed) * 10) % totalWidth
+    end
+
+    local h<const> = ((timeOffset + position) / totalWidth) * 360
     local r, g, b = hsv2rgb(h, self.saturation, 1.0)
     r = math.round(r * 255)
     g = math.round(g * 255)
@@ -162,18 +178,19 @@ end
 
 --[[ Ocean Wave style ]]
 OceanWaveConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
-function OceanWaveConsoleProgressBarStyle:constructor()
+function OceanWaveConsoleProgressBarStyle:constructor(speed)
     OceanWaveConsoleProgressBarStyle.parent.constructor(self)
 
     self.fullChar = '~'
     self.emptyChar = ' '
     self.unfilledBarFmt = "\x1b[38;5;1;48;5;234m%s\x1b[0m"
     self.minRedrawTime = 0.1
+    self.speed = speed or 1.0
 end
 
 function OceanWaveConsoleProgressBarStyle:getFilledStyle(position, filledWidth, totalWidth, step, minStep, maxStep)
     local i64DiminishFactor<const> = 16776960 -- time.getNow() returns really big numbers; we need to scale it down a lot!
-    local timeOffset<const> = math.round(math.sin(time.getNow() / i64DiminishFactor) * 10)
+    local timeOffset<const> = math.round(math.sin(time.getNow() / (i64DiminishFactor / self.speed)) * 10)
     local colors<const> = {21, 25, 26, 27, 31, 32, 33, 37, 38, 39}
     local color<const> = math.round(timeOffset + position) % (#colors - 1) + 1
 

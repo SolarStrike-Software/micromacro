@@ -18,7 +18,7 @@ function ConsoleProgressBar:constructor(min, max, width, style)
     self.width = width or 20
 
     if ConsoleOutput():isAnsiAvailable() then
-        self.style = style or DefaultConsoleProgressBarStyle()
+        self.style = style or ConsoleProgressBarStyle()
     else
         self.style = SafeModeConsoleProgressBarStyle()
     end
@@ -36,6 +36,7 @@ end
 function ConsoleProgressBar:begin()
     saveCursorPosition()
     self.began = true
+    self:draw()
 end
 
 function ConsoleProgressBar:getRatio()
@@ -74,7 +75,7 @@ function ConsoleProgressBar:draw()
     if (self.style.showRaw) then
         local maxLen = string.len(math.ceil(self.max))
         local totalLen = maxLen * 2 + 1
-        rawStr = sprintf('%-' .. totalLen .. 's', sprintf('%d/%d', self.current, self.max))
+        rawStr = sprintf('%-' .. totalLen .. 's', sprintf('%d/%d', math.floor(self.current), self.max))
         result = result .. rawStr .. ' '
     end
 
@@ -85,13 +86,17 @@ function ConsoleProgressBar:draw()
         local filledBlocksStr = ''
         for i = 1, filledWidth do
             local char = self.style:getFilledChar(i, filledWidth, self.width)
-            filledBlocksStr = filledBlocksStr .. sprintf(self.style:getFilledStyle(i, filledWidth, self.width, self.current, self.min, self.max), char)
+            filledBlocksStr = filledBlocksStr ..
+                                  sprintf(
+                    self.style:getFilledStyle(i, filledWidth, self.width, self.current, self.min, self.max), char)
         end
 
         local unfilledBlocksStr = ''
-        for i = 1, unfilledWidth do
+        for i = filledWidth + 1, self.width do
             local char = self.style:getUnfilledChar(i, filledWidth, self.width)
-            unfilledBlocksStr = unfilledBlocksStr .. sprintf(self.style:getUnfilledStyle(i, filledWidth, self.width, self.current, self.min, self.max), char)
+            unfilledBlocksStr = unfilledBlocksStr ..
+                                    sprintf(
+                    self.style:getUnfilledStyle(i, filledWidth, self.width, self.current, self.min, self.max), char)
         end
 
         result = result .. self.style.startFmt .. filledBlocksStr .. unfilledBlocksStr .. self.style.endFmt .. ' '
