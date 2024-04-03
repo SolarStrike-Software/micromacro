@@ -120,20 +120,52 @@ end
 
 --[[ Rainbow style ]]
 RainbowConsoleProgressBarStyle = class.new(ConsoleProgressBarStyle)
-function RainbowConsoleProgressBarStyle:constructor()
+function RainbowConsoleProgressBarStyle:constructor(saturation)
     RainbowConsoleProgressBarStyle.parent.constructor(self)
 
     self.fullChar = ' '
     self.emptyChar = ' '
+    self.saturation = saturation or 1.0
+end
+
+-- [[ Convert from HSV color to RGB color ]]
+local function hsv2rgb(h, s, v)
+    local hh = h
+    while (hh >= 360.0) do
+        hh = hh - 360.0
+    end
+
+    hh = hh / 60.0 -- Convert from degrees
+
+    local ff = hh - math.floor(hh)
+    local p = v * (1.0 - s)
+    local q = v * (1.0 - (s * ff))
+    local t = v * (1.0 - (s * (1.0 - ff)))
+
+    hh = math.floor(hh)
+    if hh == 0 then
+        return v, t, p
+    elseif hh == 1 then
+        return q, v, p
+    elseif hh == 2 then
+        return p, v, t
+    elseif hh == 3 then
+        return p, q, v
+    elseif hh == 4 then
+        return t, p, v
+    else
+        return v, p, q
+    end
 end
 
 function RainbowConsoleProgressBarStyle:getFilledStyle(position, filledWidth, totalWidth, step, minStep, maxStep)
-    local ratio<const> = position / totalWidth
-    local colors<const> = {160, 166, 172, 178, 184, 190, 154, 118, 82, 84, 85, 48, 42, 36, 30, 24, 27, 25, 67, 62, 57}
-    local index<const> = math.floor(ratio * #colors) + 1
-    local color<const> = colors[math.min(index, #colors)]
+    local h<const> = (position / totalWidth) * 360
+    local r, g, b = hsv2rgb(h, self.saturation, 1.0)
+    r = math.round(r * 255)
+    g = math.round(g * 255)
+    b = math.round(b * 255)
 
-    return "\x1b[38;5;233;48;5;" .. sprintf("%d", color) .. "m%s\x1b[0m"
+    return "\x1b[48;2;" .. sprintf("%d", r) .. ";" .. sprintf("%d", g) .. ";" .. sprintf("%d", b) .. "m%s\x1b[0m"
 end
 
 --[[ Ocean Wave style ]]
