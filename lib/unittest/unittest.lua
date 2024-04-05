@@ -8,7 +8,7 @@ function UnitTest:constructor()
     self.testDirectory = "tests";
     self.output = ConsoleOutput()
 
-    self.showAssertionTraceback = true
+    self.showAssertionTraceback = false
 end
 
 function UnitTest:run()
@@ -105,7 +105,9 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
             end
 
             local testname<const> = sprintf("%s::%s", relativeFilePath, functionName)
+            local startTime = time.getNow()
             local success = xpcall(ptrToTestFunction, errorHandler)
+            local endTime = time.getNow()
             local passOrFail = "";
             testCount = testCount + 1
 
@@ -122,12 +124,15 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
                 passOrFail = self.output:sstyle('fail', 'FAIL')
             end
 
-            self.output:writeln(sprintf("  [%s]  %s", passOrFail, testname))
+
+            local padding = self.output:sstyle('petty', string.rep('.', 60 - string.len(testname)))
+            local runtime = sprintf("%0.2fms", time.diff(endTime, startTime) * 1000)
+            self.output:writeln(sprintf(" [%s]  %s %s %s", passOrFail, testname, padding, runtime))
         end
     end
 
     if (testCount == 0) then
-        self.output:writeln(sprintf("  [%s]  %s", self.output:sstyle('comment', 'WARN'),
+        self.output:writeln(sprintf(" [%s]  %s", self.output:sstyle('comment', 'WARN'),
             self.output:sstyle('comment', 'No tests in ' .. relativeFilePath)))
     end
 
