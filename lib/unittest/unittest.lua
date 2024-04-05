@@ -1,6 +1,6 @@
 require 'console/output'
+require 'unittest/assert'
 
-local ASSERTION_FAILED_MESSAGE<const> = 'assertion failed!'
 
 UnitTest = class.new()
 function UnitTest:constructor()
@@ -49,6 +49,11 @@ function UnitTest:run()
 
     self.output:writeln(
         sprintf("\nTests: %d, Assertions: %d, Passed: %d, Failed: %d", successCount + failCount, assertCount, successCount, failCount))
+    
+    -- Ensure that the script now terminates gracefully, and does not end up trying to run
+    -- real initialization and main loops
+    macro.init = function () end
+    macro.main = function () return false end
 end
 
 function UnitTest:findTestFiles(path)
@@ -94,7 +99,7 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
                 errMsg = err
 
                 -- If the error message is the standard assert fail message, it must be an assertion fail
-                local isAssertionFail = string.sub(err, -(string.len(ASSERTION_FAILED_MESSAGE))) == ASSERTION_FAILED_MESSAGE
+                local isAssertionFail = string.sub(err, -(string.len(Assert.failMessage))) == Assert.failMessage
 
                 if( not isAssertionFail ) then
                     traceback = debug.traceback(nil, 2)
