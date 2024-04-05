@@ -29,7 +29,7 @@
 			ERR_DOUBLE_INIT,
 			ERR_INIT_FAIL,
 			ERR_CLEANUP_FAIL,
-			ERR_NO_STATE,
+			ERR_NO_STATE, // Can also indicate errors loading/finding a file
 			ERR_RUN,
 			ERR_MEM,
 			ERR_SYNTAX,

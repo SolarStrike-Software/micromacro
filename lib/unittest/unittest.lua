@@ -54,6 +54,12 @@ function UnitTest:run()
     -- real initialization and main loops
     macro.init = function () end
     macro.main = function () return false end
+
+    if failCount > 0 then
+        return -1
+    else
+        return 0
+    end
 end
 
 function UnitTest:findTestFiles(path)

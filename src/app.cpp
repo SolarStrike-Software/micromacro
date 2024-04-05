@@ -314,6 +314,37 @@ int App::run()
                 E->reinit();
             }
             continue;
+        } else if( args[0] == "test" ) {
+            if( args.size() <= 1 ) {
+                printf("The path to run unit tests from must be given.\n");
+                printf("Example:\ttest my-project\n\n");
+                continue;
+            }
+
+            LuaEngine *E = Macro::instance()->getEngine();
+
+            int success = luaL_dofile(E->getLuaState(), "lib/unittest/unittest.lua");
+            if( success != MicroMacro::ERR_OK )
+            {
+                std::string lastErrorMessage = E->getLastErrorMessage();
+                this->renderErrorMessage(success, lastErrorMessage.c_str(), "Load library error");
+                Logger::instance()->add("%s", lastErrorMessage.c_str());
+            } else {
+                std::string scriptDir = ::getFilePath(autoAdjustScriptFilename(args[1]), false);
+                SetCurrentDirectory(scriptDir.c_str());
+                success = E->loadString("return UnitTest():run()");
+                if( success != MicroMacro::ERR_OK )
+                {
+                    std::string lastErrorMessage = E->getLastErrorMessage();
+                    this->renderErrorMessage(success, lastErrorMessage.c_str(), "Error instantiating and running UnitTest");
+                    Logger::instance()->add("%s", lastErrorMessage.c_str());
+                }
+            }
+
+            // Make sure we re-initialize our Lua state before we move on
+            E->reinit();
+
+            continue;
         }
 
         /* Correct filename if needed */
