@@ -314,36 +314,12 @@ int App::run()
                 E->reinit();
             }
             continue;
-        } else if( args[0] == "test" ) {
-            if( args.size() <= 1 ) {
-                printf("The path to run unit tests from must be given.\n");
-                printf("Example:\ttest my-project\n\n");
-                continue;
-            }
+        }
 
-            LuaEngine *E = Macro::instance()->getEngine();
-
-            int success = luaL_dofile(E->getLuaState(), "lib/unittest/unittest.lua");
-            if( success != MicroMacro::ERR_OK )
-            {
-                std::string lastErrorMessage = E->getLastErrorMessage();
-                this->renderErrorMessage(success, lastErrorMessage.c_str(), "Load library error");
-                Logger::instance()->add("%s", lastErrorMessage.c_str());
-            } else {
-                std::string scriptDir = ::getFilePath(autoAdjustScriptFilename(args[1]), false);
-                SetCurrentDirectory(scriptDir.c_str());
-                success = E->loadString("return UnitTest():run()");
-                if( success != MicroMacro::ERR_OK )
-                {
-                    std::string lastErrorMessage = E->getLastErrorMessage();
-                    this->renderErrorMessage(success, lastErrorMessage.c_str(), "Error instantiating and running UnitTest");
-                    Logger::instance()->add("%s", lastErrorMessage.c_str());
-                }
-            }
-
-            // Make sure we re-initialize our Lua state before we move on
-            E->reinit();
-
+        std::string cmdFilePath = std::string("commands/").append(args[0]).append(".lua");
+        if( ::fileExists(cmdFilePath.c_str())) {
+            args.erase(args.begin());
+            this->runCommandFromFolder(cmdFilePath.c_str(), args);
             continue;
         }
 
@@ -859,26 +835,7 @@ int App::loadConfig(const char *filename)
 
     if( failstate )
     {
-        switch(failstate) {
-            case LUA_ERRRUN:
-                retval = MicroMacro::ERR_RUN;
-                break;
-            case LUA_ERRMEM:
-                retval = MicroMacro::ERR_MEM;
-                break;
-            case LUA_ERRSYNTAX:
-                retval = MicroMacro::ERR_SYNTAX;
-                break;
-            case LUA_ERRFILE:
-                retval = MicroMacro::ERR_FILE;
-                break;
-            case LUA_ERRERR:
-                retval = MicroMacro::ERR_ERR;
-                break;
-            default:
-                retval = MicroMacro::ERR_UNKNOWN;
-                break;
-        }
+        retval = mapLuaError(failstate);
 
         const char *err = lua_tostring(lstate, -1);
         fprintf(stderr, "%s\n", err);
@@ -1279,4 +1236,34 @@ void App::renderErrorMessage(int errCode, const char *lastErrorMessage, const ch
              description, errCode, getErrorString(errCode), renderedError.c_str());
 
     fprintf(stderr, "%s\n", buffer);
+}
+
+int App::runCommandFromFolder(const char *cmdFilePath, std::vector<std::string> args)
+{
+    const char *msgFmt = "Running command file %s\n";
+    Logger::instance()->add(msgFmt, cmdFilePath);
+    LuaEngine *E = Macro::instance()->getEngine();
+
+    // Push args
+    lua_newtable(E->getLuaState());
+    for(int i = 0; i < args.size(); i++) {
+        lua_pushinteger(E->getLuaState(), i + 1);
+        lua_pushstring(E->getLuaState(), args.at(i).c_str());
+        lua_settable(E->getLuaState(), -3);
+    }
+    lua_setglobal(E->getLuaState(), "args");
+
+    // Run command script
+    printf("\n");
+    int success = mapLuaError(luaL_dofile(E->getLuaState(), cmdFilePath));
+    if( success != MicroMacro::ERR_OK )
+    {
+        E->stdError();
+        std::string lastErrorMessage = E->getLastErrorMessage();
+        this->renderErrorMessage(success, lastErrorMessage.c_str(), "Error while executing command file");
+        Logger::instance()->add("%s", lastErrorMessage.c_str());
+    }
+
+    E->reinit();
+    return success;
 }

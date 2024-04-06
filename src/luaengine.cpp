@@ -378,26 +378,7 @@ int LuaEngine::loadString(const char *str)
     if( failstate )
     {
         stdError();
-        switch(failstate) {
-            case LUA_ERRRUN:
-                return MicroMacro::ERR_RUN;
-                break;
-            case LUA_ERRMEM:
-                return MicroMacro::ERR_MEM;
-                break;
-            case LUA_ERRSYNTAX:
-                return MicroMacro::ERR_SYNTAX;
-                break;
-            case LUA_ERRFILE:
-                return MicroMacro::ERR_FILE;
-                break;
-            case LUA_ERRERR:
-                return MicroMacro::ERR_ERR;
-                break;
-            default:
-                return MicroMacro::ERR_UNKNOWN;
-                break;
-        }
+        return mapLuaError(failstate);
     }
 
     return MicroMacro::ERR_OK;
@@ -420,26 +401,7 @@ int LuaEngine::loadFile(const char *filename)
     if( failstate )
     {
         stdError();
-        switch(failstate) {
-            case LUA_ERRRUN:
-                return MicroMacro::ERR_RUN;
-                break;
-            case LUA_ERRMEM:
-                return MicroMacro::ERR_MEM;
-                break;
-            case LUA_ERRSYNTAX:
-                return MicroMacro::ERR_SYNTAX;
-                break;
-            case LUA_ERRFILE:
-                return MicroMacro::ERR_FILE;
-                break;
-            case LUA_ERRERR:
-                return MicroMacro::ERR_ERR;
-                break;
-            default:
-                return MicroMacro::ERR_UNKNOWN;
-                break;
-        }
+        return mapLuaError(failstate);
     }
 
     return MicroMacro::ERR_OK;
@@ -485,26 +447,7 @@ int LuaEngine::runInit(std::vector<std::string> *opt_args)
     if( failstate )
     {
         stdError();
-        switch(failstate) {
-            case LUA_ERRRUN:
-                retval = MicroMacro::ERR_RUN;
-                break;
-            case LUA_ERRMEM:
-                retval = MicroMacro::ERR_MEM;
-                break;
-            case LUA_ERRSYNTAX:
-                retval = MicroMacro::ERR_SYNTAX;
-                break;
-            case LUA_ERRFILE:
-                retval = MicroMacro::ERR_FILE;
-                break;
-            case LUA_ERRERR:
-                retval = MicroMacro::ERR_ERR;
-                break;
-            default:
-                retval = MicroMacro::ERR_UNKNOWN;
-                break;
-        }
+        return mapLuaError(failstate);
     }
 
     lua_pop(lstate, 2); // Pop traceback, macro table
@@ -552,26 +495,7 @@ int LuaEngine::runMain()
     if( failstate )
     {
         stdError();
-        switch(failstate) {
-            case LUA_ERRRUN:
-                retval = MicroMacro::ERR_RUN;
-                break;
-            case LUA_ERRMEM:
-                retval = MicroMacro::ERR_MEM;
-                break;
-            case LUA_ERRSYNTAX:
-                retval = MicroMacro::ERR_SYNTAX;
-                break;
-            case LUA_ERRFILE:
-                retval = MicroMacro::ERR_FILE;
-                break;
-            case LUA_ERRERR:
-                retval = MicroMacro::ERR_ERR;
-                break;
-            default:
-                retval = MicroMacro::ERR_UNKNOWN;
-                break;
-        }
+        return mapLuaError(failstate);
     }
 
     // If available, get the return value (assume true)
@@ -816,26 +740,7 @@ int LuaEngine::runEvent(MicroMacro::Event *pe)
     if( failstate )
     {
         stdError();
-        switch(failstate) {
-            case LUA_ERRRUN:
-                retval = MicroMacro::ERR_RUN;
-                break;
-            case LUA_ERRMEM:
-                retval = MicroMacro::ERR_MEM;
-                break;
-            case LUA_ERRSYNTAX:
-                retval = MicroMacro::ERR_SYNTAX;
-                break;
-            case LUA_ERRFILE:
-                retval = MicroMacro::ERR_FILE;
-                break;
-            case LUA_ERRERR:
-                retval = MicroMacro::ERR_ERR;
-                break;
-            default:
-                retval = MicroMacro::ERR_UNKNOWN;
-                break;
-        }
+        retval = mapLuaError(failstate);
     }
 
     lua_pop(lstate, 2); // Pop stacktrace, macro table

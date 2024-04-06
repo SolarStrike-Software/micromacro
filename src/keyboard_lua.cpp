@@ -388,27 +388,7 @@ LRESULT CALLBACK Keyboard_lua::lowLevelKeyboardProc(int nCode, WPARAM wParam, LP
                     const char *lastErrorMsg = lua_tostring(lstate, lua_gettop(lstate));
                     Macro::instance()->getEngine()->setLastErrorMessage(lastErrorMsg);
 
-                    int errState = 0;
-                    switch(failstate) {
-                        case LUA_ERRRUN:
-                            errState = MicroMacro::ERR_RUN;
-                            break;
-                        case LUA_ERRMEM:
-                            errState = MicroMacro::ERR_MEM;
-                            break;
-                        case LUA_ERRSYNTAX:
-                            errState = MicroMacro::ERR_SYNTAX;
-                            break;
-                        case LUA_ERRFILE:
-                            errState = MicroMacro::ERR_FILE;
-                            break;
-                        case LUA_ERRERR:
-                            errState = MicroMacro::ERR_ERR;
-                            break;
-                        default:
-                            errState = MicroMacro::ERR_UNKNOWN;
-                            break;
-                    }
+                    int errState = mapLuaError(failstate);
                     Macro::instance()->getEngine()->setKeyHookErrorState(errState);
                     lua_pop(lstate, 1);
                 }

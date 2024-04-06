@@ -62,6 +62,7 @@ function UnitTest:run()
     end
 end
 
+
 function UnitTest:findTestFiles(path)
     local results<const> = filesystem.getDirectory(path)
     local files = {}
@@ -115,7 +116,7 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
                 end
             end
 
-            local testname<const> = sprintf("%s::%s", relativeFilePath, functionName)
+            local testname<const> = sprintf("%s::%s", self.testDirectory .. '/' .. relativeFilePath, functionName)
             local startTime = time.getNow()
             local success = xpcall(ptrToTestFunction, errorHandler)
             local endTime = time.getNow()
