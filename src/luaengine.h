@@ -44,8 +44,6 @@
 
 			static int fireEvent(lua_State *);
 
-			void stdError();
-
 			std::string basePath;
 			std::string lastErrorMsg;
 			TimeType lastTimestamp;			// Holds the timestamp so we can compute delta time
@@ -63,6 +61,8 @@
 			int cleanup();
 			int loadFile(const char *);
 			int loadString(const char *);
+			void stdError();
+
 
 			int runInit(std::vector<std::string> * = NULL);
 			int runMain();

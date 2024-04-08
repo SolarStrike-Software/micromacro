@@ -46,6 +46,8 @@
 				int enableVirtualTerminal();
 				void renderErrorMessage(int errCode, const char *lastErrorMessage, const char *description);
 
+				int runCommandFromFolder(const char *cmdFilePath, std::vector<std::string> args);
+
 			public:
 				App(HINSTANCE hinstance, LPSTR cmdLine);
 				~App();
