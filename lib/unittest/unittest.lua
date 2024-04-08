@@ -1,7 +1,6 @@
 require 'console/output'
 require 'unittest/assert'
 
-
 UnitTest = class.new()
 function UnitTest:constructor()
     self.root = filesystem.getCWD()
@@ -9,6 +8,15 @@ function UnitTest:constructor()
     self.output = ConsoleOutput()
 
     self.showAssertionTraceback = false
+    self.assertCount = 0
+end
+
+function UnitTest:getAssertCount()
+    return self.assertCount
+end
+
+function UnitTest:incrementAssertCount()
+    self.assertCount = self.assertCount + 1
 end
 
 function UnitTest:run()
@@ -21,12 +29,12 @@ function UnitTest:run()
     local failed = {}
     local successCount = 0
     local failCount = 0
-    local assertCount = 0
     local originalAssert = assert
 
-    assert = function (...)
-        assertCount = assertCount + 1
-        
+    self.successCount = 0
+    assert = function(...)
+        self:incrementAssertCount()
+
         local success, v, msg = pcall(originalAssert, ...)
         if success then
             return v, msg
@@ -47,13 +55,16 @@ function UnitTest:run()
 
     self:printFailures(failed)
 
-    self.output:writeln(
-        sprintf("\nTests: %d, Assertions: %d, Passed: %d, Failed: %d", successCount + failCount, assertCount, successCount, failCount))
-    
+    self.output:writeln(sprintf("\nTests: %d, Assertions: %d, Passed: %d, Failed: %d", successCount + failCount,
+        self:getAssertCount(), successCount, failCount))
+
     -- Ensure that the script now terminates gracefully, and does not end up trying to run
     -- real initialization and main loops
-    macro.init = function () end
-    macro.main = function () return false end
+    macro.init = function()
+    end
+    macro.main = function()
+        return false
+    end
 
     if failCount > 0 then
         return -1
@@ -61,7 +72,6 @@ function UnitTest:run()
         return 0
     end
 end
-
 
 function UnitTest:findTestFiles(path)
     local results<const> = filesystem.getDirectory(path)
@@ -106,9 +116,10 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
                 errMsg = err
 
                 -- If the error message is the standard assert fail message, it must be an assertion fail
-                local isAssertionFail = string.sub(err, -(string.len(Assert.failMessage))) == Assert.failMessage
+                local isAssertionFail = string.sub(err, -(string.len(Assert.getFailMessage()))) ==
+                                            Assert.getFailMessage()
 
-                if( not isAssertionFail ) then
+                if (not isAssertionFail) then
                     traceback = debug.traceback(nil, 2)
                 elseif self.showAssertionTraceback then
                     -- Have to move further up the stack to account for our wrapped assert call
@@ -116,14 +127,25 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
                 end
             end
 
+            local asserter = Assert(self)
+            local origAssertCount = self:getAssertCount()
             local testname<const> = sprintf("%s::%s", self.testDirectory .. '/' .. relativeFilePath, functionName)
+            local origStdout = io.stdout
             local startTime = time.getNow()
-            local success = xpcall(ptrToTestFunction, errorHandler)
+            local success = xpcall(ptrToTestFunction, errorHandler, asserter)
             local endTime = time.getNow()
             local passOrFail = "";
+            local newAssertCount = self:getAssertCount()
+
             testCount = testCount + 1
 
-            if (success) then
+            local description = testname
+            local descriptionStyle = 'default'
+            if newAssertCount == origAssertCount then
+                passOrFail = self.output:sstyle('comment', 'WARN')
+                description = description .. ' has no assertions'
+                descriptionStyle = 'comment'
+            elseif (success) then
                 table.insert(succeeded, testname)
                 passOrFail = self.output:sstyle('success', 'PASS')
             else
@@ -136,10 +158,10 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
                 passOrFail = self.output:sstyle('fail', 'FAIL')
             end
 
-
-            local padding = self.output:sstyle('petty', string.rep('.', 60 - string.len(testname)))
+            local padding = self.output:sstyle('petty', string.rep('.', 60 - string.len(description)))
             local runtime = sprintf("%0.2fms", time.diff(endTime, startTime) * 1000)
-            self.output:writeln(sprintf(" [%s]  %s %s %s", passOrFail, testname, padding, runtime))
+            self.output:writeln(sprintf(" [%s]  %s %s %s", passOrFail,
+                self.output:sstyle(descriptionStyle, description), padding, runtime))
         end
     end
 
@@ -163,7 +185,7 @@ function UnitTest:printFailures(failed)
         self.output:error("Test: " .. details['name'])
         self.output:default(details['errors'])
 
-        if( details['trace'] ~= nil ) then
+        if (details['trace'] ~= nil) then
             self.output:petty(details['trace'])
         end
     end
