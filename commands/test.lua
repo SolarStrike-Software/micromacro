@@ -17,4 +17,5 @@ end
 
 filesystem.setCWD(dir)
 
-return UnitTest():run()
+table.remove(args, 1)
+return UnitTest(args):run()

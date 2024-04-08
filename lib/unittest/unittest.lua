@@ -2,13 +2,45 @@ require 'console/output'
 require 'unittest/assert'
 
 UnitTest = class.new()
-function UnitTest:constructor()
+function UnitTest:constructor(args)
     self.root = filesystem.getCWD()
     self.testDirectory = "tests";
     self.output = ConsoleOutput()
 
     self.showAssertionTraceback = false
     self.assertCount = 0
+
+    self.filterFiles = nil
+
+    self:handleArgs(args)
+end
+
+function UnitTest:handleArgs(args)
+    local optHandlers = {
+        ['--filter-files'] = function(filters)
+            self.filterFiles = string.explode(filters, ',')
+        end,
+        ['--verbose'] = function()
+            self.showAssertionTraceback = true
+        end
+    }
+
+    for i, v in pairs(args) do
+        local splitPos = string.find(v, '=')
+        local opt = v
+        local optValue = nil
+        if splitPos then
+            opt = string.sub(v, 1, splitPos - 1)
+            optValue = string.sub(v, splitPos + 1)
+        end
+
+        if optHandlers[opt] ~= nil then
+            optHandlers[opt](optValue)
+        else
+            error(sprintf("Unknown option `%s`", opt), 0)
+        end
+
+    end
 end
 
 function UnitTest:getAssertCount()
@@ -85,8 +117,16 @@ function UnitTest:findTestFiles(path)
                 table.insert(files, v .. "/" .. k)
             end
         else
-            if (string.sub(v, -4) == ".lua") then
-                table.insert(files, v)
+            if self.filterFiles == nil then
+                if (string.sub(v, -4) == ".lua") then
+                    table.insert(files, v)
+                end
+            else
+                for i, pattern in pairs(self.filterFiles) do
+                    if string.match(v, pattern) then
+                        table.insert(files, v)
+                    end
+                end
             end
         end
     end
