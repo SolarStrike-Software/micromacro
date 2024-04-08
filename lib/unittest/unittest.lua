@@ -12,7 +12,27 @@ function UnitTest:constructor(args)
 
     self.filterFiles = nil
 
+    self.shouldRun = true
     self:handleArgs(args)
+end
+
+function UnitTest:showHelp()
+    local helps = {
+        ['--help'] = "You're looking at it",
+        ['--verbose'] = "Provide more detailed output when available.",
+        ['--filter-files={filters}'] = "Filter files in the `tests` directory. Should be comma-separted Lua patterns." ..
+            sprintf("\n%33s%s", "",
+                "Ex: " .. self.output:sstyle('success', "test my-project --filter-files=test_.*  ") ..
+                    self.output:sstyle('petty', "Only use files beginning with `test_`"))
+    }
+    self.output:writeln('Example:\t' .. self.output:sstyle('success', 'test my-project'))
+    self.output:writeln('\nOptions:')
+    for i, v in pairs(helps) do
+        local padding = string.rep(' ', 30 - string.len(i))
+        self.output:writeln(sprintf("   %s%s%s", self.output:sstyle('success', i), padding, v))
+    end
+
+    self.output:writeln('')
 end
 
 function UnitTest:handleArgs(args)
@@ -22,6 +42,10 @@ function UnitTest:handleArgs(args)
         end,
         ['--verbose'] = function()
             self.showAssertionTraceback = true
+        end,
+        ['--help'] = function()
+            self:showHelp()
+            return false
         end
     }
 
@@ -35,11 +59,13 @@ function UnitTest:handleArgs(args)
         end
 
         if optHandlers[opt] ~= nil then
-            optHandlers[opt](optValue)
+            local shouldContinue = optHandlers[opt](optValue)
+            if shouldContinue == false then
+                self.shouldRun = false
+            end
         else
             error(sprintf("Unknown option `%s`", opt), 0)
         end
-
     end
 end
 
@@ -52,6 +78,9 @@ function UnitTest:incrementAssertCount()
 end
 
 function UnitTest:run()
+    if (not self.shouldRun) then
+        return 0
+    end
     local scanPath<const> = self.root .. '/' .. self.testDirectory .. '/'
 
     local files = self:findTestFiles(scanPath)
