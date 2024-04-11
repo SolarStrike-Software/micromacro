@@ -1,6 +1,11 @@
 require 'console/output'
 require 'unittest/assert'
 
+local function isAssertionFail(msg)
+    -- If the error message is the standard assert fail message, it must be an assertion fail
+    return string.sub(msg, -(string.len(Assert.getFailMessage()))) == Assert.getFailMessage()
+end
+
 UnitTest = class.new()
 function UnitTest:constructor(args)
     args = args or {}
@@ -189,11 +194,7 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
             local errorHandler = function(err)
                 errMsg = err
 
-                -- If the error message is the standard assert fail message, it must be an assertion fail
-                local isAssertionFail = string.sub(err, -(string.len(Assert.getFailMessage()))) ==
-                                            Assert.getFailMessage()
-
-                if (not isAssertionFail) then
+                if (not isAssertionFail(err)) then
                     traceback = debug.traceback(nil, 2)
                 elseif self.showAssertionTraceback then
                     -- Have to move further up the stack to account for our wrapped assert call
@@ -203,7 +204,7 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
 
             local asserter = Assert(self)
             local origAssertCount = self:getAssertCount()
-            local testname<const> = sprintf("%s::%s", self.testDirectory .. '/' .. relativeFilePath, functionName)
+            local testname<const> = sprintf("%s::%s", relativeFilePath, functionName)
             local origStdout = io.stdout
             local startTime = time.getNow()
             local success = xpcall(ptrToTestFunction, errorHandler, asserter)
@@ -264,3 +265,4 @@ function UnitTest:printFailures(failed)
         end
     end
 end
+
