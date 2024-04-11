@@ -1,8 +1,14 @@
 require 'console/output'
 require 'unittest/assert'
 
+local function isAssertionFail(msg)
+    -- If the error message is the standard assert fail message, it must be an assertion fail
+    return string.sub(msg, -(string.len(Assert.getFailMessage()))) == Assert.getFailMessage()
+end
+
 UnitTest = class.new()
 function UnitTest:constructor(args)
+    args = args or {}
     self.root = filesystem.getCWD()
     self.testDirectory = "tests";
     self.output = ConsoleOutput()
@@ -17,22 +23,26 @@ function UnitTest:constructor(args)
 end
 
 function UnitTest:showHelp()
-    local helps = {
-        ['--help'] = "You're looking at it",
-        ['--verbose'] = "Provide more detailed output when available.",
-        ['--filter-files={filters}'] = "Filter files in the `tests` directory. Should be comma-separted Lua patterns." ..
-            sprintf("\n%33s%s", "",
-                "Ex: " .. self.output:sstyle('success', "test my-project --filter-files=test_.*  ") ..
-                    self.output:sstyle('petty', "Only use files beginning with `test_`"))
-    }
-    self.output:writeln('Example:\t' .. self.output:sstyle('success', 'test my-project'))
-    self.output:writeln('\nOptions:')
-    for i, v in pairs(helps) do
-        local padding = string.rep(' ', 30 - string.len(i))
-        self.output:writeln(sprintf("   %s%s%s", self.output:sstyle('success', i), padding, v))
-    end
+    local padSize = 25
+    local helpStr = [[
+Run unit tests for a MicroMacro project.
+See docs at: https://solarstrike.net/docs/micromacro/unit-test-library
 
-    self.output:writeln('')
+Example: ]] .. self.output:sstyle('success', 'test my-project') .. [[
+
+
+Options:
+  ]] .. self.output:sstyle('success', sprintf("%-" .. padSize .. "s", '--help')) .. [[ You're looking at it.
+  ]] .. self.output:sstyle('success', sprintf("%-" .. padSize .. "s", '--verbose')) ..
+                        [[ Provide more detailed output when available.
+  ]] .. self.output:sstyle('success', sprintf("%-" .. padSize .. "s", '--filter-files={filter}')) ..
+                        [[ Filter files in the `tests` directory. Should be comma-separted Lua patterns.
+  ]] .. sprintf("%-" .. padSize .. "s", '') .. self.output:sstyle('petty', '   Ex:  ') ..
+                        self.output:sstyle('success', "test my-project --filter-files=test_.*  ") ..
+                        self.output:sstyle('petty', "Only test files beginning with `test_`")
+
+    self.output:writeln(helpStr .. "\n")
+    return
 end
 
 function UnitTest:handleArgs(args)
@@ -184,11 +194,7 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
             local errorHandler = function(err)
                 errMsg = err
 
-                -- If the error message is the standard assert fail message, it must be an assertion fail
-                local isAssertionFail = string.sub(err, -(string.len(Assert.getFailMessage()))) ==
-                                            Assert.getFailMessage()
-
-                if (not isAssertionFail) then
+                if (not isAssertionFail(err)) then
                     traceback = debug.traceback(nil, 2)
                 elseif self.showAssertionTraceback then
                     -- Have to move further up the stack to account for our wrapped assert call
@@ -198,7 +204,7 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
 
             local asserter = Assert(self)
             local origAssertCount = self:getAssertCount()
-            local testname<const> = sprintf("%s::%s", self.testDirectory .. '/' .. relativeFilePath, functionName)
+            local testname<const> = sprintf("%s::%s", relativeFilePath, functionName)
             local origStdout = io.stdout
             local startTime = time.getNow()
             local success = xpcall(ptrToTestFunction, errorHandler, asserter)
@@ -259,3 +265,4 @@ function UnitTest:printFailures(failed)
         end
     end
 end
+

@@ -16,7 +16,7 @@ function Assert:expectError(closure, msg)
 
     -- We expect that it did NOT succeed. So if it did, we error.
     if success then
-        error(msg or ASSERTION_FAILED_MESSAGE, 2)
+        error(msg or self:getFailMessage(), 2)
     end
 end
 
@@ -30,7 +30,7 @@ function Assert:same(left, right, msg)
         if type(right) == 'string' then
             right = '"' .. right .. '"'
         end
-        error(msg or sprintf('assertion failed: (%s) %s != (%s) %s', type(left), left, type(right), right), 2)
+        error(msg or sprintf('(%s) %s != (%s) %s. %s', type(left), left, type(right), right, self:getFailMessage()), 2)
     end
 end
 
@@ -52,7 +52,7 @@ function Assert:different(left, right, msg)
         right = '"' .. right .. '"'
     end
 
-    error(msg or sprintf('assertion failed: (%s) %s == (%s) %s', type(left), left, type(right), right), 2)
+    error(msg or sprintf('(%s) %s == (%s) %s. %s', type(left), left, type(right), right, self:getFailMessage()), 2)
 end
 
 function Assert:contains(haystack, needle, msg)
@@ -63,7 +63,7 @@ function Assert:contains(haystack, needle, msg)
     end
 
     if (not table.find(haystack, needle)) then
-        error(msg or 'assertion failed: value not found in table', 2)
+        error(msg or 'value not found in table. ' .. self:getFailMessage(), 2)
     end
 end
 
@@ -75,6 +75,6 @@ function Assert:notContains(haystack, needle, msg)
     end
 
     if (table.find(haystack, needle)) then
-        error(msg or 'assertion failed: value is contained in table but not expected', 2)
+        error(msg or 'value is contained in table but not expected. ' .. self:getFailMessage(), 2)
     end
 end
