@@ -2,8 +2,13 @@ require 'unittest/unittest'
 
 local dir = filesystem.getCWD()
 
+if type(args) == 'table' and args[1] == '--help' then
+    return UnitTest(args)
+end
+
+
 -- Set CWD from argument 1, and correct for relative 'scripts' dir if needed
-if (type(args) == "table" and args[1] ~= nil) then
+if (type(args) == 'table' and args[1] ~= nil) then
     dir = args[1];
     if (not filesystem.directoryExists(dir)) then
         dir = "scripts/" .. dir

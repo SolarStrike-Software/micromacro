@@ -3,6 +3,7 @@ require 'unittest/assert'
 
 UnitTest = class.new()
 function UnitTest:constructor(args)
+    args = args or {}
     self.root = filesystem.getCWD()
     self.testDirectory = "tests";
     self.output = ConsoleOutput()
@@ -17,22 +18,26 @@ function UnitTest:constructor(args)
 end
 
 function UnitTest:showHelp()
-    local helps = {
-        ['--help'] = "You're looking at it",
-        ['--verbose'] = "Provide more detailed output when available.",
-        ['--filter-files={filters}'] = "Filter files in the `tests` directory. Should be comma-separted Lua patterns." ..
-            sprintf("\n%33s%s", "",
-                "Ex: " .. self.output:sstyle('success', "test my-project --filter-files=test_.*  ") ..
-                    self.output:sstyle('petty', "Only use files beginning with `test_`"))
-    }
-    self.output:writeln('Example:\t' .. self.output:sstyle('success', 'test my-project'))
-    self.output:writeln('\nOptions:')
-    for i, v in pairs(helps) do
-        local padding = string.rep(' ', 30 - string.len(i))
-        self.output:writeln(sprintf("   %s%s%s", self.output:sstyle('success', i), padding, v))
-    end
+    local padSize = 25
+    local helpStr = [[
+Run unit tests for a MicroMacro project.
+See docs at: https://solarstrike.net/docs/micromacro/unit-test-library
 
-    self.output:writeln('')
+Example: ]] .. self.output:sstyle('success', 'test my-project') .. [[
+
+
+Options:
+  ]] .. self.output:sstyle('success', sprintf("%-" .. padSize .. "s", '--help')) .. [[ You're looking at it.
+  ]] .. self.output:sstyle('success', sprintf("%-" .. padSize .. "s", '--verbose')) ..
+                        [[ Provide more detailed output when available.
+  ]] .. self.output:sstyle('success', sprintf("%-" .. padSize .. "s", '--filter-files={filter}')) ..
+                        [[ Filter files in the `tests` directory. Should be comma-separted Lua patterns.
+  ]] .. sprintf("%-" .. padSize .. "s", '') .. self.output:sstyle('petty', '   Ex:  ') ..
+                        self.output:sstyle('success', "test my-project --filter-files=test_.*  ") ..
+                        self.output:sstyle('petty', "Only test files beginning with `test_`")
+
+    self.output:writeln(helpStr .. "\n")
+    return
 end
 
 function UnitTest:handleArgs(args)
