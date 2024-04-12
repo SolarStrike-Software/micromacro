@@ -46,7 +46,13 @@
 				int enableVirtualTerminal();
 				void renderErrorMessage(int errCode, const char *lastErrorMessage, const char *description);
 
+				void resetFontRendering();
+				void flashWindow(int count);
+				void printBuildInfo();
+				void execRepl();
+				void execString(std::string command);
 				int runCommandFromFolder(const char *cmdFilePath, std::vector<std::string> args);
+				void runScript(std::vector<std::string> args);
 
 			public:
 				App(HINSTANCE hinstance, LPSTR cmdLine);

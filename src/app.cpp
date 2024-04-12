@@ -172,7 +172,6 @@ int App::run()
     /* Begin main loop */
     running         =   true;
     previousScript  =   "";
-    bool yieldTimeSlice = Macro::instance()->getSettings()->getInt(CONFVAR_YIELD_TIME_SLICE, CONFDEFAULT_YIELD_TIME_SLICE);
     while(running)
     {
         // Reset CWD
@@ -200,9 +199,7 @@ int App::run()
             securezero(title, sizeof(title));
         }
 
-        // Reset font rendering
-        if( ansiTerm )
-            printf("\x1b(B\x1b[0m");
+        resetFontRendering();
 
         /* Prompt for script, if needed */
         std::string command;
@@ -243,75 +240,17 @@ int App::run()
             continue;
         } else if( command == "buildinfo" )
         {
-            #ifdef _WIN64
-            const char *bits = "x64";
-            #else
-            const char *bits = "x86";
-            #endif
-            printf("Version %ld.%ld.%ld%s revision %ld %s, built on %s-%s-%s\n%s\n\n",
-                   AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD,
-                   AutoVersion::STATUS_SHORT, AutoVersion::REVISION, bits,
-                   AutoVersion::YEAR, AutoVersion::MONTH, AutoVersion::DATE,
-                   LUA_VERSION);
+            printBuildInfo();
             continue;
         } else if( args[0] == "exec" )
         {
-            int argc = args.size();
-            if( argc <= 1 ) // If they didn't actually give us a command...
+            if( args.size() <= 1 ) // If they didn't actually give us a command...
             {
-                printf("\nEntering interactive mode. Enter 'exit' to quit.\n");
-                while(true)
-                {
-                    // Prompt for command
-                    printf("> ");
-
-                    std::string fullcmd;
-                    std::cin.clear();
-                    getline(std::cin, fullcmd);
-                    std::cin.clear();
-
-                    if( fullcmd == "exit" || fullcmd == "quit" ) // Leave interactive mode
-                    {
-                        printf("\n\n");
-                        break;
-                    }
-
-                    Macro::instance()->getHid()->poll();
-
-                    // Run the string
-                    LuaEngine *E = Macro::instance()->getEngine();
-                    int success = E->loadString(fullcmd.c_str());
-                    if( success != MicroMacro::ERR_OK )
-                    {
-                        std::string lastErrorMessage = E->getLastErrorMessage();
-                        this->renderErrorMessage(success, lastErrorMessage.c_str(), "String execution error");
-                        Logger::instance()->add("%s", lastErrorMessage.c_str());
-                    }
-                }
+                execRepl();
             }
             else
             {
-                // Prep the string, then run it
-                size_t fpos = command.find_first_of(" \t");
-                if( fpos == std::string::npos )
-                    continue;
-
-                std::string cmd = command.substr(fpos + 1);
-                printf("Execute string: %s\n\n", cmd.c_str());
-                Logger::instance()->add("Execute string: \'%s\'\n", cmd.c_str());
-
-                // Run the string
-                LuaEngine *E = Macro::instance()->getEngine();
-                int success = E->loadString(cmd.c_str());
-                if( success != MicroMacro::ERR_OK )
-                {
-                    std::string lastErrorMessage = E->getLastErrorMessage();
-                    this->renderErrorMessage(success, lastErrorMessage.c_str(), "String execution error");
-                    Logger::instance()->add("%s", lastErrorMessage.c_str());
-                }
-
-                // Make sure we re-initialize our Lua state before we move on
-                E->reinit();
+                execString(command);
             }
             continue;
         }
@@ -340,160 +279,7 @@ int App::run()
         Macro::instance()->getHid()->poll();
 
         /* Run script */
-        printf("Running \'%s\'\n\n", args[0].c_str()/*script.c_str()*/);
-        Logger::instance()->add("Running \'%s\'\n", args[0].c_str());
-        int success = Macro::instance()->getEngine()->loadFile(getFileName(args[0]).c_str());
-        if( success != MicroMacro::ERR_OK )
-        {
-            LuaEngine *E = Macro::instance()->getEngine();
-
-            // Reset text color (just in case)
-            SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
-            char buffer[1024];
-            slprintf(buffer, sizeof(buffer) - 1, "Load file error code: %d (%s)\n%s\n",
-                     success, getErrorString(success), E->getLastErrorMessage().c_str());
-            fprintf(stderr, "%s\n", buffer);
-            Logger::instance()->add("%s", buffer);
-
-            E->reinit();
-            continue;
-        }
-
-        /* Run initialization callback */
-        success = Macro::instance()->getEngine()->runInit(&args);
-        if( success != MicroMacro::ERR_OK )
-        {
-            LuaEngine *E = Macro::instance()->getEngine();
-
-            // Reset text color (just in case)
-            SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
-
-            std::string lastErrorMessage = E->getLastErrorMessage();
-            this->renderErrorMessage(success, lastErrorMessage.c_str(), "Failed to run init function");
-            Logger::instance()->add("%s", lastErrorMessage.c_str());
-
-            E->reinit();
-            continue;
-        }
-
-        /* Begin script main loop */
-        Macro::instance()->getHid()->poll();
-        Macro::instance()->pollForegroundWindow();
-
-        TimeType lastRepollGamepadMaxIndex = getNow();
-        int runState = success;
-        while( runState == MicroMacro::ERR_OK )
-        {
-            #ifdef DEBUG_LSTATE_STACK
-            // Warn to make sure we're not screwing up the stack
-            if( lua_gettop(Macro::instance()->getEngine()->getLuaState()) != 0 )
-                fprintf(stderr, "[WARN]: lua_gettop() is not 0 (zero).\n");
-            #endif
-
-            // Update window focus
-            Macro::instance()->pollForegroundWindow();
-
-            // Repoll gamepads if needed
-            if( deltaTime(getNow(), lastRepollGamepadMaxIndex) > GAMEPAD_REPOLL_SECONDS )
-            {
-                //int prevCount = Macro::instance()->getHid()->getGamepadMaxIndex();
-                Macro::instance()->getHid()->repollGamepadMaxIndex();
-                //int newCount = Macro::instance()->getHid()->getGamepadMaxIndex();
-
-                lastRepollGamepadMaxIndex = getNow();
-            }
-
-            // Handle keyboard held queue
-            Macro::instance()->getHid()->handleKeyHeldQueue();
-
-            // Handle keyboard input
-            Macro::instance()->handleHidInput();
-
-            // Check for console resize
-            Macro::instance()->pollConsoleResize();
-
-            // Handle hotkeys
-            Hid *phid = Macro::instance()->getHid();
-            if( (Macro::instance()->getForegroundWindow() == Macro::instance()->getAppHwnd() &&
-                    phid->pressed('L') && phid->isDown(VK_CONTROL)) // Local CTRL+L
-                    || ((phid->pressed('L') && phid->isDown(VK_CONTROL) && phid->isDown(VK_SHIFT) &&
-                         phid->isDown(VK_MENU))) ) // Global CTRL SHIFT ALT L
-            {
-                // Reset text color (just in case)
-                SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
-
-                printf("\nScript forcibly terminated.\n");
-                break;
-            }
-
-            // Handle events
-            success = Macro::instance()->handleEvents();
-            if( success != MicroMacro::ERR_OK )
-            {
-                LuaEngine *E = Macro::instance()->getEngine();
-
-                // Reset text color (just in case)
-                SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
-
-                std::string lastErrorMessage = E->getLastErrorMessage();
-                this->renderErrorMessage(success, lastErrorMessage.c_str(), "Failed to run event function");
-                Logger::instance()->add("%s", lastErrorMessage.c_str());
-
-                // Pass to event function
-                MicroMacro::Event *pe = new MicroMacro::Event;
-                pe->type = MicroMacro::EVENT_ERROR;
-                MicroMacro::EventData ced;
-                ced.setValue(E->getLastErrorMessage());
-                pe->data.push_back(ced);
-                E->runEvent(pe);
-
-                break;
-            }
-
-            // Dispatch messages before running macro.main() func
-            runState = Macro::instance()->getEngine()->dispatchWindowsMessages();
-
-            if( runState == MicroMacro::ERR_OK )
-            {   // Run main callback
-                runState = Macro::instance()->getEngine()->runMain();
-            }
-
-            if( runState == MicroMacro::ERR_CLOSE )
-            {   // Script requested to end
-                // Reset text color (just in case)
-                SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
-
-                printf("\nScript requested termination.\n");
-                break;
-            }
-            else if( runState != MicroMacro::ERR_OK )
-            {   // An actual error occurred
-                LuaEngine *pEngine = Macro::instance()->getEngine();
-
-                // Reset text color (just in case)
-                SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
-
-                std::string lastErrorMessage = pEngine->getLastErrorMessage();
-                this->renderErrorMessage(runState, lastErrorMessage.c_str(), "Error in main loop");
-                Logger::instance()->add("%s", lastErrorMessage.c_str());
-
-                // Pass to event function
-                MicroMacro::Event *pe = new MicroMacro::Event;
-                pe->type = MicroMacro::EVENT_ERROR;
-                MicroMacro::EventData ced;
-                ced.setValue(pEngine->getLastErrorMessage());
-                pe->data.push_back(ced);
-                pEngine->runEvent(pe);
-
-                break;
-            }
-
-            // Don't waste CPU cycles
-            if( yieldTimeSlice )
-                Sleep(1);
-            else
-                Sleep(0);
-        }
+        runScript(args);
 
         // Force garbage collection
         lua_gc(Macro::instance()->getEngine()->getLuaState(), LUA_GCCOLLECT, 0);
@@ -507,13 +293,7 @@ int App::run()
 
 
         // Grab the user's attention
-        FLASHWINFO fwi;
-        fwi.hwnd = Macro::instance()->getAppHwnd();
-        fwi.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
-        fwi.cbSize = sizeof(FLASHWINFO);
-        fwi.uCount = 3;
-        fwi.dwTimeout = 0;
-        FlashWindowEx(&fwi);
+        flashWindow(3);
     }
 
     #ifdef NETWORKING_ENABLED
@@ -1189,7 +969,7 @@ void App::renderErrorMessage(int errCode, const char *lastErrorMessage, const ch
     std::string messageStyle = psettings->getString(CONFVAR_MESSAGE_STYLE);
 
     if( ansiTerm && styleErrors ) {
-        std::regex baseRegex("^([^:]+):(\\d+): ((.|\r|\n)*)\n(stack traceback:\n((.|\r|\n)*))?$");
+        std::regex baseRegex("^([^:]+):(\\d+): ((.|\r|\n)*?)\n?(stack traceback:\n((.|\r|\n)*))?$");
         std::cmatch baseMatch;
         std::string stacktrace = "";
 
@@ -1197,8 +977,11 @@ void App::renderErrorMessage(int errCode, const char *lastErrorMessage, const ch
         {
             renderedError = fileStyle + baseMatch[1].str() + "\x1b[0m:";
             renderedError += lineNumberStyle + baseMatch[2].str() + "\x1b[0m\n";
-            renderedError += messageStyle + baseMatch[3].str() + "\x1b[0m\n\nStacktrace:\n";
+            renderedError += messageStyle + baseMatch[3].str() + "\x1b[0m\n";
 
+            if( baseMatch[5] != "" ) {
+                renderedError += "\n";
+            }
             stacktrace = baseMatch[5].str();
         }
         else
@@ -1206,7 +989,7 @@ void App::renderErrorMessage(int errCode, const char *lastErrorMessage, const ch
             baseRegex = std::regex("^((.|\r|\n)*)\nstack traceback:\n((.|\r|\n)*)$");
             if (std::regex_match(lastErrorMessage, baseMatch, baseRegex))
             {
-                renderedError = messageStyle + baseMatch[1].str() + "\x1b[0m\n\nStacktrace:\n";
+                renderedError = messageStyle + baseMatch[1].str() + "\x1b[0m\n\nstack trace:\n";
                 stacktrace = baseMatch[3].str();
             }
         }
@@ -1238,6 +1021,101 @@ void App::renderErrorMessage(int errCode, const char *lastErrorMessage, const ch
     fprintf(stderr, "%s\n", buffer);
 }
 
+void App::resetFontRendering()
+{
+    // (B = Switch to ASCII character set
+    // [0m = reset to default fonts
+    if( ansiTerm )
+        printf("\x1b(B\x1b[0m");
+
+    SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
+}
+
+void App::flashWindow(int count)
+{
+    FLASHWINFO fwi;
+    fwi.hwnd = Macro::instance()->getAppHwnd();
+    fwi.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
+    fwi.cbSize = sizeof(FLASHWINFO);
+    fwi.uCount = count;
+    fwi.dwTimeout = 0;
+    FlashWindowEx(&fwi);
+}
+
+void App::printBuildInfo() {
+    #ifdef _WIN64
+    const char *bits = "x64";
+    #else
+    const char *bits = "x86";
+    #endif
+    printf("Version %ld.%ld.%ld%s revision %ld %s, built on %s-%s-%s\n%s\n\n",
+           AutoVersion::MAJOR, AutoVersion::MINOR, AutoVersion::BUILD,
+           AutoVersion::STATUS_SHORT, AutoVersion::REVISION, bits,
+           AutoVersion::YEAR, AutoVersion::MONTH, AutoVersion::DATE,
+           LUA_VERSION);
+}
+
+/*
+    Read, Evaluate, Print, Loop
+*/
+void App::execRepl()
+{
+    printf("\nEntering interactive mode. Enter 'exit' to quit.\n");
+    while(true)
+    {
+        // Prompt for command
+        printf("> ");
+
+        std::string fullcmd;
+        std::cin.clear();
+        getline(std::cin, fullcmd);
+        std::cin.clear();
+
+        if( fullcmd == "exit" || fullcmd == "quit" ) // Leave interactive mode
+        {
+            printf("\n\n");
+            return;
+        }
+
+        Macro::instance()->getHid()->poll();
+
+        // Run the string
+        LuaEngine *E = Macro::instance()->getEngine();
+        int success = E->loadString(fullcmd.c_str());
+        if( success != MicroMacro::ERR_OK )
+        {
+            std::string lastErrorMessage = E->getLastErrorMessage();
+            this->renderErrorMessage(success, lastErrorMessage.c_str(), "String execution error");
+            Logger::instance()->add("%s", lastErrorMessage.c_str());
+        }
+    }
+}
+
+void App::execString(std::string command)
+{
+    // Prep the string, then run it
+    size_t fpos = command.find_first_of(" \t");
+    if( fpos == std::string::npos )
+        return;
+
+    std::string cmd = command.substr(fpos + 1);
+    printf("Execute string: %s\n\n", cmd.c_str());
+    Logger::instance()->add("Execute string: \'%s\'\n", cmd.c_str());
+
+    // Run the string
+    LuaEngine *E = Macro::instance()->getEngine();
+    int success = E->loadString(cmd.c_str());
+    if( success != MicroMacro::ERR_OK )
+    {
+        std::string lastErrorMessage = E->getLastErrorMessage();
+        this->renderErrorMessage(success, lastErrorMessage.c_str(), "String execution error");
+        Logger::instance()->add("%s", lastErrorMessage.c_str());
+    }
+
+    // Make sure we re-initialize our Lua state before we move on
+    E->reinit();
+}
+
 int App::runCommandFromFolder(const char *cmdFilePath, std::vector<std::string> args)
 {
     const char *msgFmt = "Running command file %s\n";
@@ -1266,4 +1144,160 @@ int App::runCommandFromFolder(const char *cmdFilePath, std::vector<std::string> 
 
     E->reinit();
     return success;
+}
+
+void App::runScript(std::vector<std::string> args)
+{
+    bool yieldTimeSlice = Macro::instance()->getSettings()->getInt(CONFVAR_YIELD_TIME_SLICE, CONFDEFAULT_YIELD_TIME_SLICE);
+
+    if(args.size() == 0) {
+        throw std::out_of_range("Missing arguments");
+    }
+
+    printf("Running \'%s\'\n\n", args[0].c_str()/*script.c_str()*/);
+    Logger::instance()->add("Running \'%s\'\n", args[0].c_str());
+    int success = Macro::instance()->getEngine()->loadFile(getFileName(args[0]).c_str());
+    if( success != MicroMacro::ERR_OK )
+    {
+        LuaEngine *E = Macro::instance()->getEngine();
+
+        resetFontRendering();
+        char buffer[1024];
+        slprintf(buffer, sizeof(buffer) - 1, "Load file error code: %d (%s)\n%s\n",
+                 success, getErrorString(success), E->getLastErrorMessage().c_str());
+        fprintf(stderr, "%s\n", buffer);
+        Logger::instance()->add("%s", buffer);
+
+        E->reinit();
+        return;
+    }
+
+    /* Run initialization callback */
+    success = Macro::instance()->getEngine()->runInit(&args);
+    if( success != MicroMacro::ERR_OK )
+    {
+        LuaEngine *E = Macro::instance()->getEngine();
+
+        resetFontRendering();
+        std::string lastErrorMessage = E->getLastErrorMessage();
+        this->renderErrorMessage(success, lastErrorMessage.c_str(), "Failed to run init function");
+        Logger::instance()->add("%s", lastErrorMessage.c_str());
+
+        E->reinit();
+        return;
+    }
+
+    /* Begin script main loop */
+    Macro::instance()->getHid()->poll();
+    Macro::instance()->pollForegroundWindow();
+
+    TimeType lastRepollGamepadMaxIndex = getNow();
+    int runState = success;
+    while( runState == MicroMacro::ERR_OK )
+    {
+        #ifdef DEBUG_LSTATE_STACK
+        // Warn to make sure we're not screwing up the stack
+        if( lua_gettop(Macro::instance()->getEngine()->getLuaState()) != 0 )
+            fprintf(stderr, "[WARN]: lua_gettop() is not 0 (zero).\n");
+        #endif
+
+        // Update window focus
+        Macro::instance()->pollForegroundWindow();
+
+        // Repoll gamepads if needed
+        if( deltaTime(getNow(), lastRepollGamepadMaxIndex) > GAMEPAD_REPOLL_SECONDS )
+        {
+            //int prevCount = Macro::instance()->getHid()->getGamepadMaxIndex();
+            Macro::instance()->getHid()->repollGamepadMaxIndex();
+            //int newCount = Macro::instance()->getHid()->getGamepadMaxIndex();
+
+            lastRepollGamepadMaxIndex = getNow();
+        }
+
+        // Handle keyboard held queue
+        Macro::instance()->getHid()->handleKeyHeldQueue();
+
+        // Handle keyboard input
+        Macro::instance()->handleHidInput();
+
+        // Check for console resize
+        Macro::instance()->pollConsoleResize();
+
+        // Handle hotkeys
+        Hid *phid = Macro::instance()->getHid();
+        if( (Macro::instance()->getForegroundWindow() == Macro::instance()->getAppHwnd() &&
+                phid->pressed('L') && phid->isDown(VK_CONTROL)) // Local CTRL+L
+                || ((phid->pressed('L') && phid->isDown(VK_CONTROL) && phid->isDown(VK_SHIFT) &&
+                     phid->isDown(VK_MENU))) ) // Global CTRL SHIFT ALT L
+        {
+            resetFontRendering();
+
+            printf("\nScript forcibly terminated.\n");
+            return;
+        }
+
+        // Handle events
+        success = Macro::instance()->handleEvents();
+        if( success != MicroMacro::ERR_OK )
+        {
+            LuaEngine *E = Macro::instance()->getEngine();
+
+            resetFontRendering();
+            std::string lastErrorMessage = E->getLastErrorMessage();
+            this->renderErrorMessage(success, lastErrorMessage.c_str(), "Failed to run event function");
+            Logger::instance()->add("%s", lastErrorMessage.c_str());
+
+            // Pass to event function
+            MicroMacro::Event *pe = new MicroMacro::Event;
+            pe->type = MicroMacro::EVENT_ERROR;
+            MicroMacro::EventData ced;
+            ced.setValue(E->getLastErrorMessage());
+            pe->data.push_back(ced);
+            E->runEvent(pe);
+
+            return;
+        }
+
+        // Dispatch messages before running macro.main() func
+        runState = Macro::instance()->getEngine()->dispatchWindowsMessages();
+
+        if( runState == MicroMacro::ERR_OK )
+        {   // Run main callback
+            runState = Macro::instance()->getEngine()->runMain();
+        }
+
+        if( runState == MicroMacro::ERR_CLOSE )
+        {   // Script requested to end
+            // Reset text color (just in case)
+            SetConsoleTextAttribute(Macro::instance()->getAppHandle(), Macro::instance()->getConsoleDefaultAttributes());
+
+            printf("\nScript requested termination.\n");
+            return;
+        }
+        else if( runState != MicroMacro::ERR_OK )
+        {   // An actual error occurred
+            LuaEngine *pEngine = Macro::instance()->getEngine();
+
+            resetFontRendering();
+            std::string lastErrorMessage = pEngine->getLastErrorMessage();
+            this->renderErrorMessage(runState, lastErrorMessage.c_str(), "Error in main loop");
+            Logger::instance()->add("%s", lastErrorMessage.c_str());
+
+            // Pass to event function
+            MicroMacro::Event *pe = new MicroMacro::Event;
+            pe->type = MicroMacro::EVENT_ERROR;
+            MicroMacro::EventData ced;
+            ced.setValue(pEngine->getLastErrorMessage());
+            pe->data.push_back(ced);
+            pEngine->runEvent(pe);
+
+            return;
+        }
+
+        // Don't waste CPU cycles
+        if( yieldTimeSlice )
+            Sleep(1);
+        else
+            Sleep(0);
+    }
 }
