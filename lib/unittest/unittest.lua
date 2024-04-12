@@ -180,8 +180,18 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
     local env = setmetatable({}, {
         __index = _G
     })
-    local chunk = loadfile(path, nil, env)
-    chunk()
+
+    local chunk, err = loadfile(path, nil, env)
+    if not chunk then
+        self.output:writeln()
+        error(err, 2)
+    end
+
+    local success, err = pcall(chunk)
+    if (not success) then
+        self.output:writeln()
+        error(err, 2)
+    end
 
     -- Locate test functions within the environment and run try them
     local succeeded = {}
