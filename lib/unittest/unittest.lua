@@ -15,8 +15,10 @@ function UnitTest:constructor(args)
 
     self.showAssertionTraceback = false
     self.assertCount = 0
+    self.warnOnFilesWithNoTests = false
 
     self.filterFiles = nil
+    self.filterTests = nil
 
     self.shouldRun = true
     self:handleArgs(args)
@@ -38,8 +40,13 @@ Options:
   ]] .. self.output:sstyle('success', sprintf("%-" .. padSize .. "s", '--filter-files={filter}')) ..
                         [[ Filter files in the `tests` directory. Should be comma-separted Lua patterns.
   ]] .. sprintf("%-" .. padSize .. "s", '') .. self.output:sstyle('petty', '   Ex:  ') ..
-                        self.output:sstyle('success', "test my-project --filter-files=test_.*  ") ..
-                        self.output:sstyle('petty', "Only test files beginning with `test_`")
+                        self.output:sstyle('success', "test my-project --filter-files=^test_  ") ..
+                        self.output:sstyle('petty', "Only test files beginning with `test_`") .. "\n  " ..
+                        self.output:sstyle('success', sprintf("%-" .. padSize .. "s", '--filter-tests={filter}')) ..
+                        [[ Filter which functions to test within available test files. Should be comma-separated Lua patterns.
+  ]] .. sprintf("%-" .. padSize .. "s", '') .. self.output:sstyle('petty', '   Ex:  ') ..
+                        self.output:sstyle('success', "test my-project --filter-tests=apple,banana  ") ..
+                        self.output:sstyle('petty', "Only test functions containing `apple` or `banana`") .. "\n  "
 
     self.output:writeln(helpStr .. "\n")
     return
@@ -50,8 +57,12 @@ function UnitTest:handleArgs(args)
         ['--filter-files'] = function(filters)
             self.filterFiles = string.explode(filters, ',')
         end,
+        ['--filter-tests'] = function(filters)
+            self.filterTests = string.explode(filters, ',')
+        end,
         ['--verbose'] = function()
             self.showAssertionTraceback = true
+            self.warnOnFilesWithNoTests = true
         end,
         ['--help'] = function()
             self:showHelp()
@@ -193,12 +204,37 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
         error(err, 2)
     end
 
+    local function isTestFunction(fnName)
+        -- Use default
+        if self.filterTests == nil then
+            return string.sub(fnName, 1, 5) == "test_"
+        end
+
+        -- Use custom filters
+        if (not string.sub(fnName, 1, 5) == "test_") then
+            return false
+        end
+        for i, pattern in pairs(self.filterTests) do
+            if string.match(fnName, pattern) then
+                return true
+            end
+        end
+
+        return false
+    end
+
     -- Locate test functions within the environment and run try them
     local succeeded = {}
     local failed = {}
     local testCount = 0
     for functionName, ptrToTestFunction in pairs(env) do
-        if (type(ptrToTestFunction) == "function" and string.sub(functionName, 1, 5) == "test_") then
+        if (type(ptrToTestFunction) ~= "function") then
+            goto continue
+        end
+
+        if (not isTestFunction(functionName)) then
+            testCount = testCount + 1
+        else
             local traceback = nil
             local errMsg = ''
             local errorHandler = function(err)
@@ -248,9 +284,11 @@ function UnitTest:runTestsInFile(root, relativeFilePath)
             self.output:writeln(sprintf(" [%s]  %s %s %s", passOrFail,
                 self.output:sstyle(descriptionStyle, description), padding, runtime))
         end
+
+        ::continue::
     end
 
-    if (testCount == 0) then
+    if (self.warnOnFilesWithNoTests and testCount == 0) then
         self.output:writeln(sprintf(" [%s]  %s", self.output:sstyle('comment', 'WARN'),
             self.output:sstyle('comment', 'No tests in ' .. relativeFilePath)))
     end
