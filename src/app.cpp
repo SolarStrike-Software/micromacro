@@ -12,6 +12,8 @@
 #include <conio.h>
 #include <Shlwapi.h>
 #include <regex>
+#include <unistd.h>
+#include <stdbool.h>
 
 #include "macro.h"
 #include "ncurses_lua.h"
@@ -552,6 +554,10 @@ void App::clearCliScreen()
     HANDLE stdOut = Macro::instance()->getAppHandle()/*GetStdHandle(STD_OUTPUT_HANDLE)*/;
     COORD coord = {0, 0};
 
+    DWORD count;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(stdOut, &csbi);
+
     if( ansiTerm )
     {
         // ANSI clear -- prevents bugginess with ANSI output in the buffer
@@ -559,14 +565,9 @@ void App::clearCliScreen()
         DWORD written = 0;
         WriteConsoleW(stdOut, sequence, (DWORD)wcslen(sequence), &written, NULL);
     }
-    else
-    {
-        DWORD count;
-        CONSOLE_SCREEN_BUFFER_INFO csbi;
-        GetConsoleScreenBufferInfo(stdOut, &csbi);
-        FillConsoleOutputCharacter(stdOut, ' ', csbi.dwMaximumWindowSize.X * csbi.dwMaximumWindowSize.Y, coord, &count);
-    }
 
+    FillConsoleOutputAttribute(stdOut, csbi.wAttributes, csbi.dwMaximumWindowSize.X * csbi.dwMaximumWindowSize.Y, coord, &count);
+    FillConsoleOutputCharacter(stdOut, ' ', csbi.dwMaximumWindowSize.X * csbi.dwMaximumWindowSize.Y, coord, &count);
     SetConsoleCursorPosition(stdOut, coord);
 }
 
@@ -946,15 +947,29 @@ int App::enableVirtualTerminal()
     }
 
     // Enable virtual terminal if not already set
+    ansiTerm = isAnsiSupported();
     if( !(dwMode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) )
     {
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         if (!SetConsoleMode(handle, dwMode))
             return GetLastError();
-        ansiTerm = true;
+        ansiTerm = isAnsiSupported();
     }
 
     return 0;
+}
+
+bool App::isAnsiSupported() {
+    char *term = getenv("TERM");
+    if (term != NULL && strstr(term, "xterm") != NULL) {
+        return true;
+    }
+
+    if( isatty(STDOUT_FILENO) ) {
+        return true;
+    }
+
+    return false;
 }
 
 void App::renderErrorMessage(int errCode, const char *lastErrorMessage, const char *description)

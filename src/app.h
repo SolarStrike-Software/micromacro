@@ -16,6 +16,8 @@
 				static const int GAMEPAD_REPOLL_SECONDS = 10;
 				static const int WM_SYSICON = (WM_USER + 1);
 
+				bool isAnsiSupported();
+
 				HINSTANCE hinstance;
 				HWND messageReceiveHwnd;
 				char baseDirectory[MAX_PATH+1];
