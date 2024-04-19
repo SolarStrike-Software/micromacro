@@ -1,3 +1,4 @@
+require 'color/color'
 ConsoleProgressBarStyle = class.new()
 
 function ConsoleProgressBarStyle:constructor(character)
@@ -167,13 +168,10 @@ function RainbowConsoleProgressBarStyle:getFilledStyle(position, filledWidth, to
         timeOffset = math.round(time.getNow() / i64DiminishFactor * (-self.speed) * 10) % totalWidth
     end
 
-    local h<const> = ((timeOffset + position) / totalWidth) * 360
-    local r, g, b = hsv2rgb(h, self.saturation, 1.0)
-    r = math.round(r * 255)
-    g = math.round(g * 255)
-    b = math.round(b * 255)
+    local hue<const> = ((timeOffset + position) / totalWidth) * 360
+    local rgb = HSV(hue, self.saturation, 1.0):toRgb()
 
-    return "\x1b[48;2;" .. sprintf("%d", r) .. ";" .. sprintf("%d", g) .. ";" .. sprintf("%d", b) .. "m%s\x1b[0m"
+    return "\x1b[48;2;" .. sprintf("%d", rgb.r) .. ";" .. sprintf("%d", rgb.g) .. ";" .. sprintf("%d", rgb.b) .. "m%s\x1b[0m"
 end
 
 --[[ Ocean Wave style ]]

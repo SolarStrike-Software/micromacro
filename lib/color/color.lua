@@ -85,6 +85,7 @@ function RGB:adjust()
     while self.r > RGB_MAX do
         self.r = self.r - RGB_MAX
     end
+    self.r = math.round(self.r)
 
     while self.g < 0 do
         self.g = self.g + RGB_MAX
@@ -92,6 +93,7 @@ function RGB:adjust()
     while self.g > RGB_MAX do
         self.g = self.g - RGB_MAX
     end
+    self.g = math.round(self.g)
 
     while self.b < 0 do
         self.b = self.b + RGB_MAX
@@ -99,6 +101,7 @@ function RGB:adjust()
     while self.b > RGB_MAX do
         self.b = self.b - RGB_MAX
     end
+    self.b = math.round(self.b)
 end
 
 function RGB:toHsv()
